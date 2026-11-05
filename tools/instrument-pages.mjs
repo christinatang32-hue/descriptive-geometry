@@ -22,7 +22,14 @@ for(const name of fs.readdirSync(root)){
     source=source.replace('</body>',`${tag}</body>`);
   }
   if(name.startsWith('ex-')){
-    if(!source.includes('id="lesson-data"'))throw Error(`Missing assignment data: ${name}`);
+    if(!source.includes('id="lesson-data"')){
+      const problem=source.match(/\bproblem:'((?:\\.|[^'\\])*)'/)?.[1];
+      if(!problem)throw Error(`Missing assignment problem: ${name}`);
+      const checks=[...source.matchAll(/\baction:'((?:\\.|[^'\\])*)'/g)]
+        .map(match=>match[1].replace(/\\n/g,' ').replace(/\\'/g,"'")).slice(0,8);
+      const metadata=JSON.stringify({problem:problem.replace(/\\'/g,"'"),checks}).replace(/</g,'\\u003c');
+      source=source.replace('</body>',`<script id="lesson-data" type="application/json">${metadata}</script></body>`);
+    }
     if(!source.includes('href="assignment-flow.css"')){
       source=source.replace('</head>','<link rel="stylesheet" href="assignment-flow.css"></head>');
     }
