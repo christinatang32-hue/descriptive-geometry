@@ -30,42 +30,53 @@
     try{const data=await request('/api/admin/summary');rows=data.students||[];renderRows();await loadRosterSummary()}
     catch(err){error.textContent=err.message||'读取失败'}finally{$('load').disabled=false}
   });
-  function parseCsv(input){
-    const text=input.replace(/^\ufeff/,''),table=[];let row=[],cell='',quoted=false;
-    for(let i=0;i<text.length;i++){
-      const char=text[i];
-      if(quoted){if(char==='"'&&text[i+1]==='"'){cell+='"';i++}else if(char==='"')quoted=false;else cell+=char}
-      else if(char==='"'&&cell==='')quoted=true;
-      else if(char===','){row.push(cell);cell=''}
-      else if(char==='\n'||char==='\r'){if(char==='\r'&&text[i+1]==='\n')i++;row.push(cell);if(row.some(value=>value.trim()))table.push(row);row=[];cell=''}
-      else cell+=char;
+  async function parseExcel(file){
+    if(!window.XLSX)throw Error('Excel 读取组件未加载，请刷新页面重试。');
+    let workbook;try{workbook=XLSX.read(await file.arrayBuffer(),{type:'array',cellText:true,cellDates:false})}
+    catch{throw Error('无法读取 Excel 文件，请确认文件未损坏且格式为 .xlsx 或 .xls。')}
+    const text=value=>String(value??'').trim();
+    for(const sheetName of workbook.SheetNames){
+      const sheet=workbook.Sheets[sheetName];if(!sheet?.['!ref'])continue;
+      const table=XLSX.utils.sheet_to_json(sheet,{header:1,defval:'',raw:false,blankrows:true});
+      const firstRow=XLSX.utils.decode_range(sheet['!ref']).s.r;
+      const headerIndex=table.slice(0,30).findIndex(row=>{
+        const headers=row.map(value=>text(value).replace(/\s+/g,''));
+        return headers.some(value=>['学号','studentId','student_id'].includes(value))&&headers.some(value=>['姓名','name'].includes(value));
+      });
+      if(headerIndex<0)continue;
+      const headers=table[headerIndex].map(value=>text(value).replace(/\s+/g,''));
+      const idColumn=headers.findIndex(value=>['学号','studentId','student_id'].includes(value));
+      const nameColumn=headers.findIndex(value=>['姓名','name'].includes(value));
+      const seen=new Set(),students=[];
+      for(let index=headerIndex+1;index<table.length;index++){
+        const values=table[index],studentId=text(values[idColumn]),name=text(values[nameColumn]).replace(/\s+/g,' ');
+        if(!studentId&&!name)continue;
+        const rowNumber=firstRow+index+1;
+        if(!/^[0-9A-Za-z-]{4,24}$/.test(studentId)||name.length<2||name.length>30)throw Error(`工作表“${sheetName}”第 ${rowNumber} 行学号或姓名格式不正确。学号若以 0 开头，请在 Excel 中设为文本。`);
+        if(seen.has(studentId))throw Error(`工作表“${sheetName}”第 ${rowNumber} 行学号重复：${studentId}`);
+        seen.add(studentId);students.push({studentId,name});
+        if(students.length>10000)throw Error('单次最多上传 10000 人，请拆分文件。');
+      }
+      if(!students.length)throw Error(`工作表“${sheetName}”没有可上传的学生。`);
+      return students;
     }
-    if(quoted)throw Error('CSV 引号未闭合，请重新导出文件。');
-    row.push(cell);if(row.some(value=>value.trim()))table.push(row);
-    if(table.length<2)throw Error('名单至少需要表头和一名学生。');
-    const header=table.shift().map(value=>value.trim());
-    const idColumn=header.findIndex(value=>['学号','studentId','student_id'].includes(value));
-    const nameColumn=header.findIndex(value=>['姓名','name'].includes(value));
-    if(idColumn<0||nameColumn<0)throw Error('CSV 表头必须包含“学号”和“姓名”。');
-    const seen=new Set(),students=[];
-    for(const [index,values] of table.entries()){
-      const studentId=(values[idColumn]||'').trim(),name=(values[nameColumn]||'').trim().replace(/\s+/g,' ');
-      if(!/^[0-9A-Za-z-]{4,24}$/.test(studentId)||name.length<2||name.length>30)throw Error(`第 ${index+2} 行学号或姓名格式不正确。`);
-      if(seen.has(studentId))throw Error(`第 ${index+2} 行学号重复：${studentId}`);
-      seen.add(studentId);students.push({studentId,name});
-    }
-    if(students.length>10000)throw Error('单次最多上传 10000 人，请拆分文件。');
-    return students;
+    throw Error('Excel 前 30 行中未找到包含“学号”和“姓名”的表头。');
   }
+  $('download-template').addEventListener('click',()=>{
+    if(!window.XLSX){$('roster-status').textContent='Excel 组件未加载，请刷新页面重试。';return}
+    const workbook=XLSX.utils.book_new(),sheet=XLSX.utils.aoa_to_sheet([['学号','姓名']]);
+    sheet['!cols']=[{wch:24},{wch:18}];XLSX.utils.book_append_sheet(workbook,sheet,'学生名单');
+    XLSX.writeFile(workbook,'学生名单模板.xlsx',{compression:true});
+  });
   upload.addEventListener('submit',async event=>{
     event.preventDefault();const status=$('roster-status'),button=$('roster-upload'),cohort=$('cohort').value.trim(),file=$('roster-file').files[0];
     status.textContent='';if(!api()){status.textContent='尚未配置学习记录服务，不能上传名单。';return}
     if(!token()){status.textContent='请先填写教师访问密钥。';return}
     if(!/^[\p{L}\p{N}\s_-]{2,40}$/u.test(cohort)){status.textContent='届别或班级名称需为 2–40 个字符。';return}
-    if(!file||file.size>1024*1024){status.textContent='请选择不超过 1 MB 的 UTF-8 CSV 文件。';return}
+    if(!file||!/^.+\.(xlsx|xls)$/i.test(file.name)||file.size>10*1024*1024){status.textContent='请选择不超过 10 MB 的 .xlsx 或 .xls 文件。';return}
     button.disabled=true;let completed=0;
     try{
-      const students=parseCsv(await file.text());
+      const students=await parseExcel(file);
       for(let i=0;i<students.length;i+=100){
         const chunk=students.slice(i,i+100);
         await request('/api/admin/roster/import',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cohort,students:chunk})});

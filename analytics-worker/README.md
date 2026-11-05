@@ -8,7 +8,7 @@
 2. 用 Wrangler 执行 `schema.sql` 创建学生名单、登录、学习时长和作业提交表。若数据库已存在，重复执行该文件即可添加新表。
 3. 先发布本仓库中的 `answer-references/*.png` 与习题页。Worker 通过 `COURSE_BASE_URL` 从可信课程站点读取标准答案图与题目，不采用学生提交的“标准答案”。
 4. 用 Wrangler secret 设置长随机 `ADMIN_TOKEN`，部署 Worker。不要把密钥写入仓库、网页或 URL。
-5. 将 Worker 的 HTTPS 地址写入 `publish/config.js` 的 `apiBase`，再次发布网站。在 `admin.html` 输入教师密钥，按届别上传含“学号、姓名”两列的 UTF-8 CSV 名单。
+5. 将 Worker 的 HTTPS 地址写入网站根目录 `config.js` 的 `apiBase`，再次发布网站。在 `admin.html` 输入教师密钥，直接上传含“学号、姓名”两列的 `.xlsx` 或 `.xls` 名单。Excel 文件在浏览器内解析，服务端只接收核对后的名单数据。
 6. 用真实照片逐题验证 AI 对线条、点位、可见性和多解的反馈，并检查标注框落在学生照片上的正确位置，再向学生开放作业批改。
 
 可参考命令：
