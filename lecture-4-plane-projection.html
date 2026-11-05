@@ -78,7 +78,7 @@ svg{--diagram-ink:#344e42;--diagram-accent:#517d6a;--diagram-green:#507d5b}.labe
 .toolbar button{border-radius:3px;color:#4d6151}.toolbar .primary{background:#304d3b;color:#f5f5ea}.toolbar .primary:hover:not(:disabled){background:#44634d}.toolbar button:hover:not(:disabled){background:#ccd6c9}
 .menu-items>button{background:#eff2e9}.menu-items>button.selected{background:#dce5d4}dialog{background:#fafaf6}#zoom-scroll{background:#fafaf6}
 </style></head>
-<body><div id="app"><nav aria-label="课程导航" style="width:100%;flex-shrink:0;display:flex;gap:20px;flex-wrap:wrap;padding:14px 24px;background:#fff;border-bottom:1px solid #dce5e5;font:16px/1.7 Microsoft YaHei,sans-serif"><a href="index.html#lectures">← 课程目录</a></nav>
+<body><div id="app"><nav aria-label="课程导航" style="width:100%;flex-shrink:0;display:flex;gap:20px;flex-wrap:wrap;padding:14px 24px;background:#fff;border-bottom:1px solid #dce5e5;font:16px/1.7 Microsoft YaHei,sans-serif"><a href="catalog.html#lectures">← 首页</a></nav>
 <header class="app-bar"><span class="identity">画法几何 <span class="muted">/ 平面的投影</span></span><span id="step-caption" aria-live="polite"></span></header>
 <main id="viewport" aria-label="16:9 课件演示"><div id="stage">
 <section class="slide cover" data-slide="0" aria-label="封面"><div class="cover-rule"></div><div class="cover-course">画法几何</div><div class="cover-number" aria-hidden="true">04</div><div class="cover-lecture">第 四 讲</div><h1>平面的投影</h1></section>
@@ -308,4 +308,4 @@ window.addEventListener('beforeprint',()=>{stop();maxSteps.forEach((n,i)=>steps[
 window.geometryAudit={horizontal,faces,example2:{A,B,C,axis,knownKFront,dp,dWorld,kWorld,dRatio,kRatio},model:'All views generated from shared 3D vertices; no extracted assets.'};
 render();fit();
 })();
-</script></body></html>
+</script><script defer src="config.js"></script><script defer src="tracker.js"></script></body></html>

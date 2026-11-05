@@ -1,0 +1,36 @@
+body.assignment-locked #app{display:none}
+.assignment-hub{max-width:1040px;margin:30px auto;padding:0 24px 48px;color:#20333e;font:16px/1.65 "Microsoft YaHei","PingFang SC",sans-serif}
+.assignment-hub *{box-sizing:border-box}
+.assignment-hub h1{font-size:30px;line-height:1.35;margin:6px 0 8px}
+.assignment-hub header{display:block;margin:0 0 24px;align-items:initial}
+.assignment-hub .hub-eyebrow{font-size:13px;color:#007f79;font-weight:800;letter-spacing:.1em}
+.assignment-hub .hub-intro{margin:0 0 26px;color:#586b73}
+.assignment-hub .hub-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:0 0 20px;padding:0;list-style:none}
+.assignment-hub .hub-steps li{padding:17px 18px;background:#fff;border:1px solid #dce5e5;border-radius:12px}
+.assignment-hub .hub-steps .step-no{display:block;color:#007f79;font-weight:800;font-size:13px}
+.assignment-hub .hub-steps strong{display:block;font-size:20px;margin:4px 0}
+.assignment-hub .hub-steps span:last-child{display:block;font-size:13px;color:#667980}
+.assignment-hub .hub-panel{padding:25px;background:#fff;border:1px solid #dce5e5;border-radius:14px}
+.assignment-hub .hub-panel h2{font-size:22px;margin:0 0 8px}
+.assignment-hub .hub-panel p{margin:0 0 15px;color:#596d76}
+.assignment-hub .upload-row{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.assignment-hub input[type=file]{display:block;max-width:100%;font:inherit}
+.assignment-hub button{border:1px solid #007f79;border-radius:8px;padding:10px 17px;background:#007f79;color:#fff;font:700 15px "Microsoft YaHei",sans-serif;cursor:pointer}
+.assignment-hub button:hover:not(:disabled){background:#006b66}
+.assignment-hub button:disabled{opacity:.45;cursor:not-allowed}
+.assignment-hub button.secondary{background:#fff;color:#007f79}
+.assignment-hub button.secondary:hover:not(:disabled){background:#eaf5f3;color:#006b66}
+.assignment-hub .hub-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:18px;padding-top:17px;border-top:1px solid #e4ecec}
+.assignment-hub .hub-status{min-height:25px;margin:15px 0 0!important;color:#865422!important;font-size:14px}
+.assignment-hub .hub-status.error{color:#a92929!important}
+.assignment-hub .hub-note{margin-top:17px!important;font-size:13px;color:#75858b!important}
+.assignment-hub .result-panel{margin-top:22px;padding-top:20px;border-top:1px solid #e4ecec}
+.assignment-hub .result-summary{font-weight:700;color:#20333e!important}
+.assignment-hub .marked-wrap{position:relative;max-width:850px;margin:16px auto;background:#f4f7f7}
+.assignment-hub .marked-wrap img{display:block;width:100%;height:auto}
+.assignment-hub .marked-wrap svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.assignment-hub .issue-list{margin:13px 0 0;padding-left:24px}
+.assignment-hub .issue-list li{margin:8px 0;color:#7d2828}
+.assignment-hub .issue-list strong{color:#a82424}
+.assignment-hub .issue-list.no-issues li{color:#355b54}
+@media(max-width:720px){.assignment-hub{padding:0 14px 36px;margin:20px auto}.assignment-hub h1{font-size:25px}.assignment-hub .hub-steps{grid-template-columns:1fr;gap:8px}.assignment-hub .hub-steps li{padding:11px 14px}.assignment-hub .hub-steps strong{font-size:18px;margin:0}.assignment-hub .hub-panel{padding:18px}.assignment-hub .hub-actions button{flex:1}}
