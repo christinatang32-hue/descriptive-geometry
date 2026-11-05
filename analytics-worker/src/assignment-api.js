@@ -32,7 +32,7 @@ function parseGrade(raw){
 }
 
 async function trustedAnswer(env,page){
-  const base=(env.COURSE_BASE_URL||'https://jackinthebox771.github.io/descriptive-geometry').replace(/\/$/,'')+'/';
+  const base=(env.COURSE_BASE_URL||'https://christinatang32-hue.github.io/descriptive-geometry').replace(/\/$/,'')+'/';
   const [imageResponse,lessonResponse]=await Promise.all([
     fetch(new URL('answer-references/'+page.replace(/\.html$/,'.png'),base)),
     fetch(new URL(page,base))

@@ -1,5 +1,7 @@
 # 《画法几何及工程制图》学习平台
 
+新项目仓库：<https://github.com/christinatang32-hue/descriptive-geometry>。课程页面使用 GitHub Pages 从 `main` 分支根目录发布，目标地址为 <https://christinatang32-hue.github.io/descriptive-geometry/>。
+
 `index.html` 是课程封面与学习登记；登录后的 `catalog.html` 设讲义、例题、习题、专题四个模块。现有内容为 1 份讲义、66 道习题、2 个互动例题和涵洞专题链接；钢屋架、钢筋混凝土T形梁、房屋建筑内容待补充。使用 GitHub Pages 从 main 分支根目录发布。涵洞专题在另一个网站打开，其站内学习时长目前不纳入本平台统计。
 
 `config.js` 的 `apiBase` 留空时，仅能演示登记和浏览，**不会向教师上传访问记录，也不会核对学生名单**。需要班级学情统计时，先按 `analytics-worker/README.md` 部署独立的记录服务，再填入 Worker 地址。之后在 `admin.html` 用教师密钥按届别上传学生名单，名单匹配的学号与姓名才能建立学习记录。

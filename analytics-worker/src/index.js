@@ -1,5 +1,5 @@
 import {assignmentRoute,purgeAssignments} from './assignment-api.js';
-const DEFAULT_ORIGIN='https://jackinthebox771.github.io';
+const DEFAULT_ORIGIN='https://christinatang32-hue.github.io';
 const encoder=new TextEncoder();
 const json=(body,status=200,headers={})=>Response.json(body,{status,headers:{'Cache-Control':'no-store',...headers}});
 const tokenHash=async token=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',encoder.encode(token))),v=>v.toString(16).padStart(2,'0')).join('');
