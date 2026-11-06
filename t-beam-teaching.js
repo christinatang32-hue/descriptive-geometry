@@ -32,7 +32,7 @@
   for(const x of [-1975,1975])add('hoist',8,19,[V(x,-48,530),V(x,-48,680),V(x,-36,704),V(x,36,704),V(x,48,680),V(x,48,530)]);
 
   const steps=[
-    {title:'先认清 T 形断面与梁长',text:'立面图确定纵向外形；断面图确定翼缘和腹板的组合。将 T 形断面沿梁长方向延伸，得到梁体。',points:['翼缘宽 650 mm、厚 100 mm；腹板宽 300 mm。','翼缘下腹板高 500 mm，总高 600 mm。'],layers:['concrete'],opacity:100},
+    {title:'先认清 T 形断面与梁长',text:'立面图确定纵向外形；断面图确定翼缘和腹板的组合。将 T 形断面沿梁长方向延伸，得到梁体。',points:['翼缘宽 650 mm、厚 100 mm；腹板宽 300 mm。','翼缘下腹板高 500 mm，总高 600 mm。'],layers:['concrete','bottom','bent','top','stirrup','hoist'],opacity:100},
     {title:'放入 ① 号底部纵筋',text:'腹板下部放置 4 根 Φ22 纵筋。观察端面：外侧两根贴靠外箍筋肢，其余两根也贴靠箍筋的底部内表面。',points:['①：4Φ22，单根下料长度 6580 mm。','三维弯钩仅作识图示意，长度以钢筋表为准。'],layers:['concrete','bottom','stirrup'],opacity:13},
     {title:'辨认 ②③④ 号弯起筋',text:'沿梁长追踪水平段和斜段。②④ 靠近腹板外侧箍筋肢，③ 置于中间箍筋肢之间。',points:['②：2Φ19，7700 mm；③：1Φ19，4060 mm；④：2Φ19，5260 mm。','原图注明弯起钢筋均弯起 45°。'],layers:['concrete','bottom','bent','stirrup'],opacity:12},
     {title:'布置 ⑤ 号顶部纵筋',text:'在翼缘内沿梁长布置 8 根 Φ12 顶部纵筋。钢筋位于翼缘箍筋的内侧，顶面相互贴合。',points:['⑤：8Φ12，单根下料长度 6050 mm。','旋转至断面视角，观察八根钢筋沿翼缘宽度分布。'],layers:['concrete','bottom','bent','top','stirrup'],opacity:12},
