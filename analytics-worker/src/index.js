@@ -1,4 +1,5 @@
 import {assignmentRoute,purgeAssignments} from './assignment-api.js';
+import {createPasswordHash,validPassword,verifyPassword} from './password.js';
 const DEFAULT_ORIGIN='https://christinatang32-hue.github.io';
 const encoder=new TextEncoder();
 const json=(body,status=200,headers={})=>Response.json(body,{status,headers:{'Cache-Control':'no-store',...headers}});
@@ -9,14 +10,20 @@ const validName=name=>typeof name==='string'&&name.trim().length>=2&&name.trim()
 const validPage=page=>typeof page==='string'&&/^[A-Za-z0-9_.()-]{1,80}\.html$/.test(page);
 const validCohort=cohort=>typeof cohort==='string'&&/^[\p{L}\p{N}\s_-]{1,40}$/u.test(cohort.trim());
 const normalizedName=name=>name.trim().replace(/\s+/g,' ');
+const validPhone=phone=>typeof phone==='string'&&/^1[3-9]\d{9}$/.test(phone);
+async function readJson(request,limit=4096){
+  const raw=await request.text();
+  if(raw.length>limit)throw new RangeError('Payload too large');
+  return JSON.parse(raw);
+}
 const fiveYearCutoff=now=>{const date=new Date(now);date.setUTCFullYear(date.getUTCFullYear()-5);return date.getTime()};
 async function teacher(request,env,now){
   const id=request.headers.get('X-Session-Id')||'';
   const token=(request.headers.get('Authorization')||'').replace(/^Bearer /,'');
   if(!id||!token)return null;
-  const row=await env.DB.prepare('SELECT employee_id,token_hash,started_at FROM teacher_sessions WHERE id=?').bind(id).first();
+  const row=await env.DB.prepare('SELECT s.employee_id,s.token_hash,s.started_at,c.must_change FROM teacher_sessions s JOIN teacher_credentials c ON c.employee_id=s.employee_id WHERE s.id=?').bind(id).first();
   if(!row||row.token_hash!==await tokenHash(token)||now-row.started_at>12*3600*1000)return null;
-  return row.employee_id;
+  return {employeeId:row.employee_id,mustChange:Boolean(row.must_change),sessionId:id};
 }
 async function purgeExpired(env,now){
   const cutoff=fiveYearCutoff(now);
@@ -26,6 +33,7 @@ async function purgeExpired(env,now){
     env.DB.prepare('DELETE FROM sessions WHERE started_at < ?').bind(cutoff),
     env.DB.prepare('DELETE FROM teacher_sessions WHERE started_at < ?').bind(cutoff),
     env.DB.prepare('DELETE FROM roster WHERE imported_at < ?').bind(cutoff),
+    env.DB.prepare('DELETE FROM student_accounts WHERE NOT EXISTS (SELECT 1 FROM roster WHERE roster.student_id=student_accounts.student_id)'),
     env.DB.prepare('DELETE FROM students WHERE NOT EXISTS (SELECT 1 FROM sessions WHERE sessions.student_id=students.student_id) AND NOT EXISTS (SELECT 1 FROM submissions WHERE submissions.student_id=students.student_id)'),
     env.DB.prepare('UPDATE students SET first_seen=(SELECT MIN(started_at) FROM sessions WHERE sessions.student_id=students.student_id),last_seen=(SELECT MAX(last_seen) FROM sessions WHERE sessions.student_id=students.student_id) WHERE EXISTS (SELECT 1 FROM sessions WHERE sessions.student_id=students.student_id)')
   ]);
@@ -42,25 +50,60 @@ export default {
     const url=new URL(request.url),now=Date.now();
     try{
       if(url.pathname.startsWith('/api/assignment/'))return await assignmentRoute(request,env,url,now,cors);
+      if(url.pathname==='/api/student/register'&&request.method==='POST'){
+        const input=await readJson(request);
+        if(!validStudentId(input.studentId)||!validName(input.name)||!validCohort(input.className)||!validPhone(input.phone)||!validPassword(input.password)||input.password!==input.confirmPassword)
+          return json({error:'Invalid registration'},400,cors);
+        const roster=await env.DB.prepare('SELECT name,cohort FROM roster WHERE student_id=?').bind(input.studentId).first();
+        if(!roster||normalizedName(input.name)!==roster.name||input.className.trim()!==roster.cohort)
+          return json({error:'Not in roster'},403,cors);
+        const existing=await env.DB.prepare('SELECT student_id FROM student_accounts WHERE student_id=?').bind(input.studentId).first();
+        if(existing)return json({error:'Already registered'},409,cors);
+        const passwordHash=await createPasswordHash(input.password);
+        const result=await env.DB.prepare('INSERT INTO student_accounts(student_id,password_hash,phone,registered_at,last_login) VALUES(?,?,?,?,NULL) ON CONFLICT(student_id) DO NOTHING')
+          .bind(input.studentId,passwordHash,input.phone,now).run();
+        if(result.meta?.changes===0)return json({error:'Already registered'},409,cors);
+        return json({registered:true},201,cors);
+      }
       if(url.pathname==='/api/session/start'&&request.method==='POST'){
-        const input=await request.json();
-        if(!validStudentId(input.studentId)||!validName(input.name))return json({error:'Invalid student registration'},400,cors);
+        const input=await readJson(request);
+        if(!validStudentId(input.studentId)||!validName(input.name)||typeof input.password!=='string'||input.password.length>128)return json({error:'Invalid login'},400,cors);
         const id=input.studentId,teacherAccount=await env.DB.prepare('SELECT name FROM teacher_accounts WHERE employee_id=?').bind(id).first();
         if(teacherAccount){
-          if(normalizedName(input.name)!==teacherAccount.name)return json({error:'Account not found'},403,cors);
+          const credential=await env.DB.prepare('SELECT password_hash,must_change FROM teacher_credentials WHERE employee_id=?').bind(id).first();
+          if(normalizedName(input.name)!==teacherAccount.name||!credential||!await verifyPassword(input.password,credential.password_hash))return json({error:'Invalid credentials'},403,cors);
           const sessionId=crypto.randomUUID(),token=randomToken();
           await env.DB.prepare('INSERT INTO teacher_sessions(id,employee_id,token_hash,started_at,last_seen) VALUES(?,?,?,?,?)')
             .bind(sessionId,id,await tokenHash(token),now,now).run();
-          return json({role:'teacher',sessionId,token},201,cors);
+          return json({role:'teacher',sessionId,token,mustChange:Boolean(credential.must_change)},201,cors);
         }
         const roster=await env.DB.prepare('SELECT name,cohort FROM roster WHERE student_id=?').bind(id).first();
         if(!roster||normalizedName(input.name)!==roster.name)return json({error:'Student not found in roster'},403,cors);
+        const account=await env.DB.prepare('SELECT password_hash FROM student_accounts WHERE student_id=?').bind(id).first();
+        if(!account)return json({error:'Registration required'},409,cors);
+        if(!await verifyPassword(input.password,account.password_hash))return json({error:'Invalid credentials'},403,cors);
         const name=roster.name,cohort=roster.cohort,sessionId=crypto.randomUUID(),token=randomToken();
         await env.DB.batch([
           env.DB.prepare('INSERT INTO students(student_id,name,cohort,first_seen,last_seen) VALUES(?,?,?,?,?) ON CONFLICT(student_id) DO UPDATE SET name=excluded.name,cohort=excluded.cohort,last_seen=excluded.last_seen').bind(id,name,cohort,now,now),
-          env.DB.prepare('INSERT INTO sessions(id,student_id,token_hash,started_at,last_seen,active_seconds) VALUES(?,?,?,?,?,0)').bind(sessionId,id,await tokenHash(token),now,now)
+          env.DB.prepare('INSERT INTO sessions(id,student_id,token_hash,started_at,last_seen,active_seconds) VALUES(?,?,?,?,?,0)').bind(sessionId,id,await tokenHash(token),now,now),
+          env.DB.prepare('UPDATE student_accounts SET last_login=? WHERE student_id=?').bind(now,id)
         ]);
         return json({role:'student',sessionId,token},201,cors);
+      }
+      if(url.pathname==='/api/teacher/password/change'&&request.method==='POST'){
+        const account=await teacher(request,env,now);
+        if(!account)return json({error:'Unauthorized'},401,cors);
+        const input=await readJson(request);
+        if(!validPassword(input.newPassword)||input.newPassword!==input.confirmPassword||typeof input.currentPassword!=='string')return json({error:'Invalid password change'},400,cors);
+        const credential=await env.DB.prepare('SELECT password_hash FROM teacher_credentials WHERE employee_id=?').bind(account.employeeId).first();
+        if(!credential||!await verifyPassword(input.currentPassword,credential.password_hash))return json({error:'Current password incorrect'},403,cors);
+        if(input.currentPassword===input.newPassword)return json({error:'Choose a different password'},400,cors);
+        const passwordHash=await createPasswordHash(input.newPassword);
+        await env.DB.batch([
+          env.DB.prepare('UPDATE teacher_credentials SET password_hash=?,must_change=0,updated_at=? WHERE employee_id=?').bind(passwordHash,now,account.employeeId),
+          env.DB.prepare('DELETE FROM teacher_sessions WHERE employee_id=? AND id<>?').bind(account.employeeId,account.sessionId)
+        ]);
+        return json({changed:true},200,cors);
       }
       if(url.pathname==='/api/session/heartbeat'&&request.method==='POST'){
         const raw=await request.text();if(raw.length>2048)return json({error:'Payload too large'},413,cors);
@@ -78,7 +121,9 @@ export default {
         return json({credited},200,cors);
       }
       if(url.pathname==='/api/admin/roster/import'&&request.method==='POST'){
-        if(!await teacher(request,env,now))return json({error:'Unauthorized'},401,cors);
+        const account=await teacher(request,env,now);
+        if(!account)return json({error:'Unauthorized'},401,cors);
+        if(account.mustChange)return json({error:'Password change required'},403,cors);
         const raw=await request.text();if(raw.length>30000)return json({error:'Roster chunk too large'},413,cors);
         const input=JSON.parse(raw);
         if(!Array.isArray(input.students)||input.students.length<1||input.students.length>100)return json({error:'Invalid roster chunk'},400,cors);
@@ -94,13 +139,17 @@ export default {
         return json({imported:entries.length},200,cors);
       }
       if(url.pathname==='/api/admin/roster/summary'&&request.method==='GET'){
-        if(!await teacher(request,env,now))return json({error:'Unauthorized'},401,cors);
+        const account=await teacher(request,env,now);
+        if(!account)return json({error:'Unauthorized'},401,cors);
+        if(account.mustChange)return json({error:'Password change required'},403,cors);
         await purgeExpired(env,now);
         const result=await env.DB.prepare('SELECT cohort,COUNT(*) AS students,MAX(imported_at) AS lastImport FROM roster GROUP BY cohort ORDER BY cohort DESC').all();
         return json({cohorts:result.results||[]},200,cors);
       }
       if(url.pathname==='/api/admin/summary'&&request.method==='GET'){
-        if(!await teacher(request,env,now))return json({error:'Unauthorized'},401,cors);
+        const account=await teacher(request,env,now);
+        if(!account)return json({error:'Unauthorized'},401,cors);
+        if(account.mustChange)return json({error:'Password change required'},403,cors);
         await purgeExpired(env,now);
         const query=`WITH ses AS (
             SELECT student_id,COUNT(*) AS sessions,SUM(active_seconds) AS total_seconds,MAX(last_seen) AS last_seen
@@ -123,7 +172,9 @@ export default {
       }
       return json({error:'Not found'},404,cors);
     }catch(error){
+      if(error instanceof RangeError)return json({error:'Payload too large'},413,cors);
       if(error instanceof SyntaxError)return json({error:'Invalid JSON'},400,cors);
+      console.error('Service error',error?.name,error?.message);
       return json({error:'Service unavailable'},503,cors);
     }
   },

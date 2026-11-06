@@ -12,6 +12,13 @@ CREATE TABLE IF NOT EXISTS roster (
   imported_at INTEGER NOT NULL
 );
 CREATE INDEX IF NOT EXISTS roster_cohort_idx ON roster(cohort);
+CREATE TABLE IF NOT EXISTS student_accounts (
+  student_id TEXT PRIMARY KEY,
+  password_hash TEXT NOT NULL,
+  phone TEXT NOT NULL,
+  registered_at INTEGER NOT NULL,
+  last_login INTEGER
+);
 CREATE TABLE IF NOT EXISTS teacher_accounts (
   employee_id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
@@ -25,6 +32,12 @@ CREATE TABLE IF NOT EXISTS teacher_sessions (
   last_seen INTEGER NOT NULL
 );
 CREATE INDEX IF NOT EXISTS teacher_sessions_employee_idx ON teacher_sessions(employee_id);
+CREATE TABLE IF NOT EXISTS teacher_credentials (
+  employee_id TEXT PRIMARY KEY REFERENCES teacher_accounts(employee_id),
+  password_hash TEXT NOT NULL,
+  must_change INTEGER NOT NULL DEFAULT 1,
+  updated_at INTEGER NOT NULL
+);
 CREATE TABLE IF NOT EXISTS sessions (
   id TEXT PRIMARY KEY,
   student_id TEXT NOT NULL REFERENCES students(student_id),
