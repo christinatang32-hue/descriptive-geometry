@@ -1,0 +1,28 @@
+{
+  "name": "descriptive-geometry-analytics",
+  "main": "src/index.js",
+  "compatibility_date": "2026-10-01",
+  "vars": {
+    "ALLOWED_ORIGIN": "https://christinatang32-hue.github.io",
+    "COURSE_BASE_URL": "https://christinatang32-hue.github.io/descriptive-geometry"
+  },
+  "ai": {
+    "binding": "AI"
+  },
+  "r2_buckets": [
+    {
+      "binding": "ASSIGNMENTS",
+      "bucket_name": "descriptive-geometry-submissions"
+    }
+  ],
+  "triggers": {
+    "crons": ["0 18 * * *"]
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "descriptive-geometry-learning",
+      "database_id": "a865bf96-c630-4c8a-b174-86873216b38e"
+    }
+  ]
+}
