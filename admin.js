@@ -12,18 +12,31 @@
     if(!response.ok){const result=await response.json().catch(()=>({}));if(result.error==='Password change required'){location.replace('teacher-password.html');throw Error('请先修改初始密码。')}throw Error(result.error||'记录服务暂不可用。')}
     return response.json();
   }
+  const today=new Date(),schoolStart=today.getMonth()>=7?today.getFullYear():today.getFullYear()-1;
+  const defaultYear=`${schoolStart}-${schoolStart+1}`,defaultSemester=today.getMonth()>=7||today.getMonth()===0?1:2;
+  $('manual-year').value=defaultYear;$('upload-year').value=defaultYear;
+  $('manual-semester').value=String(defaultSemester);$('upload-semester').value=String(defaultSemester);
+  const termKey=(year,semester)=>year+'|'+semester;
+  const validYear=value=>/^20\d{2}-20\d{2}$/.test(value)&&Number(value.slice(5))===Number(value.slice(0,4))+1;
   const selectedGroup=()=>$('group-filter').value||'all';
-  const groupQuery=()=>'?groupId='+encodeURIComponent(selectedGroup());
+  const selectedTerm=()=>{const [academicYear,semester]=$('term-filter').value.split('|');return{academicYear,semester:Number(semester)}};
+  const groupQuery=()=>{const term=selectedTerm();return '?groupId='+encodeURIComponent(selectedGroup())+'&academicYear='+encodeURIComponent(term.academicYear)+'&semester='+term.semester};
   const cohortSort=(a,b)=>{
     const year=value=>{const match=String(value).match(/(\d{2})\d{2}$/);return match?Number(match[1]):999};
-    return year(a.cohort)-year(b.cohort)||a.cohort.localeCompare(b.cohort,'zh-CN');
+    return year(b.cohort)-year(a.cohort)||a.cohort.localeCompare(b.cohort,'zh-CN');
+  };
+  const mainClassLabel=students=>{
+    const year=className=>{const match=className.match(/(\d{2})\d{2}$/);return match?Number(match[1]):-1};
+    const classes=[...new Set(students.map(student=>student.className))];
+    const latest=Math.max(...classes.map(year));
+    return classes.filter(className=>year(className)===latest).sort((a,b)=>a.localeCompare(b,'zh-CN')).join('、').slice(0,100);
   };
   function renderRows(){
     $('students').textContent=rows.length;
     $('sessions').textContent=rows.reduce((n,r)=>n+r.sessions,0);
     $('duration').textContent=fmt(rows.reduce((n,r)=>n+r.totalSeconds,0));
     $('rows').replaceChildren();
-    if(!rows.length){const tr=document.createElement('tr'),td=document.createElement('td');td.colSpan=9;td.className='empty';td.textContent='该上课头尚无学生名单';tr.append(td);$('rows').append(tr)}
+    if(!rows.length){const tr=document.createElement('tr'),td=document.createElement('td');td.colSpan=9;td.className='empty';td.textContent='该授课班级尚无学生名单';tr.append(td);$('rows').append(tr)}
     for(const r of rows){const tr=document.createElement('tr');for(const value of [r.studentId,r.name,r.cohort||'—',r.sessions,fmt(r.lectureSeconds),fmt(r.exampleSeconds),fmt(r.assignmentSeconds),fmt(r.totalSeconds),r.lastSeen?new Date(r.lastSeen).toLocaleString('zh-CN'):'—']){const td=document.createElement('td');td.textContent=String(value);tr.append(td)}$('rows').append(tr)}
   }
   function chart(svgId,series,labels){
@@ -54,10 +67,27 @@
   }
   async function loadGroups(){
     const data=await request('/api/admin/groups');groups=data.groups||[];
-    const filter=$('group-filter'),manualSelect=$('manual-group'),previous=filter.value;
-    filter.replaceChildren(new Option('全部上课头','all'));manualSelect.replaceChildren(new Option('请选择',''));
-    for(const group of groups){const label=`${group.label}（${group.students} 人）`;filter.add(new Option(label,group.id));manualSelect.add(new Option(label,group.id))}
-    filter.value=groups.some(group=>group.id===previous)?previous:'all';
+    const termSelect=$('term-filter'),previousTerm=termSelect.value,previousGroup=$('group-filter').value;
+    const terms=[...new Set([termKey(defaultYear,defaultSemester),...groups.map(group=>termKey(group.academicYear,group.semester))])]
+      .sort((a,b)=>b.localeCompare(a));
+    termSelect.replaceChildren(...terms.map(value=>{const [year,semester]=value.split('|');return new Option(`${year} 学年第 ${semester} 学期`,value)}));
+    termSelect.value=terms.includes(previousTerm)?previousTerm:termKey(defaultYear,defaultSemester);
+    updateGroupFilter(previousGroup);updateManualGroups();
+  }
+  function updateGroupFilter(previous='all'){
+    const term=$('term-filter').value,filter=$('group-filter');
+    filter.replaceChildren(new Option('全部授课班级','all'));
+    for(const group of groups.filter(item=>termKey(item.academicYear,item.semester)===term))
+      filter.add(new Option(`${group.label}（${group.students} 人）`,group.id));
+    filter.value=[...filter.options].some(option=>option.value===previous)?previous:'all';
+  }
+  function updateManualGroups(){
+    const term=termKey($('manual-year').value.trim(),$('manual-semester').value);
+    const manualSelect=$('manual-group'),previous=manualSelect.value;
+    manualSelect.replaceChildren(new Option('按所填班级自动建立',''));
+    for(const group of groups.filter(item=>termKey(item.academicYear,item.semester)===term))
+      manualSelect.add(new Option(`${group.label}（${group.students} 人）`,group.id));
+    manualSelect.value=[...manualSelect.options].some(option=>option.value===previous)?previous:'';
   }
   async function loadRosterSummary(){
     const data=await request('/api/admin/roster/summary'+groupQuery());$('cohort-list').replaceChildren();
@@ -68,7 +98,12 @@
     try{await loadGroups();const data=await request('/api/admin/summary'+groupQuery());rows=data.students||[];renderRows();renderTrend(data.trend);await loadRosterSummary()}
     catch(err){error.textContent=err.message||'读取失败'}finally{$('load').disabled=false}
   }
-  $('load').addEventListener('click',load);$('group-filter').addEventListener('change',load);load();
+  $('load').addEventListener('click',load);
+  $('term-filter').addEventListener('change',()=>{updateGroupFilter();load()});
+  $('group-filter').addEventListener('change',load);
+  $('manual-year').addEventListener('input',updateManualGroups);
+  $('manual-semester').addEventListener('change',updateManualGroups);
+  load();
   async function parseExcel(file){
     if(!window.XLSX)throw Error('Excel 读取组件未加载，请刷新页面重试。');
     let workbook;try{workbook=XLSX.read(await file.arrayBuffer(),{type:'array',cellText:true,cellDates:false})}
@@ -95,7 +130,7 @@
         const rowNumber=firstRow+index+1;
         if(!/^[0-9A-Za-z-]{4,24}$/.test(studentId)||name.length<2||name.length>30||!/^[\p{L}\p{N}\s_-]{1,40}$/u.test(className))throw Error(`工作表“${sheetName}”第 ${rowNumber} 行学号、姓名或班级格式不正确。学号若以 0 开头，请在 Excel 中设为文本。`);
         if(seen.has(studentId))throw Error(`工作表“${sheetName}”第 ${rowNumber} 行学号重复：${studentId}`);
-        seen.add(studentId);students.push({studentId,name,className});
+        seen.add(studentId);students.push({studentId,name,className,position:students.length+1});
         if(students.length>10000)throw Error('单次最多上传 10000 人，请拆分文件。');
       }
       if(!students.length)throw Error(`工作表“${sheetName}”没有可上传的学生。`);
@@ -107,36 +142,40 @@
     event.preventDefault();const status=$('roster-status'),button=$('roster-upload'),file=$('roster-file').files[0];
     status.textContent='';if(!api()){status.textContent='尚未配置学习记录服务，不能上传名单。';return}
     if(!file||!/^.+\.(xlsx|xls)$/i.test(file.name)||file.size>10*1024*1024){status.textContent='请选择不超过 10 MB 的 .xlsx 或 .xls 文件。';return}
+    const academicYear=$('upload-year').value.trim(),semester=Number($('upload-semester').value);
+    if(!validYear(academicYear)){status.textContent='学年请填写如 2026-2027 的格式。';return}
     button.disabled=true;let completed=0;
     try{
       const students=await parseExcel(file);
-      const created=await request('/api/admin/groups/create',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({label:(file.name.replace(/\.(xlsx|xls)$/i,'')+' · '+new Date().toLocaleString('zh-CN')).slice(0,100),sourceKind:'excel'})});
+      const label=mainClassLabel(students);
+      const created=await request('/api/admin/groups/create',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({label,academicYear,semester,sourceKind:'excel'})});
       for(let i=0;i<students.length;i+=50){
         const chunk=students.slice(i,i+50);
         await request('/api/admin/roster/import',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({groupId:created.id,students:chunk})});
         completed+=chunk.length;status.textContent=`已上传 ${completed} / ${students.length} 人…`;
       }
-      status.textContent=`名单上传完成：${completed} 人。`;
+      status.textContent=`名单上传完成：${completed} 人；授课班级：${label}。`;
       $('roster-file').value='';
-      await load();
+      await loadGroups();$('term-filter').value=termKey(academicYear,semester);updateGroupFilter(created.id);await load();
     }catch(err){status.textContent=`上传中止（已完成 ${completed} 人）：${err.message||'请重试。'}`}
     finally{button.disabled=false}
   });
   manual.addEventListener('submit',async event=>{
     event.preventDefault();
-    const status=$('manual-status'),button=$('manual-add'),label=$('new-group-name').value.trim();
+    const status=$('manual-status'),button=$('manual-add');
     const student={studentId:$('manual-id').value.trim(),name:$('manual-name').value.trim(),className:$('manual-class').value.trim()};
+    const academicYear=$('manual-year').value.trim(),semester=Number($('manual-semester').value);
     status.textContent='';
     if(!/^[0-9A-Za-z-]{4,24}$/.test(student.studentId)||student.name.length<2||student.name.length>30||!basicClass(student.className)){status.textContent='请核对学号、姓名和班级。';return}
-    if(!label&&!$('manual-group').value){status.textContent='请选择上课头，或填写新建上课头名称。';return}
+    if(!validYear(academicYear)){status.textContent='学年请填写如 2026-2027 的格式。';return}
     button.disabled=true;
     try{
       let groupId=$('manual-group').value;
-      if(label){const created=await request('/api/admin/groups/create',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({label,sourceKind:'manual'})});groupId=created.id}
+      if(!groupId){const created=await request('/api/admin/groups/create',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({label:student.className,academicYear,semester,sourceKind:'manual'})});groupId=created.id}
       await request('/api/admin/roster/import',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({groupId,students:[student]})});
       status.textContent=`已添加：${student.name}（${student.studentId}）。`;
-      $('manual-id').value='';$('manual-name').value='';$('manual-class').value='';$('new-group-name').value='';
-      await load();$('manual-group').value=groupId;
+      $('manual-id').value='';$('manual-name').value='';$('manual-class').value='';
+      await loadGroups();$('term-filter').value=termKey(academicYear,semester);updateGroupFilter(groupId);await load();$('manual-group').value=groupId;
     }catch(err){status.textContent='添加失败：'+(err.message||'请重试。')}
     finally{button.disabled=false}
   });

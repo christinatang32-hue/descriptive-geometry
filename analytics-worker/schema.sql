@@ -16,14 +16,18 @@ CREATE TABLE IF NOT EXISTS teaching_groups (
   id TEXT PRIMARY KEY,
   owner_id TEXT NOT NULL REFERENCES teacher_accounts(employee_id),
   label TEXT NOT NULL,
+  academic_year TEXT NOT NULL,
+  semester INTEGER NOT NULL,
   source_kind TEXT NOT NULL,
   created_at INTEGER NOT NULL,
   updated_at INTEGER NOT NULL
 );
-CREATE INDEX IF NOT EXISTS teaching_groups_owner_idx ON teaching_groups(owner_id,created_at);
+CREATE INDEX IF NOT EXISTS teaching_groups_owner_idx ON teaching_groups(owner_id,academic_year,semester,created_at);
+CREATE UNIQUE INDEX IF NOT EXISTS teaching_groups_term_label_idx ON teaching_groups(owner_id,academic_year,semester,label);
 CREATE TABLE IF NOT EXISTS teaching_group_students (
   group_id TEXT NOT NULL REFERENCES teaching_groups(id),
   student_id TEXT NOT NULL REFERENCES roster(student_id),
+  position INTEGER NOT NULL DEFAULT 0,
   PRIMARY KEY(group_id,student_id)
 );
 CREATE INDEX IF NOT EXISTS teaching_group_students_student_idx ON teaching_group_students(student_id);
