@@ -51,7 +51,32 @@
     const form=document.getElementById('login-form'),button=document.getElementById('login-button'),error=document.getElementById('login-error');
     const api=()=>String(window.COURSE_CONFIG?.apiBase||'').replace(/\/$/,'');
     const next=()=>{const raw=new URLSearchParams(location.search).get('next');if(!raw)return'catalog.html';try{const u=new URL(raw,location.href);return u.origin===location.origin&&u.pathname.startsWith(location.pathname.replace(/[^/]+$/,''))?u.href:'catalog.html'}catch{return'catalog.html'}};
-    form.addEventListener('submit',async e=>{e.preventDefault();error.textContent='';const studentId=form.studentId.value.trim(),name=form.studentName.value.trim();if(!/^[0-9A-Za-z-]{4,24}$/.test(studentId)){error.textContent='学号/工号请输入 4–24 位字母、数字或短横线。';return}if(name.length<2||name.length>30){error.textContent='姓名请输入 2–30 个字符。';return}button.disabled=true;try{let record={studentId,name,demo:true};let role='student';if(api()){const response=await fetch(api()+'/api/session/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({studentId,name})});if(response.status===403)throw Error('学号/工号与姓名不匹配，请核对后重试。');if(!response.ok)throw Error('学习记录服务暂不可用，请稍后重试。');const data=await response.json();role=data.role;record={studentId,name,sessionId:data.sessionId,token:data.token,demo:false}}if(role==='teacher'){sessionStorage.removeItem('dg-study-session');sessionStorage.setItem('dg-teacher-session',JSON.stringify(record));location.href='admin.html'}else{sessionStorage.removeItem('dg-teacher-session');sessionStorage.setItem('dg-study-session',JSON.stringify(record));location.href=next()}}catch(err){error.textContent=err.message||'登录失败，请稍后重试。';button.disabled=false}});
+    form.addEventListener('submit',async e=>{
+      e.preventDefault();error.textContent='';
+      const studentId=document.getElementById('student-id').value.trim();
+      const name=document.getElementById('student-name').value.trim();
+      if(!/^[0-9A-Za-z-]{4,24}$/.test(studentId)){error.textContent='学号/工号请输入 4–24 位字母、数字或短横线。';return}
+      if(name.length<2||name.length>30){error.textContent='姓名请输入 2–30 个字符。';return}
+      button.disabled=true;
+      try{
+        if(document.readyState==='loading')await new Promise(resolve=>document.addEventListener('DOMContentLoaded',resolve,{once:true}));
+        if(!api())throw Error('登录服务尚未加载，请刷新页面后重试。');
+        const response=await fetch(api()+'/api/session/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({studentId,name})});
+        if(response.status===403)throw Error('学号/工号与姓名不匹配，请核对后重试。');
+        if(!response.ok)throw Error('登录服务暂不可用，请稍后重试。');
+        const data=await response.json();
+        const record={studentId,name,sessionId:data.sessionId,token:data.token,demo:false};
+        if(data.role==='teacher'){
+          sessionStorage.removeItem('dg-study-session');
+          sessionStorage.setItem('dg-teacher-session',JSON.stringify(record));
+          location.href='admin.html';
+        }else{
+          sessionStorage.removeItem('dg-teacher-session');
+          sessionStorage.setItem('dg-study-session',JSON.stringify(record));
+          location.href=next();
+        }
+      }catch(err){error.textContent=err instanceof TypeError?'无法连接登录服务，请检查网络后重试。':err.message||'登录失败，请稍后重试。';button.disabled=false}
+    });
   })();
   </script>
 </body>
