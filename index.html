@@ -40,18 +40,18 @@
         <section class="panel" aria-labelledby="course-title">
           <h1 class="course-title" id="course-title">《画法几何及工程制图》<span>学习平台</span></h1>
           <form id="login-form">
-            <label for="student-id">学号<input id="student-id" name="studentId" autocomplete="username" maxlength="24" required placeholder="请输入学号"></label>
+            <label for="student-id">学号/工号<input id="student-id" name="studentId" autocomplete="username" maxlength="24" required placeholder="请输入学号或工号"></label>
             <label for="student-name">姓名<input id="student-name" name="studentName" autocomplete="name" maxlength="30" required placeholder="请输入姓名"></label>
             <button class="login-button" type="submit" id="login-button">登录</button>
             <p class="error" id="login-error" role="alert"></p>
           </form>
           <p class="mode" id="service-mode">正在检查学习记录服务…</p>
-          <footer class="below"><button type="button" id="privacy-link">学习记录说明</button><a href="admin.html">教师统计入口</a></footer>
+          <footer class="below"><button type="button" id="privacy-link">学习记录说明</button></footer>
         </section>
       </div>
     </div>
   </main>
-  <dialog id="privacy-dialog" aria-labelledby="privacy-title"><h3 id="privacy-title">学习记录说明</h3><p>登录时按授课教师上传的名单核对学号与姓名。平台记录访问页面及有效学习时长；上传习题作业时，还会保存作业照片及 AI 初评结果。这些资料供课程教学与学情统计使用，保存三年。名单核对无法证明操作者本人身份。</p><form method="dialog"><button>知道了</button></form></dialog>
+  <dialog id="privacy-dialog" aria-labelledby="privacy-title"><h3 id="privacy-title">学习记录说明</h3><p>学生登录时按教师上传的名单核对学号与姓名；教师登录时核对服务端教师名单中的工号与姓名。平台记录学生访问页面及有效学习时长；上传习题作业时，还会保存作业照片及 AI 初评结果。这些资料供课程教学与学情统计使用，保存五年。名单核对无法证明操作者本人身份。</p><form method="dialog"><button>知道了</button></form></dialog>
   <script>
   (()=>{
     const form=document.getElementById('login-form'),button=document.getElementById('login-button'),error=document.getElementById('login-error'),mode=document.getElementById('service-mode');
@@ -60,7 +60,7 @@
     const updateMode=()=>{mode.textContent=api()?'学习记录服务已接入。':'本地演示模式：可浏览课程，学习记录暂不上传。'};
     document.addEventListener('DOMContentLoaded',updateMode);updateMode();
     const next=()=>{const raw=new URLSearchParams(location.search).get('next');if(!raw)return'catalog.html';try{const u=new URL(raw,location.href);return u.origin===location.origin&&u.pathname.startsWith(location.pathname.replace(/[^/]+$/,''))?u.href:'catalog.html'}catch{return'catalog.html'}};
-    form.addEventListener('submit',async e=>{e.preventDefault();error.textContent='';const studentId=form.studentId.value.trim(),name=form.studentName.value.trim();if(!/^[0-9A-Za-z-]{4,24}$/.test(studentId)){error.textContent='学号请输入 4–24 位字母、数字或短横线。';return}if(name.length<2||name.length>30){error.textContent='姓名请输入 2–30 个字符。';return}button.disabled=true;try{let record={studentId,name,demo:true};if(api()){const response=await fetch(api()+'/api/session/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({studentId,name})});if(response.status===403)throw Error('学号和姓名与教师上传的名单不匹配，请核对后重试。');if(!response.ok)throw Error('学习记录服务暂不可用，请稍后重试。');const data=await response.json();record={studentId,name,sessionId:data.sessionId,token:data.token,demo:false}}sessionStorage.setItem('dg-study-session',JSON.stringify(record));location.href=next()}catch(err){error.textContent=err.message||'登录失败，请稍后重试。';button.disabled=false}});
+    form.addEventListener('submit',async e=>{e.preventDefault();error.textContent='';const studentId=form.studentId.value.trim(),name=form.studentName.value.trim();if(!/^[0-9A-Za-z-]{4,24}$/.test(studentId)){error.textContent='学号/工号请输入 4–24 位字母、数字或短横线。';return}if(name.length<2||name.length>30){error.textContent='姓名请输入 2–30 个字符。';return}button.disabled=true;try{let record={studentId,name,demo:true};let role='student';if(api()){const response=await fetch(api()+'/api/session/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({studentId,name})});if(response.status===403)throw Error('学号/工号与姓名不匹配，请核对后重试。');if(!response.ok)throw Error('学习记录服务暂不可用，请稍后重试。');const data=await response.json();role=data.role;record={studentId,name,sessionId:data.sessionId,token:data.token,demo:false}}if(role==='teacher'){sessionStorage.removeItem('dg-study-session');sessionStorage.setItem('dg-teacher-session',JSON.stringify(record));location.href='admin.html'}else{sessionStorage.removeItem('dg-teacher-session');sessionStorage.setItem('dg-study-session',JSON.stringify(record));location.href=next()}}catch(err){error.textContent=err.message||'登录失败，请稍后重试。';button.disabled=false}});
   })();
   </script>
 </body>

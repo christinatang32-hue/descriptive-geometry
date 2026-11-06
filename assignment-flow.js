@@ -13,7 +13,7 @@
       <p id="assignment-status" class="hub-status" role="status" aria-live="polite"></p>
       <div class="hub-actions"><button type="button" class="secondary" id="view-result" disabled>查看结果</button><button type="button" id="start-learning" disabled>开始学习</button></div>
       <div id="result-panel" class="result-panel" hidden><h2>AI 初评结果</h2><p id="result-summary" class="result-summary"></p><div class="marked-wrap"><img id="student-photo" alt="学生上传的作业照片"><svg id="error-marks" viewBox="0 0 1000 1000" preserveAspectRatio="none" aria-label="红色错误位置标注"></svg></div><ol id="issue-list" class="issue-list"></ol></div>
-      <p class="hub-note">AI 初评可能漏检或误判。请结合题图复核红色标注，学习时再对照完整作图过程。作业照片和批改记录保存三年。</p>
+      <p class="hub-note">AI 初评可能漏检或误判。请结合题图复核红色标注，学习时再对照完整作图过程。作业照片和批改记录保存五年。</p>
     </div>`;
   const app=document.getElementById('app');
   app.before(hub);
