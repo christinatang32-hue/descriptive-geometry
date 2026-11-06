@@ -53,6 +53,11 @@ export async function adminRoute(request,env,url,now,cors,account,purgeExpired){
   const owner=account.employeeId;
   if(url.pathname==='/api/admin/me'&&request.method==='GET')
     return json({employeeId:owner,name:account.name,isAdmin:account.isAdmin},200,cors);
+  if(url.pathname==='/api/admin/teachers'&&request.method==='GET'){
+    if(!account.isAdmin)return json({error:'Administrator required'},403,cors);
+    const result=await env.DB.prepare('SELECT employee_id AS employeeId,name,is_admin AS isAdmin,created_at AS createdAt FROM teacher_accounts WHERE active=1 ORDER BY created_at,employee_id').all();
+    return json({teachers:(result.results||[]).map(row=>({...row,isAdmin:Boolean(row.isAdmin)}))},200,cors);
+  }
   if(url.pathname==='/api/admin/teachers/create'&&request.method==='POST'){
     if(!account.isAdmin)return json({error:'Administrator required'},403,cors);
     const raw=await request.text();if(raw.length>2000)return json({error:'Teacher payload too large'},413,cors);
@@ -68,6 +73,48 @@ export async function adminRoute(request,env,url,now,cors,account,purgeExpired){
       env.DB.prepare('INSERT INTO teacher_credentials(employee_id,password_hash,must_change,updated_at) VALUES(?,?,1,?)').bind(employeeId,hash,now)
     ]);
     return json({employeeId,name,initialPassword:password,mustChange:true},201,cors);
+  }
+  if(url.pathname==='/api/admin/teachers/update'&&request.method==='POST'){
+    if(!account.isAdmin)return json({error:'Administrator required'},403,cors);
+    const raw=await request.text();if(raw.length>2000)return json({error:'Teacher payload too large'},413,cors);
+    const input=JSON.parse(raw),employeeId=input.employeeId,newEmployeeId=input.newEmployeeId,name=typeof input.name==='string'?normalize(input.name):'';
+    if(!validEmployeeId(employeeId)||!validEmployeeId(newEmployeeId)||!validName(name))return json({error:'Invalid teacher details'},400,cors);
+    const existing=await env.DB.prepare('SELECT employee_id,is_admin FROM teacher_accounts WHERE employee_id=? AND active=1').bind(employeeId).first();
+    if(!existing)return json({error:'Teacher not found'},404,cors);
+    if(existing.is_admin)return json({error:'Administrator account cannot be edited here'},403,cors);
+    if(employeeId!==newEmployeeId){
+      const collision=await env.DB.prepare('SELECT employee_id FROM teacher_accounts WHERE employee_id=?').bind(newEmployeeId).first();
+      const student=await env.DB.prepare('SELECT student_id FROM roster WHERE student_id=?').bind(newEmployeeId).first();
+      if(collision||student)return json({error:'ID already in use'},409,cors);
+      await env.DB.batch([
+        env.DB.prepare('INSERT INTO teacher_accounts(employee_id,name,is_admin,active,created_at) SELECT ?,?,0,1,created_at FROM teacher_accounts WHERE employee_id=?').bind(newEmployeeId,name,employeeId),
+        env.DB.prepare('UPDATE teacher_credentials SET employee_id=? WHERE employee_id=?').bind(newEmployeeId,employeeId),
+        env.DB.prepare('UPDATE teaching_groups SET owner_id=? WHERE owner_id=?').bind(newEmployeeId,employeeId),
+        env.DB.prepare('DELETE FROM teacher_sessions WHERE employee_id=?').bind(employeeId),
+        env.DB.prepare('DELETE FROM teacher_accounts WHERE employee_id=?').bind(employeeId)
+      ]);
+    }else{
+      await env.DB.batch([
+        env.DB.prepare('UPDATE teacher_accounts SET name=? WHERE employee_id=?').bind(name,employeeId),
+        env.DB.prepare('DELETE FROM teacher_sessions WHERE employee_id=?').bind(employeeId)
+      ]);
+    }
+    return json({employeeId:newEmployeeId,name},200,cors);
+  }
+  if(url.pathname==='/api/admin/teachers/delete'&&request.method==='POST'){
+    if(!account.isAdmin)return json({error:'Administrator required'},403,cors);
+    const raw=await request.text();if(raw.length>2000)return json({error:'Teacher payload too large'},413,cors);
+    const employeeId=JSON.parse(raw).employeeId;
+    if(!validEmployeeId(employeeId))return json({error:'Invalid teacher details'},400,cors);
+    const existing=await env.DB.prepare('SELECT is_admin FROM teacher_accounts WHERE employee_id=? AND active=1').bind(employeeId).first();
+    if(!existing)return json({error:'Teacher not found'},404,cors);
+    if(existing.is_admin)return json({error:'Administrator account cannot be deleted here'},403,cors);
+    await env.DB.batch([
+      env.DB.prepare('DELETE FROM teacher_sessions WHERE employee_id=?').bind(employeeId),
+      env.DB.prepare('DELETE FROM teacher_credentials WHERE employee_id=?').bind(employeeId),
+      env.DB.prepare('UPDATE teacher_accounts SET active=0 WHERE employee_id=?').bind(employeeId)
+    ]);
+    return json({deleted:true},200,cors);
   }
   if(url.pathname==='/api/admin/groups/create'&&request.method==='POST'){
     const raw=await request.text();if(raw.length>2000)return json({error:'Group payload too large'},413,cors);
@@ -122,6 +169,29 @@ export async function adminRoute(request,env,url,now,cors,account,purgeExpired){
       WHERE g.owner_id=? AND (? IS NULL OR g.academic_year=?) AND (? IS NULL OR g.semester=?) AND (?='all' OR g.id=?)
       GROUP BY r.cohort`).bind(...scopeBindings(owner,scope)).all();
     return json({cohorts:result.results||[]},200,cors);
+  }
+  if(url.pathname==='/api/admin/students/remove'&&request.method==='POST'){
+    const raw=await request.text();if(raw.length>2000)return json({error:'Student payload too large'},413,cors);
+    const input=JSON.parse(raw);
+    if(!validStudentId(input.studentId))return json({error:'Invalid student'},400,cors);
+    const memberships=await env.DB.prepare(`SELECT DISTINCT g.owner_id AS ownerId FROM teaching_group_students gs
+      JOIN teaching_groups g ON g.id=gs.group_id WHERE gs.student_id=?`).bind(input.studentId).all();
+    const owners=memberships.results||[];
+    if(!owners.some(row=>row.ownerId===owner))return json({error:'Student not in your teaching classes'},404,cors);
+    if(!account.isAdmin&&owners.some(row=>row.ownerId!==owner))return json({error:'Student also belongs to another teacher; contact administrator'},409,cors);
+    const submissions=await env.DB.prepare('SELECT object_key FROM submissions WHERE student_id=?').bind(input.studentId).all();
+    if((submissions.results||[]).length&&!env.ASSIGNMENTS)return json({error:'Image storage unavailable'},503,cors);
+    for(const row of submissions.results||[])await env.ASSIGNMENTS.delete(row.object_key);
+    await env.DB.batch([
+      env.DB.prepare('DELETE FROM submissions WHERE student_id=?').bind(input.studentId),
+      env.DB.prepare('DELETE FROM page_activity WHERE session_id IN (SELECT id FROM sessions WHERE student_id=?)').bind(input.studentId),
+      env.DB.prepare('DELETE FROM sessions WHERE student_id=?').bind(input.studentId),
+      env.DB.prepare('DELETE FROM teaching_group_students WHERE student_id=?').bind(input.studentId),
+      env.DB.prepare('DELETE FROM student_accounts WHERE student_id=?').bind(input.studentId),
+      env.DB.prepare('DELETE FROM roster WHERE student_id=?').bind(input.studentId),
+      env.DB.prepare('DELETE FROM students WHERE student_id=?').bind(input.studentId)
+    ]);
+    return json({deleted:true},200,cors);
   }
   if(url.pathname==='/api/admin/summary'&&request.method==='GET'){
     const scope=await groupScope(url,env,owner);

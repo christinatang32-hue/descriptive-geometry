@@ -22,7 +22,7 @@ async function teacher(request,env,now){
   const id=request.headers.get('X-Session-Id')||'';
   const token=(request.headers.get('Authorization')||'').replace(/^Bearer /,'');
   if(!id||!token)return null;
-  const row=await env.DB.prepare('SELECT s.employee_id,s.token_hash,s.started_at,c.must_change,a.name,a.is_admin FROM teacher_sessions s JOIN teacher_credentials c ON c.employee_id=s.employee_id JOIN teacher_accounts a ON a.employee_id=s.employee_id WHERE s.id=?').bind(id).first();
+  const row=await env.DB.prepare('SELECT s.employee_id,s.token_hash,s.started_at,c.must_change,a.name,a.is_admin FROM teacher_sessions s JOIN teacher_credentials c ON c.employee_id=s.employee_id JOIN teacher_accounts a ON a.employee_id=s.employee_id WHERE s.id=? AND a.active=1').bind(id).first();
   if(!row||row.token_hash!==await tokenHash(token)||now-row.started_at>12*3600*1000)return null;
   return {employeeId:row.employee_id,name:row.name,isAdmin:Boolean(row.is_admin),mustChange:Boolean(row.must_change),sessionId:id};
 }
@@ -72,8 +72,9 @@ export default {
       if(url.pathname==='/api/session/start'&&request.method==='POST'){
         const input=await readJson(request);
         if(!validStudentId(input.studentId)||!validName(input.name)||typeof input.password!=='string'||input.password.length>128)return json({error:'Invalid login'},400,cors);
-        const id=input.studentId,teacherAccount=await env.DB.prepare('SELECT name FROM teacher_accounts WHERE employee_id=?').bind(id).first();
+        const id=input.studentId,teacherAccount=await env.DB.prepare('SELECT name,active FROM teacher_accounts WHERE employee_id=?').bind(id).first();
         if(teacherAccount){
+          if(!teacherAccount.active)return json({error:'Invalid credentials'},403,cors);
           const credential=await env.DB.prepare('SELECT password_hash,must_change FROM teacher_credentials WHERE employee_id=?').bind(id).first();
           if(normalizedName(input.name)!==teacherAccount.name||!credential||!await verifyPassword(input.password,credential.password_hash))return json({error:'Invalid credentials'},403,cors);
           const sessionId=crypto.randomUUID(),token=randomToken();

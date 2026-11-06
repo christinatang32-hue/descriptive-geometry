@@ -15,7 +15,9 @@
   async function loadIdentity(){
     try{
       const person=await request('/api/admin/me');
-      if(person.isAdmin){$('role-badge').textContent=`${person.name} · 管理员`;$('role-badge').hidden=false;$('teacher-management').hidden=false}
+      $('role-badge').textContent=`${person.name} · ${person.isAdmin?'管理员':'教师'}`;
+      $('role-badge').hidden=false;
+      $('teacher-management-link').hidden=!person.isAdmin;
     }catch(cause){error.textContent=cause.message||'无法读取教师身份。'}
   }
   const today=new Date(),schoolStart=today.getMonth()>=7?today.getFullYear():today.getFullYear()-1;
@@ -43,7 +45,20 @@
     $('duration').textContent=fmt(rows.reduce((n,r)=>n+r.totalSeconds,0));
     $('rows').replaceChildren();
     if(!rows.length){const tr=document.createElement('tr'),td=document.createElement('td');td.colSpan=9;td.className='empty';td.textContent='该授课班级尚无学生名单';tr.append(td);$('rows').append(tr)}
-    for(const r of rows){const tr=document.createElement('tr');for(const value of [r.studentId,r.name,r.cohort||'—',r.sessions,fmt(r.lectureSeconds),fmt(r.exampleSeconds),fmt(r.assignmentSeconds),fmt(r.totalSeconds),r.lastSeen?new Date(r.lastSeen).toLocaleString('zh-CN'):'—']){const td=document.createElement('td');td.textContent=String(value);tr.append(td)}$('rows').append(tr)}
+    for(const r of rows){
+      const tr=document.createElement('tr');
+      for(const [index,value] of [r.studentId,r.name,r.cohort||'—',r.sessions,fmt(r.lectureSeconds),fmt(r.exampleSeconds),fmt(r.assignmentSeconds),fmt(r.totalSeconds)].entries()){
+        const td=document.createElement('td');td.textContent=String(value);if(index>=3)td.className='num';tr.append(td);
+      }
+      const action=document.createElement('td'),button=document.createElement('button');button.type='button';button.className='row-delete';button.textContent='删除';
+      button.addEventListener('click',()=>deleteStudent(r,button));action.append(button);tr.append(action);$('rows').append(tr);
+    }
+  }
+  async function deleteStudent(student,button){
+    if(!confirm(`确定删除 ${student.name}（${student.studentId}）吗？该学生的名单、学习记录和作业照片将一并永久删除。`))return;
+    button.disabled=true;error.textContent='';
+    try{await request('/api/admin/students/remove',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({studentId:student.studentId})});await load()}
+    catch(cause){error.textContent=cause.message==='Student also belongs to another teacher; contact administrator'?'该学生还属于其他教师的授课班级，请联系管理员删除。':cause.message||'删除失败';button.disabled=false}
   }
   function chart(svgId,series,labels){
     const svg=$(svgId),ns='http://www.w3.org/2000/svg';svg.replaceChildren();
@@ -110,6 +125,52 @@
   $('manual-year').addEventListener('input',updateManualGroups);
   $('manual-semester').addEventListener('change',updateManualGroups);
   loadIdentity();load();
+  $('teacher-management-link').addEventListener('click',async()=>{
+    $('teacher-dialog').showModal();await loadTeachers();
+  });
+  $('teacher-close').addEventListener('click',()=>$('teacher-dialog').close());
+  async function loadTeachers(){
+    const status=$('teacher-list-status');status.textContent='正在读取教师信息…';
+    try{
+      const data=await request('/api/admin/teachers');$('teacher-rows').replaceChildren();
+      for(const person of data.teachers){
+        const tr=document.createElement('tr');
+        for(const value of [person.employeeId,person.name,person.isAdmin?'管理员':'教师']){const td=document.createElement('td');td.textContent=value;tr.append(td)}
+        const action=document.createElement('td');
+        if(!person.isAdmin){
+          const edit=document.createElement('button');edit.type='button';edit.className='secondary';edit.textContent='编辑';
+          edit.addEventListener('click',()=>editTeacher(person,tr));
+          const remove=document.createElement('button');remove.type='button';remove.className='row-delete';remove.textContent='删除';
+          remove.addEventListener('click',()=>deleteTeacher(person,remove));action.append(edit,remove);
+        }else action.textContent='—';
+        tr.append(action);$('teacher-rows').append(tr);
+      }
+      status.textContent=data.teachers.length?`共 ${data.teachers.length} 位教师。`:'暂无教师信息。';
+    }catch(cause){status.textContent=cause.message||'读取教师信息失败。'}
+  }
+  function editTeacher(person,tr){
+    const idInput=document.createElement('input'),nameInput=document.createElement('input');
+    idInput.value=person.employeeId;idInput.inputMode='numeric';idInput.maxLength=16;idInput.setAttribute('aria-label','教师工号');
+    nameInput.value=person.name;nameInput.maxLength=30;nameInput.setAttribute('aria-label','教师姓名');
+    tr.children[0].replaceChildren(idInput);tr.children[1].replaceChildren(nameInput);
+    const save=document.createElement('button'),cancel=document.createElement('button');
+    save.type=cancel.type='button';save.textContent='保存';cancel.textContent='取消';cancel.className='secondary';
+    cancel.addEventListener('click',loadTeachers);
+    save.addEventListener('click',async()=>{
+      const newEmployeeId=idInput.value.trim(),name=nameInput.value.trim();
+      if(!/^\d{6,16}$/.test(newEmployeeId)||name.length<2||name.length>30){$('teacher-list-status').textContent='请填写 6–16 位数字工号和 2–30 字的姓名。';return}
+      save.disabled=true;
+      try{await request('/api/admin/teachers/update',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({employeeId:person.employeeId,newEmployeeId,name})});await loadTeachers();$('teacher-list-status').textContent='教师信息已更新；该教师需重新登录。'}
+      catch(cause){$('teacher-list-status').textContent=cause.message==='ID already in use'?'工号已被使用。':cause.message||'保存失败。';save.disabled=false}
+    });
+    tr.lastElementChild.replaceChildren(save,cancel);idInput.focus();
+  }
+  async function deleteTeacher(person,button){
+    if(!confirm(`确定删除 ${person.name}（${person.employeeId}）吗？该教师将无法再登录，历史授课记录保留。`))return;
+    button.disabled=true;
+    try{await request('/api/admin/teachers/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({employeeId:person.employeeId})});await loadTeachers();$('teacher-list-status').textContent='教师已删除，登录已停用。'}
+    catch(cause){$('teacher-list-status').textContent=cause.message||'删除失败。';button.disabled=false}
+  }
   $('teacher-form').addEventListener('submit',async event=>{
     event.preventDefault();
     const employeeId=$('teacher-id').value.trim(),name=$('teacher-name').value.trim();
@@ -124,6 +185,7 @@
       $('teacher-credential').hidden=false;
       status.textContent='教师已添加，请复制初始密码并交给该教师。';
       $('teacher-form').reset();
+      await loadTeachers();
     }catch(cause){status.textContent=cause.message==='Teacher already exists'?'该工号已存在。':cause.message==='ID already belongs to a student'?'该号码已用于学生学号。':cause.message==='Administrator required'?'当前账号没有管理员权限。':cause.message||'添加教师失败。'}
     finally{button.disabled=false}
   });
