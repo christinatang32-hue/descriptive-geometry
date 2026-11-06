@@ -4,7 +4,9 @@ const PREFIX='pbkdf2-sha512-2x';
 const hex=bytes=>Array.from(bytes,byte=>byte.toString(16).padStart(2,'0')).join('');
 const unhex=value=>Uint8Array.from(value.match(/.{2}/g)||[],pair=>parseInt(pair,16));
 
-export const validPassword=password=>typeof password==='string'&&password.length>=10&&password.length<=128&&!/[\u0000-\u001f\u007f]/.test(password);
+const cleanPassword=password=>typeof password==='string'&&password.length>=6&&password.length<=128&&!/[\u0000-\u001f\u007f]/.test(password);
+export const validPassword=password=>cleanPassword(password)&&password.length>=10;
+export const validStudentPassword=password=>cleanPassword(password)&&password.length<=10;
 
 async function derive(password,salt,iterations){
   const key=await crypto.subtle.importKey('raw',encoder.encode(password),'PBKDF2',false,['deriveBits']);
@@ -17,7 +19,7 @@ async function deriveTwice(password,salt,iterations){
 }
 
 export async function createPasswordHash(password){
-  if(!validPassword(password))throw Error('Invalid password');
+  if(!cleanPassword(password))throw Error('Invalid password');
   const salt=crypto.getRandomValues(new Uint8Array(16));
   return `${PREFIX}$${ITERATIONS}$${hex(salt)}$${hex(await deriveTwice(password,salt,ITERATIONS))}`;
 }

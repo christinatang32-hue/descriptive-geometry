@@ -1,5 +1,5 @@
 import {assignmentRoute,purgeAssignments} from './assignment-api.js';
-import {createPasswordHash,validPassword,verifyPassword} from './password.js';
+import {createPasswordHash,validPassword,validStudentPassword,verifyPassword} from './password.js';
 import {adminRoute} from './teacher-admin.js';
 const DEFAULT_ORIGIN='https://christinatang32-hue.github.io';
 const encoder=new TextEncoder();
@@ -56,7 +56,7 @@ export default {
       if(url.pathname.startsWith('/api/assignment/'))return await assignmentRoute(request,env,url,now,cors);
       if(url.pathname==='/api/student/register'&&request.method==='POST'){
         const input=await readJson(request);
-        if(!validStudentId(input.studentId)||!validName(input.name)||!validCohort(input.className)||!validPhone(input.phone)||!validPassword(input.password)||input.password!==input.confirmPassword)
+        if(!validStudentId(input.studentId)||!validName(input.name)||!validCohort(input.className)||!validPhone(input.phone)||!validStudentPassword(input.password)||input.password!==input.confirmPassword)
           return json({error:'Invalid registration'},400,cors);
         const roster=await env.DB.prepare('SELECT name,cohort FROM roster WHERE student_id=?').bind(input.studentId).first();
         if(!roster||normalizedName(input.name)!==roster.name||input.className.trim()!==roster.cohort)
