@@ -55,7 +55,7 @@ export async function adminRoute(request,env,url,now,cors,account,purgeExpired){
     return json({employeeId:owner,name:account.name,isAdmin:account.isAdmin},200,cors);
   if(url.pathname==='/api/admin/teachers'&&request.method==='GET'){
     if(!account.isAdmin)return json({error:'Administrator required'},403,cors);
-    const result=await env.DB.prepare('SELECT employee_id AS employeeId,name,is_admin AS isAdmin,created_at AS createdAt FROM teacher_accounts WHERE active=1 ORDER BY created_at,employee_id').all();
+    const result=await env.DB.prepare("SELECT employee_id AS employeeId,name,is_admin AS isAdmin,created_at AS createdAt FROM teacher_accounts WHERE active=1 ORDER BY CASE WHEN employee_id='2017011104' THEN 0 ELSE 1 END,created_at,employee_id").all();
     return json({teachers:(result.results||[]).map(row=>({...row,isAdmin:Boolean(row.isAdmin)}))},200,cors);
   }
   if(url.pathname==='/api/admin/teachers/create'&&request.method==='POST'){

@@ -133,15 +133,17 @@
     const status=$('teacher-list-status');status.textContent='正在读取教师信息…';
     try{
       const data=await request('/api/admin/teachers');$('teacher-rows').replaceChildren();
+      data.teachers.sort((a,b)=>Number(b.employeeId==='2017011104')-Number(a.employeeId==='2017011104')||a.createdAt-b.createdAt||a.employeeId.localeCompare(b.employeeId));
       for(const person of data.teachers){
         const tr=document.createElement('tr');
         for(const value of [person.employeeId,person.name,person.isAdmin?'管理员':'教师']){const td=document.createElement('td');td.textContent=value;tr.append(td)}
         const action=document.createElement('td');
         if(!person.isAdmin){
+          const buttons=document.createElement('div');buttons.className='teacher-actions';
           const edit=document.createElement('button');edit.type='button';edit.className='secondary';edit.textContent='编辑';
           edit.addEventListener('click',()=>editTeacher(person,tr));
           const remove=document.createElement('button');remove.type='button';remove.className='row-delete';remove.textContent='删除';
-          remove.addEventListener('click',()=>deleteTeacher(person,remove));action.append(edit,remove);
+          remove.addEventListener('click',()=>deleteTeacher(person,remove));buttons.append(edit,remove);action.append(buttons);
         }else action.textContent='—';
         tr.append(action);$('teacher-rows').append(tr);
       }
@@ -163,7 +165,8 @@
       try{await request('/api/admin/teachers/update',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({employeeId:person.employeeId,newEmployeeId,name})});await loadTeachers();$('teacher-list-status').textContent='教师信息已更新；该教师需重新登录。'}
       catch(cause){$('teacher-list-status').textContent=cause.message==='ID already in use'?'工号已被使用。':cause.message||'保存失败。';save.disabled=false}
     });
-    tr.lastElementChild.replaceChildren(save,cancel);idInput.focus();
+    const buttons=document.createElement('div');buttons.className='teacher-actions';buttons.append(save,cancel);
+    tr.lastElementChild.replaceChildren(buttons);idInput.focus();
   }
   async function deleteTeacher(person,button){
     if(!confirm(`确定删除 ${person.name}（${person.employeeId}）吗？该教师将无法再登录，历史授课记录保留。`))return;

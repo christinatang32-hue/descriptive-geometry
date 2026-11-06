@@ -23,7 +23,7 @@
   const headers=()=>({Authorization:'Bearer '+session.token,'X-Session-Id':session.sessionId});
   async function call(path,options={}){
     const response=await fetch(api+path,{...options,headers:{...headers(),...(options.headers||{})}});
-    if(!response.ok){let message='批改服务暂不可用，请稍后重试。';try{const data=await response.json();if(response.status===401)message='登录已过期，请从首页重新登录。';else if(response.status===413)message='图片过大，请重新拍摄或压缩后上传。';else if(response.status===503)message='批改服务尚未配置或暂不可用。';else if(data.error==='Use a JPG, PNG or WebP image under 5 MB')message='请上传小于 5 MB 的 JPG 或 PNG 图片。'}catch{}throw Error(message)}
+    if(!response.ok){let message='批改服务暂不可用，请稍后重试。';try{const data=await response.json();if(response.status===401)message='登录已过期，请从首页重新登录。';else if(response.status===413)message='图片过大，请重新拍摄或压缩后上传。';else if(data.error==='Grading service not configured')message='批改服务尚未配置，请联系教师。';else if(data.error==='AI grade invalid')message='AI 未能生成可用的批改结果，请稍后重新上传。';else if(response.status===503)message='批改服务当前不可用，请稍后重试。';else if(data.error==='Use a JPG, PNG or WebP image under 5 MB')message='请上传小于 5 MB 的 JPG 或 PNG 图片。'}catch{}throw Error(message)}
     return response;
   }
   let latest=null,photoUrl=null;
@@ -52,14 +52,16 @@
     event.preventDefault();
     const file=$('assignment-photo').files[0];if(!file)return;
     const button=$('grade-button');button.disabled=true;$('view-result').disabled=true;$('start-learning').disabled=true;$('result-panel').hidden=true;
+    let seconds=0;
     status('正在上传并批改，请保持页面打开…');
+    const progress=setInterval(()=>{seconds+=5;status(`正在批改，已等待 ${seconds} 秒，请保持页面打开…`)},5000);
     try{
       const photo=await preparePhoto(file);
       const form=new FormData();form.set('page',page);form.set('photo',photo);
-      const response=await call('/api/assignment/grade',{method:'POST',body:form});
+      const response=await call('/api/assignment/grade',{method:'POST',body:form,signal:AbortSignal.timeout(120000)});
       latest=await response.json();$('view-result').disabled=false;
       status(latest.result.readable?'批改完成。请点击“查看结果”，再开始学习。':'照片无法可靠辨认，请查看结果并重新上传清晰照片。');
-    }catch(error){status(error.message,true)}finally{button.disabled=!api}
+    }catch(error){status(error.name==='TimeoutError'?'批改超过两分钟，请刷新页面检查结果；若仍无结果，请重新上传。':error.message||'网络连接中断，请重试。',true)}finally{clearInterval(progress);button.disabled=!api}
   });
   $('view-result').addEventListener('click',async()=>{
     if(!latest)return;

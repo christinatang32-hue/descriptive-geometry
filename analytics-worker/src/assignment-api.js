@@ -82,8 +82,16 @@ export async function assignmentRoute(request,env,url,now,cors){
       const ai=await env.AI.run(MODEL,{messages:[
         {role:'system',content:'你是谨慎的画法几何及工程制图教师。只输出有效 JSON，不给未经确认的分数。'},
         {role:'user',content:[{type:'text',text:prompt+(attempt?'\n上次输出格式或标注框无效，请严格修正 JSON 与每个问题的 box。':'')},...images]}
-      ],max_tokens:1200,temperature:0.1,reasoning_effort:'low',response_format:{type:'json_object'}});
-      try{grade=parseGrade(ai);break}catch(error){if(attempt===1)throw error}
+      ],max_completion_tokens:1200,temperature:0.1,reasoning_effort:'low',chat_template_kwargs:{enable_thinking:false},response_format:{type:'json_object'}});
+      try{grade=parseGrade(ai);break}catch(error){
+        const output=ai?.response??ai?.choices?.[0]?.message?.content;
+        let parsedKeys=[];
+        if(typeof output==='string'){
+          try{const match=output.match(/\{[\s\S]*\}/);if(match)parsedKeys=Object.keys(JSON.parse(match[0]))}catch{}
+        }else if(output&&typeof output==='object')parsedKeys=Object.keys(output);
+        console.error('AI grade parse',error.message,{responseType:typeof output,responseLength:typeof output==='string'?output.length:null,keyCount:parsedKeys.length,hasReadable:parsedKeys.includes('readable'),hasSummary:parsedKeys.includes('summary'),hasIssues:parsedKeys.includes('issues'),hasResponse:!!ai?.response,hasChoices:Array.isArray(ai?.choices),finishReason:ai?.choices?.[0]?.finish_reason,usage:ai?.usage?.completion_tokens});
+        if(attempt===1)return json({error:'AI grade invalid'},502,cors);
+      }
     }
     const id=crypto.randomUUID(),key=`${studentId}/${page}/${id}`;
     await env.ASSIGNMENTS.put(key,bytes,{httpMetadata:{contentType:file.type}});
