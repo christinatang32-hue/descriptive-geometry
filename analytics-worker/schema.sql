@@ -12,6 +12,21 @@ CREATE TABLE IF NOT EXISTS roster (
   imported_at INTEGER NOT NULL
 );
 CREATE INDEX IF NOT EXISTS roster_cohort_idx ON roster(cohort);
+CREATE TABLE IF NOT EXISTS teaching_groups (
+  id TEXT PRIMARY KEY,
+  owner_id TEXT NOT NULL REFERENCES teacher_accounts(employee_id),
+  label TEXT NOT NULL,
+  source_kind TEXT NOT NULL,
+  created_at INTEGER NOT NULL,
+  updated_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS teaching_groups_owner_idx ON teaching_groups(owner_id,created_at);
+CREATE TABLE IF NOT EXISTS teaching_group_students (
+  group_id TEXT NOT NULL REFERENCES teaching_groups(id),
+  student_id TEXT NOT NULL REFERENCES roster(student_id),
+  PRIMARY KEY(group_id,student_id)
+);
+CREATE INDEX IF NOT EXISTS teaching_group_students_student_idx ON teaching_group_students(student_id);
 CREATE TABLE IF NOT EXISTS student_accounts (
   student_id TEXT PRIMARY KEY,
   password_hash TEXT NOT NULL,

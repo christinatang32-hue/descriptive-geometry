@@ -1,5 +1,6 @@
 import {assignmentRoute,purgeAssignments} from './assignment-api.js';
 import {createPasswordHash,validPassword,verifyPassword} from './password.js';
+import {adminRoute} from './teacher-admin.js';
 const DEFAULT_ORIGIN='https://christinatang32-hue.github.io';
 const encoder=new TextEncoder();
 const json=(body,status=200,headers={})=>Response.json(body,{status,headers:{'Cache-Control':'no-store',...headers}});
@@ -10,7 +11,7 @@ const validName=name=>typeof name==='string'&&name.trim().length>=2&&name.trim()
 const validPage=page=>typeof page==='string'&&/^[A-Za-z0-9_.()-]{1,80}\.html$/.test(page);
 const validCohort=cohort=>typeof cohort==='string'&&/^[\p{L}\p{N}\s_-]{1,40}$/u.test(cohort.trim());
 const normalizedName=name=>name.trim().replace(/\s+/g,' ');
-const validPhone=phone=>typeof phone==='string'&&/^1[3-9]\d{9}$/.test(phone);
+const validPhone=phone=>typeof phone==='string'&&(phone===''||/^1[3-9]\d{9}$/.test(phone));
 async function readJson(request,limit=4096){
   const raw=await request.text();
   if(raw.length>limit)throw new RangeError('Payload too large');
@@ -32,7 +33,10 @@ async function purgeExpired(env,now){
     env.DB.prepare('DELETE FROM page_activity WHERE session_id IN (SELECT id FROM sessions WHERE started_at < ?)').bind(cutoff),
     env.DB.prepare('DELETE FROM sessions WHERE started_at < ?').bind(cutoff),
     env.DB.prepare('DELETE FROM teacher_sessions WHERE started_at < ?').bind(cutoff),
+    env.DB.prepare('DELETE FROM teaching_group_students WHERE group_id IN (SELECT id FROM teaching_groups WHERE updated_at < ?)').bind(cutoff),
+    env.DB.prepare('DELETE FROM teaching_groups WHERE updated_at < ?').bind(cutoff),
     env.DB.prepare('DELETE FROM roster WHERE imported_at < ?').bind(cutoff),
+    env.DB.prepare('DELETE FROM teaching_group_students WHERE NOT EXISTS (SELECT 1 FROM roster WHERE roster.student_id=teaching_group_students.student_id)'),
     env.DB.prepare('DELETE FROM student_accounts WHERE NOT EXISTS (SELECT 1 FROM roster WHERE roster.student_id=student_accounts.student_id)'),
     env.DB.prepare('DELETE FROM students WHERE NOT EXISTS (SELECT 1 FROM sessions WHERE sessions.student_id=students.student_id) AND NOT EXISTS (SELECT 1 FROM submissions WHERE submissions.student_id=students.student_id)'),
     env.DB.prepare('UPDATE students SET first_seen=(SELECT MIN(started_at) FROM sessions WHERE sessions.student_id=students.student_id),last_seen=(SELECT MAX(last_seen) FROM sessions WHERE sessions.student_id=students.student_id) WHERE EXISTS (SELECT 1 FROM sessions WHERE sessions.student_id=students.student_id)')
@@ -120,55 +124,11 @@ export default {
         ]);
         return json({credited},200,cors);
       }
-      if(url.pathname==='/api/admin/roster/import'&&request.method==='POST'){
+      if(url.pathname.startsWith('/api/admin/')){
         const account=await teacher(request,env,now);
         if(!account)return json({error:'Unauthorized'},401,cors);
         if(account.mustChange)return json({error:'Password change required'},403,cors);
-        const raw=await request.text();if(raw.length>30000)return json({error:'Roster chunk too large'},413,cors);
-        const input=JSON.parse(raw);
-        if(!Array.isArray(input.students)||input.students.length<1||input.students.length>100)return json({error:'Invalid roster chunk'},400,cors);
-        const seen=new Set(),entries=[];
-        for(const student of input.students){
-          if(!validStudentId(student.studentId)||!validName(student.name)||!validCohort(student.className)||seen.has(student.studentId))return json({error:'Invalid or duplicate roster row'},400,cors);
-          seen.add(student.studentId);entries.push({id:student.studentId,name:normalizedName(student.name),className:student.className.trim()});
-        }
-        await env.DB.batch(entries.flatMap(student=>[
-          env.DB.prepare('INSERT INTO roster(student_id,name,cohort,imported_at) VALUES(?,?,?,?) ON CONFLICT(student_id) DO UPDATE SET name=excluded.name,cohort=excluded.cohort,imported_at=excluded.imported_at').bind(student.id,student.name,student.className,now),
-          env.DB.prepare('UPDATE students SET name=?,cohort=? WHERE student_id=?').bind(student.name,student.className,student.id)
-        ]));
-        return json({imported:entries.length},200,cors);
-      }
-      if(url.pathname==='/api/admin/roster/summary'&&request.method==='GET'){
-        const account=await teacher(request,env,now);
-        if(!account)return json({error:'Unauthorized'},401,cors);
-        if(account.mustChange)return json({error:'Password change required'},403,cors);
-        await purgeExpired(env,now);
-        const result=await env.DB.prepare('SELECT cohort,COUNT(*) AS students,MAX(imported_at) AS lastImport FROM roster GROUP BY cohort ORDER BY cohort DESC').all();
-        return json({cohorts:result.results||[]},200,cors);
-      }
-      if(url.pathname==='/api/admin/summary'&&request.method==='GET'){
-        const account=await teacher(request,env,now);
-        if(!account)return json({error:'Unauthorized'},401,cors);
-        if(account.mustChange)return json({error:'Password change required'},403,cors);
-        await purgeExpired(env,now);
-        const query=`WITH ses AS (
-            SELECT student_id,COUNT(*) AS sessions,SUM(active_seconds) AS total_seconds,MAX(last_seen) AS last_seen
-            FROM sessions GROUP BY student_id
-          ), pages AS (
-            SELECT s.student_id,
-              SUM(CASE WHEN p.page LIKE 'lecture-%' THEN p.active_seconds ELSE 0 END) AS lecture_seconds,
-              SUM(CASE WHEN p.page LIKE 'example-%' THEN p.active_seconds ELSE 0 END) AS example_seconds,
-              SUM(CASE WHEN p.page LIKE 'ex-%' THEN p.active_seconds ELSE 0 END) AS assignment_seconds
-            FROM page_activity p JOIN sessions s ON s.id=p.session_id GROUP BY s.student_id
-          )
-          SELECT st.student_id AS studentId,st.name,st.cohort,COALESCE(ses.sessions,0) AS sessions,
-            COALESCE(ses.total_seconds,0) AS totalSeconds,COALESCE(pages.lecture_seconds,0) AS lectureSeconds,
-            COALESCE(pages.example_seconds,0) AS exampleSeconds,COALESCE(pages.assignment_seconds,0) AS assignmentSeconds,
-            ses.last_seen AS lastSeen
-          FROM students st LEFT JOIN ses ON ses.student_id=st.student_id
-          LEFT JOIN pages ON pages.student_id=st.student_id ORDER BY ses.last_seen DESC`;
-        const result=await env.DB.prepare(query).all();
-        return json({students:result.results||[]},200,cors);
+        return adminRoute(request,env,url,now,cors,account,purgeExpired);
       }
       return json({error:'Not found'},404,cors);
     }catch(error){
