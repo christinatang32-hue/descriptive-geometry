@@ -1,9 +1,12 @@
+import {createPasswordHash} from './password.js';
 const json=(body,status=200,headers={})=>Response.json(body,{status,headers:{'Cache-Control':'no-store',...headers}});
 const validStudentId=id=>typeof id==='string'&&/^[0-9A-Za-z-]{4,24}$/.test(id);
 const validName=name=>typeof name==='string'&&name.trim().length>=2&&name.trim().length<=30&&!/[\u0000-\u001f\u007f]/.test(name);
 const validClass=value=>typeof value==='string'&&/^[\p{L}\p{N}\s_-]{1,40}$/u.test(value.trim());
 const groupPattern=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const normalize=value=>value.trim().replace(/\s+/g,' ');
+const validEmployeeId=value=>typeof value==='string'&&/^\d{6,16}$/.test(value);
+const initialPassword=()=>btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(12)))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
 const validYear=value=>typeof value==='string'&&/^20\d{2}-20\d{2}$/.test(value)&&Number(value.slice(5))===Number(value.slice(0,4))+1;
 const validSemester=value=>value===1||value===2;
 const SHANGHAI_OFFSET=8*3600*1000;
@@ -48,6 +51,24 @@ function trendFromSessions(sessions,now){
 
 export async function adminRoute(request,env,url,now,cors,account,purgeExpired){
   const owner=account.employeeId;
+  if(url.pathname==='/api/admin/me'&&request.method==='GET')
+    return json({employeeId:owner,name:account.name,isAdmin:account.isAdmin},200,cors);
+  if(url.pathname==='/api/admin/teachers/create'&&request.method==='POST'){
+    if(!account.isAdmin)return json({error:'Administrator required'},403,cors);
+    const raw=await request.text();if(raw.length>2000)return json({error:'Teacher payload too large'},413,cors);
+    const input=JSON.parse(raw),employeeId=input.employeeId,name=typeof input.name==='string'?normalize(input.name):'';
+    if(!validEmployeeId(employeeId)||!validName(name))return json({error:'Invalid teacher details'},400,cors);
+    const existing=await env.DB.prepare('SELECT employee_id FROM teacher_accounts WHERE employee_id=?').bind(employeeId).first();
+    if(existing)return json({error:'Teacher already exists'},409,cors);
+    const student=await env.DB.prepare('SELECT student_id FROM roster WHERE student_id=?').bind(employeeId).first();
+    if(student)return json({error:'ID already belongs to a student'},409,cors);
+    const password=initialPassword(),hash=await createPasswordHash(password);
+    await env.DB.batch([
+      env.DB.prepare('INSERT INTO teacher_accounts(employee_id,name,is_admin,created_at) VALUES(?,?,0,?)').bind(employeeId,name,now),
+      env.DB.prepare('INSERT INTO teacher_credentials(employee_id,password_hash,must_change,updated_at) VALUES(?,?,1,?)').bind(employeeId,hash,now)
+    ]);
+    return json({employeeId,name,initialPassword:password,mustChange:true},201,cors);
+  }
   if(url.pathname==='/api/admin/groups/create'&&request.method==='POST'){
     const raw=await request.text();if(raw.length>2000)return json({error:'Group payload too large'},413,cors);
     const input=JSON.parse(raw),label=typeof input.label==='string'?normalize(input.label):'';

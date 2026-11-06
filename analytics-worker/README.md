@@ -5,9 +5,10 @@
 ## 上线前
 
 1. 在 Cloudflare 创建 D1 数据库 `descriptive-geometry-learning` 和私有 R2 bucket `descriptive-geometry-submissions`。把数据库 ID 填入 `wrangler.example.jsonc` 的副本 `wrangler.jsonc`；其中已配置 R2 与 Workers AI 绑定。
-2. 用 Wrangler 执行 `schema.sql` 创建教师名单、教师密码、学生名单、学生账号、学习时长和作业提交表。若数据库已存在，重复执行该文件即可添加新表。教师工号与姓名由管理员直接写入 `teacher_accounts`，教师初始密码哈希写入 `teacher_credentials`，不能通过网页自助注册。密码使用带独立盐值的 PBKDF2-HMAC-SHA512 哈希保存，数据库不保存明文密码。
+2. 用 Wrangler 执行 `schema.sql` 创建教师名单、教师密码、学生名单、学生账号、学习时长和作业提交表。若数据库已存在，重复执行该文件即可添加新表。首位管理员账号由维护者写入 `teacher_accounts` 和 `teacher_credentials`，并设置 `is_admin=1`；之后由管理员在教师学情统计页面添加教师。新教师的初始密码只在创建成功的响应中显示一次，数据库仅保存带独立盐值的 PBKDF2-HMAC-SHA512 哈希，首次登录必须改密。
 
 已有授课班级表的部署需执行一次 `migrations/2026-11-06-teaching-term.sql`，为授课班级补充学年、学期和学生原表行序。旧名单的学年学期、授课班级名称与行序应按对应教学记录表核对后回填。
+已有教师账号的部署需执行一次 `migrations/2026-11-06-teacher-admin.sql`，仅把经确认的唐玉账号 `2017011104` 授予管理员权限。
 3. 先发布本仓库中的 `answer-references/*.png` 与习题页。Worker 通过 `COURSE_BASE_URL` 从可信课程站点读取标准答案图与题目，不采用学生提交的“标准答案”。
 4. 部署 Worker。教师用工号、姓名和初始密码在统一登录页登录，改密后才可查看统计和上传名单。学生必须先凭名单中的学号、姓名和班级注册，之后凭学号、姓名和密码登录。
 5. 将 Worker 的 HTTPS 地址写入网站根目录 `config.js` 的 `apiBase`，再次发布网站。教师登录后在 `admin.html` 直接上传教学系统导出的 `.xlsx` 或 `.xls` 记录表。系统识别“学号、姓名、班级”三列并跳过空行和汇总行；无需将原文件转换为模板。上传时填写授课学年、学期；系统按主修年级的行政班级命名授课班级，重修学生保留在名单内，学生行序沿用 Excel。教师也可选择授课班级后手动添加学生，未选择时按学生行政班级自动建立。统计先按授课学年/学期，再按授课班级调取。

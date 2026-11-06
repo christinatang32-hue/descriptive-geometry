@@ -12,6 +12,12 @@
     if(!response.ok){const result=await response.json().catch(()=>({}));if(result.error==='Password change required'){location.replace('teacher-password.html');throw Error('请先修改初始密码。')}throw Error(result.error||'记录服务暂不可用。')}
     return response.json();
   }
+  async function loadIdentity(){
+    try{
+      const person=await request('/api/admin/me');
+      if(person.isAdmin){$('role-badge').textContent=`${person.name} · 管理员`;$('role-badge').hidden=false;$('teacher-management').hidden=false}
+    }catch(cause){error.textContent=cause.message||'无法读取教师身份。'}
+  }
   const today=new Date(),schoolStart=today.getMonth()>=7?today.getFullYear():today.getFullYear()-1;
   const defaultYear=`${schoolStart}-${schoolStart+1}`,defaultSemester=today.getMonth()>=7||today.getMonth()===0?1:2;
   $('manual-year').value=defaultYear;$('upload-year').value=defaultYear;
@@ -103,7 +109,28 @@
   $('group-filter').addEventListener('change',load);
   $('manual-year').addEventListener('input',updateManualGroups);
   $('manual-semester').addEventListener('change',updateManualGroups);
-  load();
+  loadIdentity();load();
+  $('teacher-form').addEventListener('submit',async event=>{
+    event.preventDefault();
+    const employeeId=$('teacher-id').value.trim(),name=$('teacher-name').value.trim();
+    const status=$('teacher-status'),button=$('teacher-add');
+    status.textContent='';$('teacher-credential').hidden=true;$('credential-password').textContent='';
+    if(!/^\d{6,16}$/.test(employeeId)||name.length<2||name.length>30){status.textContent='请填写 6–16 位数字工号和教师姓名。';return}
+    button.disabled=true;
+    try{
+      const data=await request('/api/admin/teachers/create',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({employeeId,name})});
+      $('credential-person').textContent=`${data.name}（${data.employeeId}）`;
+      $('credential-password').textContent=data.initialPassword;
+      $('teacher-credential').hidden=false;
+      status.textContent='教师已添加，请复制初始密码并交给该教师。';
+      $('teacher-form').reset();
+    }catch(cause){status.textContent=cause.message==='Teacher already exists'?'该工号已存在。':cause.message==='ID already belongs to a student'?'该号码已用于学生学号。':cause.message==='Administrator required'?'当前账号没有管理员权限。':cause.message||'添加教师失败。'}
+    finally{button.disabled=false}
+  });
+  $('copy-credential').addEventListener('click',async()=>{
+    try{await navigator.clipboard.writeText($('credential-password').textContent);$('teacher-status').textContent='已复制初始密码。'}
+    catch{$('teacher-status').textContent='复制失败，请手动选择密码并复制。'}
+  });
   async function parseExcel(file){
     if(!window.XLSX)throw Error('Excel 读取组件未加载，请刷新页面重试。');
     let workbook;try{workbook=XLSX.read(await file.arrayBuffer(),{type:'array',cellText:true,cellDates:false})}

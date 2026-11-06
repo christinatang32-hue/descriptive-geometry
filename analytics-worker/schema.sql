@@ -41,6 +41,7 @@ CREATE TABLE IF NOT EXISTS student_accounts (
 CREATE TABLE IF NOT EXISTS teacher_accounts (
   employee_id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
+  is_admin INTEGER NOT NULL DEFAULT 0,
   created_at INTEGER NOT NULL
 );
 CREATE TABLE IF NOT EXISTS teacher_sessions (

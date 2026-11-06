@@ -22,9 +22,9 @@ async function teacher(request,env,now){
   const id=request.headers.get('X-Session-Id')||'';
   const token=(request.headers.get('Authorization')||'').replace(/^Bearer /,'');
   if(!id||!token)return null;
-  const row=await env.DB.prepare('SELECT s.employee_id,s.token_hash,s.started_at,c.must_change FROM teacher_sessions s JOIN teacher_credentials c ON c.employee_id=s.employee_id WHERE s.id=?').bind(id).first();
+  const row=await env.DB.prepare('SELECT s.employee_id,s.token_hash,s.started_at,c.must_change,a.name,a.is_admin FROM teacher_sessions s JOIN teacher_credentials c ON c.employee_id=s.employee_id JOIN teacher_accounts a ON a.employee_id=s.employee_id WHERE s.id=?').bind(id).first();
   if(!row||row.token_hash!==await tokenHash(token)||now-row.started_at>12*3600*1000)return null;
-  return {employeeId:row.employee_id,mustChange:Boolean(row.must_change),sessionId:id};
+  return {employeeId:row.employee_id,name:row.name,isAdmin:Boolean(row.is_admin),mustChange:Boolean(row.must_change),sessionId:id};
 }
 async function purgeExpired(env,now){
   const cutoff=fiveYearCutoff(now);
