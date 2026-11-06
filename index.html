@@ -15,7 +15,7 @@
     .cover{display:grid;grid-template-columns:minmax(0,58fr) minmax(400px,42fr);background:#fff}
     .art{position:relative;min-height:100vh;min-height:100svh;background:#e8edf3;overflow:hidden}.art img{display:block;width:100%;height:100%;position:absolute;inset:0;object-fit:cover;object-position:center}
     .art::after{content:"";position:absolute;inset:60% 0 0;background:linear-gradient(transparent,#f3f7f9a8)}
-    .art-caption{position:absolute;z-index:1;left:48px;bottom:40px;padding:5px 9px;border-radius:4px;background:#f5f8fbcc;color:#173b61;font-size:17px;letter-spacing:.06em;font-weight:800;text-shadow:0 1px #fff}
+    .art-caption{position:absolute;z-index:1;left:48px;bottom:40px;padding:5px 9px;border-radius:4px;background:#f5f8fbcc;color:#173b61;font-size:19px;letter-spacing:.06em;font-weight:800;text-shadow:0 1px #fff}
     .panel{position:relative;display:flex;flex-direction:column;justify-content:center;padding:74px clamp(42px,5vw,90px);background:linear-gradient(145deg,#fff 35%,#f7faff 100%)}
     .course-title{margin:0 0 44px;font-size:clamp(24px,calc(1.8vw + 2px),32px);line-height:1.45;letter-spacing:0;font-weight:800;color:#10213e}.course-title span{display:inline}
     label{display:block;margin:12px 0 0;color:#52617b;font-size:13px;font-weight:700}
@@ -24,11 +24,8 @@
     .login-button{width:100%;height:46px;margin-top:20px;border:0;border-radius:7px;background:linear-gradient(90deg,#2f7af4,#245ce2);color:white;font-weight:800;letter-spacing:.08em;box-shadow:0 8px 18px #2867e835}
     .login-button:hover{filter:brightness(1.06)}.login-button:disabled{opacity:.7;cursor:wait}
     .error{min-height:20px;margin:7px 0 0;color:#b03232;font-size:13px}
-    .mode{margin:16px 0 0;color:#78869b;font-size:12px;line-height:1.6}
-    .below{position:absolute;left:clamp(42px,5vw,90px);right:clamp(42px,5vw,90px);bottom:32px;display:flex;justify-content:space-between;gap:14px;color:#8795aa;font-size:12px}.below button,.below a{border:0;padding:0;background:none;color:inherit;text-decoration:none;font:inherit;white-space:nowrap}.below button:hover,.below a:hover{text-decoration:underline;color:var(--blue)}
-    dialog{max-width:min(460px,calc(100% - 32px));border:0;border-radius:12px;padding:28px 30px;box-shadow:0 18px 60px #12203855;color:var(--ink)}dialog::backdrop{background:#101827a3}dialog h3{margin:0 0 12px;font-size:21px}dialog p{margin:0 0 18px;color:#53627a;line-height:1.7}dialog button{border:0;border-radius:6px;background:var(--blue);color:#fff;padding:9px 22px}
-    @media(max-width:800px){.cover{grid-template-columns:1fr}.art{min-height:34vh;min-height:34svh}.art-caption{left:24px;bottom:20px;font-size:15px}.panel{min-height:66vh;min-height:66svh;padding:52px clamp(26px,7vw,64px) 96px}.course-title{margin-bottom:34px}.below{left:clamp(26px,7vw,64px);right:clamp(26px,7vw,64px);bottom:25px}}
-    @media(max-width:480px){.art{min-height:240px}.panel{min-height:560px;padding:36px 26px 95px}.course-title{font-size:24px;margin-bottom:27px}.course-title span{display:block}.below{left:26px;right:26px;bottom:22px}}
+    @media(max-width:800px){.cover{grid-template-columns:1fr}.art{min-height:34vh;min-height:34svh}.art-caption{left:24px;bottom:20px;font-size:17px}.panel{min-height:66vh;min-height:66svh;padding:52px clamp(26px,7vw,64px)}.course-title{margin-bottom:34px}}
+    @media(max-width:480px){.art{min-height:240px}.panel{min-height:560px;padding:36px 26px}.course-title{font-size:24px;margin-bottom:27px}.course-title span{display:block}}
   </style>
   <script defer src="config.js"></script>
 </head>
@@ -45,20 +42,14 @@
             <button class="login-button" type="submit" id="login-button">登录</button>
             <p class="error" id="login-error" role="alert"></p>
           </form>
-          <p class="mode" id="service-mode">正在检查学习记录服务…</p>
-          <footer class="below"><button type="button" id="privacy-link">学习记录说明</button></footer>
         </section>
       </div>
     </div>
   </main>
-  <dialog id="privacy-dialog" aria-labelledby="privacy-title"><h3 id="privacy-title">学习记录说明</h3><p>学生登录时按教师上传的名单核对学号与姓名；教师登录时核对服务端教师名单中的工号与姓名。平台记录学生访问页面及有效学习时长；上传习题作业时，还会保存作业照片及 AI 初评结果。这些资料供课程教学与学情统计使用，保存五年。名单核对无法证明操作者本人身份。</p><form method="dialog"><button>知道了</button></form></dialog>
   <script>
   (()=>{
-    const form=document.getElementById('login-form'),button=document.getElementById('login-button'),error=document.getElementById('login-error'),mode=document.getElementById('service-mode');
-    document.getElementById('privacy-link').addEventListener('click',()=>document.getElementById('privacy-dialog').showModal());
+    const form=document.getElementById('login-form'),button=document.getElementById('login-button'),error=document.getElementById('login-error');
     const api=()=>String(window.COURSE_CONFIG?.apiBase||'').replace(/\/$/,'');
-    const updateMode=()=>{mode.textContent=api()?'学习记录服务已接入。':'本地演示模式：可浏览课程，学习记录暂不上传。'};
-    document.addEventListener('DOMContentLoaded',updateMode);updateMode();
     const next=()=>{const raw=new URLSearchParams(location.search).get('next');if(!raw)return'catalog.html';try{const u=new URL(raw,location.href);return u.origin===location.origin&&u.pathname.startsWith(location.pathname.replace(/[^/]+$/,''))?u.href:'catalog.html'}catch{return'catalog.html'}};
     form.addEventListener('submit',async e=>{e.preventDefault();error.textContent='';const studentId=form.studentId.value.trim(),name=form.studentName.value.trim();if(!/^[0-9A-Za-z-]{4,24}$/.test(studentId)){error.textContent='学号/工号请输入 4–24 位字母、数字或短横线。';return}if(name.length<2||name.length>30){error.textContent='姓名请输入 2–30 个字符。';return}button.disabled=true;try{let record={studentId,name,demo:true};let role='student';if(api()){const response=await fetch(api()+'/api/session/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({studentId,name})});if(response.status===403)throw Error('学号/工号与姓名不匹配，请核对后重试。');if(!response.ok)throw Error('学习记录服务暂不可用，请稍后重试。');const data=await response.json();role=data.role;record={studentId,name,sessionId:data.sessionId,token:data.token,demo:false}}if(role==='teacher'){sessionStorage.removeItem('dg-study-session');sessionStorage.setItem('dg-teacher-session',JSON.stringify(record));location.href='admin.html'}else{sessionStorage.removeItem('dg-teacher-session');sessionStorage.setItem('dg-study-session',JSON.stringify(record));location.href=next()}}catch(err){error.textContent=err.message||'登录失败，请稍后重试。';button.disabled=false}});
   })();
