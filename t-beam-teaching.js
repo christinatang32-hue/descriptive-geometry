@@ -12,31 +12,34 @@
   const opacityInput=$('opacity');
   const V=(x,y,z)=>({x,y,z});
   const steel=[];
-  const add=(group,id,dia,points)=>steel.push({group,id,dia,points});
+  const add=(group,id,dia,points,color)=>steel.push({group,id,dia,points,color});
   // ① 底筋：最外侧两根靠外箍筋肢，四根均贴近腹板箍筋底部内表面。
-  for(const y of [-102,-34,34,102])add('bottom',1,22,[V(-2900,y,205),V(-2900,y,49),V(2900,y,49),V(2900,y,205)]);
-  // ②、④ 的纵向位置靠外侧箍筋肢；③ 位于两根中间箍筋肢之间。
-  for(const y of [-102.5,102.5])add('bent',2,19,[V(-2900,y,526.5),V(-2640,y,526.5),V(-2200,y,88.5),V(2200,y,88.5),V(2640,y,526.5),V(2900,y,526.5)]);
-  for(const y of [-102.5,102.5])add('bent',4,19,[V(-2220,y,526.5),V(-2020,y,526.5),V(-1600,y,110.5),V(1600,y,110.5),V(2020,y,526.5),V(2220,y,526.5)]);
-  add('bent',3,19,[V(-1640,0,526.5),V(-1438,0,526.5),V(-1000,0,88.5),V(1000,0,88.5),V(1438,0,526.5),V(1640,0,526.5)]);
-  // ⑤ 翼缘内 8 根顶部纵筋，紧贴 ⑦ 箍筋的上部内表面。
-  for(const y of [-284,-210,-138,-48,48,138,210,284])add('top',5,12,[V(-2900,y,563),V(2900,y,563)]);
-  // 每道位置有两根 ⑥ 腹板箍筋和一根 ⑦ 翼缘箍筋；中间箍筋肢对应原图 1—1 断面。
+  for(const y of [-110,-20,20,110])add('bottom',1,22,[V(-2900,y,205),V(-2900,y,40),V(2900,y,40),V(2900,y,205)]);
+  // ② 位于两只叠合腹板箍筋各自的内部，④ 贴靠中间箍筋肢，③ 靠另一中间箍筋肢。
+  for(const y of [-75,75])add('bent',2,19,[V(-2923,y,561.5),V(-2723,y,561.5),V(-2200,y,38.5),V(2200,y,38.5),V(2723,y,561.5),V(2923,y,561.5)]);
+  for(const y of [-48.5,48.5])add('bent',4,19,[V(-2296.5,y,561.5),V(-2096.5,y,561.5),V(-1600,y,65),V(1600,y,65),V(2096.5,y,561.5),V(2296.5,y,561.5)]);
+  add('bent',3,19,[V(-1670,21.5,538.5),V(-1470,21.5,538.5),V(-1000,21.5,68.5),V(1000,21.5,68.5),V(1470,21.5,538.5),V(1670,21.5,538.5)]);
+  // ⑤ 共八根：翼缘上层六根，两端下层各一根，均不与 ⑥、⑦ 箍筋断面相交。
+  for(const y of [-290,-115,-25,25,115,290])add('top',5,12,[V(-2900,y,565),V(2900,y,565)]);
+  for(const y of [-290,290])add('top',5,12,[V(-2900,y,535),V(2900,y,535)]);
+  // ⑥ 两个 160 mm 宽、550 mm 高的矩形箍筋互相叠合 70 mm：
+  // 红箍 y=-125..35，蓝箍 y=-35..125；腹板两侧各留 25 mm。
+  // ⑦ 翼缘箍筋宽 600 mm、高 50 mm，四周按图留 25 mm。
   // 立面 @250 是名义间距，模型均布 25 道以示钢筋表的 50 根 ⑥ 和 25 根 ⑦。
   for(let i=0;i<25;i++){
     const x=-2875+i*5750/24;
-    for(const [left,right] of [[-116,-13.5],[13.5,116]])
-      add('stirrup',6,8,[V(x,left,34),V(x,right,34),V(x,right,540),V(x,left,540),V(x,left,34)]);
-    add('stirrup',7,8,[V(x,-294,519),V(x,294,519),V(x,294,573),V(x,-294,573),V(x,-294,519)]);
+    for(const [left,right,color] of [[-125,35,'#ff5f79'],[-35,125,'#5c9bff']])
+      add('stirrup',6,8,[V(x,left,25),V(x,right,25),V(x,right,575),V(x,left,575),V(x,left,25)],color);
+    add('stirrup',7,8,[V(x,-300,525),V(x,300,525),V(x,300,575),V(x,-300,575),V(x,-300,525)]);
   }
   for(const x of [-1975,1975])add('hoist',8,19,[V(x,-48,530),V(x,-48,680),V(x,-36,704),V(x,36,704),V(x,48,680),V(x,48,530)]);
 
   const steps=[
     {title:'先认清 T 形断面与梁长',text:'立面图确定纵向外形；断面图确定翼缘和腹板的组合。将 T 形断面沿梁长方向延伸，得到梁体。',points:['翼缘宽 650 mm、厚 100 mm；腹板宽 300 mm。','翼缘下腹板高 500 mm，总高 600 mm。'],layers:['concrete','bottom','bent','top','stirrup','hoist'],opacity:100},
     {title:'放入 ① 号底部纵筋',text:'腹板下部放置 4 根 Φ22 纵筋。观察端面：外侧两根贴靠外箍筋肢，其余两根也贴靠箍筋的底部内表面。',points:['①：4Φ22，单根下料长度 6580 mm。','三维弯钩仅作识图示意，长度以钢筋表为准。'],layers:['concrete','bottom','stirrup'],opacity:13},
-    {title:'辨认 ②③④ 号弯起筋',text:'沿梁长追踪水平段和斜段。②④ 靠近腹板外侧箍筋肢，③ 置于中间箍筋肢之间。',points:['②：2Φ19，7700 mm；③：1Φ19，4060 mm；④：2Φ19，5260 mm。','原图注明弯起钢筋均弯起 45°。'],layers:['concrete','bottom','bent','stirrup'],opacity:12},
-    {title:'布置 ⑤ 号顶部纵筋',text:'在翼缘内沿梁长布置 8 根 Φ12 顶部纵筋。钢筋位于翼缘箍筋的内侧，顶面相互贴合。',points:['⑤：8Φ12，单根下料长度 6050 mm。','旋转至断面视角，观察八根钢筋沿翼缘宽度分布。'],layers:['concrete','bottom','bent','top','stirrup'],opacity:12},
-    {title:'补全箍筋与吊环',text:'每处腹板有左右两根 ⑥ 箍筋，中间也有箍筋肢；⑦ 围住翼缘内的顶部纵筋。两处 ⑧ 吊环从梁顶伸出。',points:['⑥：50 根 Φ8、单根 1570 mm；⑦：25 根 Φ8、单根 1450 mm。','⑧：2 根 Φ19、单根 1620 mm。'],layers:['concrete','bottom','bent','top','stirrup','hoist'],opacity:10},
+    {title:'辨认 ②③④ 号弯起筋',text:'沿梁长追踪水平段和斜段。② 分别位于两只叠合的腹板箍筋内部，③④ 位于相应箍筋肢旁，断面位置与箍筋不重叠。',points:['②：2Φ19，7700 mm；③：1Φ19，4060 mm；④：2Φ19，5260 mm。','模型的弯起段按原图说明作 45°。'],layers:['concrete','bottom','bent','stirrup'],opacity:12},
+    {title:'布置 ⑤ 号顶部纵筋',text:'翼缘内有 8 根 Φ12 顶部纵筋：上层六根，两侧下层各一根。各根钢筋贴在箍筋内侧，断面之间留有净距。',points:['⑤：8Φ12，单根下料长度 6050 mm。','旋转至断面视角，核对六上、两下的分布。'],layers:['concrete','bottom','bent','top','stirrup'],opacity:12},
+    {title:'补全箍筋与吊环',text:'两根 ⑥ 箍筋都是宽 160 mm 的矩形，在腹板中央叠合 70 mm；⑦ 为翼缘箍筋。两处 ⑧ 吊环从梁顶伸出。',points:['⑥：每梁 50 根 Φ8、单根 1570 mm；⑦：25 根 Φ8、单根 1450 mm。','⑧：2 根 Φ19、单根 1620 mm。'],layers:['concrete','bottom','bent','top','stirrup','hoist'],opacity:10},
     {title:'移动剖切面核对钢筋',text:'选择图纸的 1—1、2—2、3—3 横断面，或拖动滑杆看梁长上的任意横断面；再切换纵剖面，沿梁宽移动剖切位置。',points:['剖切会移去一侧混凝土与钢筋，剖面上的彩色点是被切到的钢筋。','将混凝土滑杆拖至最左只看钢筋，拖至最右查看实体剖面。'],layers:['concrete','bottom','bent','top','stirrup','hoist'],opacity:74,cut:'transverse'},
     {title:'回到整体配筋图',text:'将混凝土、纵筋、箍筋和吊环叠合，核对原图的立面、钢筋详图、三个断面和钢筋表。',points:['下料长度、直径与根数可在下方钢筋尺寸表逐项查看。','模型沿梁长压缩展示；梁体实际尺寸及弯钩细节均以原始配筋图为准。'],layers:['concrete','bottom','bent','top','stirrup','hoist'],opacity:23,cut:'none'}
   ];
@@ -107,18 +110,18 @@
   }
   function drawBars(f,alpha){
     if(alpha<=0)return;
-    for(const bar of steel){if(!checks[bar.group].checked)continue;for(const run of activePaths(bar.points))path(run,colors[bar.group],Math.max(1.3,bar.dia*f.s),f,alpha);}
+    for(const bar of steel){if(!checks[bar.group].checked)continue;for(const run of activePaths(bar.points))path(run,bar.color||colors[bar.group],Math.max(1.3,bar.dia*f.s),f,alpha);}
   }
   function drawCutSteel(f){
     if(cutMode==='none')return;
     const axis=cutMode==='transverse'?'x':'y',value=cutMode==='transverse'?cutX-L/2:cutY;
     for(const bar of steel){if(!checks[bar.group].checked||bar.group==='hoist')continue;
       if(cutMode==='transverse'&&bar.group==='stirrup'&&Math.abs(bar.points[0].x-value)<=bar.dia/2)
-        path(bar.points,colors.stirrup,Math.max(1.3,bar.dia*f.s),f);
+        path(bar.points,bar.color||colors.stirrup,Math.max(1.3,bar.dia*f.s),f);
       if(cutMode==='longitudinal'&&['bottom','bent','top'].includes(bar.group)&&bar.points.every(p=>Math.abs(p.y-cutY)<=bar.dia/2))
-        path(bar.points,colors[bar.group],Math.max(1.3,bar.dia*f.s),f);
+        path(bar.points,bar.color||colors[bar.group],Math.max(1.3,bar.dia*f.s),f);
       for(const hit of planeIntersections(bar.points,axis,value)){
-        const q=screen(hit,f);ctx.save();ctx.fillStyle=colors[bar.group];ctx.strokeStyle='#06121f';ctx.lineWidth=1.2;ctx.beginPath();ctx.arc(q.x,q.y,Math.max(2,bar.dia*f.s/2),0,Math.PI*2);ctx.fill();ctx.stroke();ctx.restore();
+        const q=screen(hit,f);ctx.save();ctx.fillStyle=bar.color||colors[bar.group];ctx.strokeStyle='#06121f';ctx.lineWidth=1.2;ctx.beginPath();ctx.arc(q.x,q.y,Math.max(2,bar.dia*f.s/2),0,Math.PI*2);ctx.fill();ctx.stroke();ctx.restore();
       }
     }
   }
@@ -143,17 +146,15 @@
     const point=(y,z)=>[175+y*113/325,235-z*209/600],xy=(y,z)=>point(y,z).join(',');
     const shape=cross.map(([y,z])=>xy(y,z)).join(' '),parts=[];
     if(checks.concrete.checked&&Number(opacityInput.value)>0)parts.push(`<polygon points="${shape}" fill="#244356" stroke="#7bc7db" stroke-width="2"/>`);
-    if(checks.stirrup.checked){
-      for(const [left,right] of [[-116,-13.5],[13.5,116]])parts.push(`<polyline points="${[[left,34],[right,34],[right,540],[left,540],[left,34]].map(p=>xy(...p)).join(' ')}" fill="none" stroke="${colors.stirrup}" stroke-width="2.4"/>`);
-      parts.push(`<polyline points="${[[-294,519],[294,519],[294,573],[-294,573],[-294,519]].map(p=>xy(...p)).join(' ')}" fill="none" stroke="${colors.stirrup}" stroke-width="2.4"/>`);
-    }
+    if(checks.stirrup.checked)for(const bar of steel.filter(item=>item.group==='stirrup').slice(0,3))
+      parts.push(`<polyline points="${bar.points.map(p=>xy(p.y,p.z)).join(' ')}" fill="none" stroke="${bar.color||colors.stirrup}" stroke-width="2.4"/>`);
     for(const bar of steel){if(!checks[bar.group].checked||!['bottom','bent','top'].includes(bar.group))continue;
       for(const hit of planeIntersections(bar.points,'x',cutX-L/2)){
         const [x,y]=point(hit.y,hit.z),r=Math.max(3.2,bar.dia*.24);
-        parts.push(`<circle cx="${x}" cy="${y}" r="${r}" fill="${colors[bar.group]}" stroke="#071a2a" stroke-width="1"/>`);
+        parts.push(`<circle cx="${x}" cy="${y}" r="${r}" fill="${bar.color||colors[bar.group]}" stroke="#071a2a" stroke-width="1"/>`);
       }
     }
-    parts.push('<text x="175" y="17" text-anchor="middle" fill="#a9d4df" font-size="12">翼缘 650 mm</text><text x="175" y="256" text-anchor="middle" fill="#a9d4df" font-size="12">腹板 300 mm</text>');
+    parts.push('<text x="175" y="17" text-anchor="middle" fill="#a9d4df" font-size="12">翼缘 650 mm</text><text x="175" y="256" text-anchor="middle" fill="#a9d4df" font-size="12">腹板 300 mm · ⑥ 重叠 70 mm</text>');
     return parts.join('');
   }
   function svgLongitudinal(){
@@ -161,10 +162,10 @@
     const z0=Math.abs(cutY)<150?0:500;
     if(checks.concrete.checked&&Number(opacityInput.value)>0)parts.push(`<rect x="24" y="${zmap(600)}" width="302" height="${zmap(z0)-zmap(600)}" fill="#244356" stroke="#7bc7db" stroke-width="1.7"/>`);
     for(const bar of steel){if(!checks[bar.group].checked||!['bottom','bent','top'].includes(bar.group))continue;
-      if(bar.points.every(p=>Math.abs(p.y-cutY)<=bar.dia/2+2))parts.push(`<polyline points="${bar.points.map(p=>`${xmap(p.x)},${zmap(p.z)}`).join(' ')}" fill="none" stroke="${colors[bar.group]}" stroke-width="2"/>`);
+      if(bar.points.every(p=>Math.abs(p.y-cutY)<=bar.dia/2+2))parts.push(`<polyline points="${bar.points.map(p=>`${xmap(p.x)},${zmap(p.z)}`).join(' ')}" fill="none" stroke="${bar.color||colors[bar.group]}" stroke-width="2"/>`);
     }
     if(checks.stirrup.checked)for(const bar of steel.filter(item=>item.group==='stirrup')){
-      for(const hit of planeIntersections(bar.points,'y',cutY))parts.push(`<circle cx="${xmap(hit.x)}" cy="${zmap(hit.z)}" r="2.2" fill="${colors.stirrup}"/>`);
+      for(const hit of planeIntersections(bar.points,'y',cutY))parts.push(`<circle cx="${xmap(hit.x)}" cy="${zmap(hit.z)}" r="2.2" fill="${bar.color||colors.stirrup}"/>`);
     }
     parts.push('<text x="175" y="21" text-anchor="middle" fill="#a9d4df" font-size="12">沿梁长 5950 mm</text><text x="175" y="258" text-anchor="middle" fill="#a9d4df" font-size="12">纵剖位置由上方滑杆控制</text>');
     return parts.join('');
