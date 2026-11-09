@@ -16,11 +16,11 @@
   // ① 底筋：最外侧两根靠外箍筋肢，四根均贴近腹板箍筋底部内表面。
   for(const y of [-110,-20,20,110])add('bottom',1,22,[V(-2900,y,205),V(-2900,y,40),V(2900,y,40),V(2900,y,205)]);
   // ② 的下水平段分别贴靠两只 ⑥ 箍筋的下横肢。
-  for(const y of [-75,75])add('bent',2,19,[V(-2923,y,561.5),V(-2723,y,561.5),V(-2200,y,38.5),V(2200,y,38.5),V(2723,y,561.5),V(2923,y,561.5)]);
-  // ④ 在 2—2、3—3 断面下部贴靠两侧外箍筋肢；上端移到箍筋上横肢内侧。
-  for(const side of [-1,1])add('bent',4,19,[V(-2296.5,side*75,561.5),V(-2096.5,side*75,561.5),V(-1600,side*111.5,65),V(1600,side*111.5,65),V(2096.5,side*75,561.5),V(2296.5,side*75,561.5)]);
+  for(const y of [-75,75])add('bent',2,18,[V(-2924,y,562),V(-2724,y,562),V(-2200,y,38),V(2200,y,38),V(2724,y,562),V(2924,y,562)]);
+  // ④ 全程贴靠两侧外箍筋肢，与 1—1 断面顶部的 ② 保持不同的横向和高度位置。
+  for(const side of [-1,1])add('bent',4,18,[V(-2277,side*112,542),V(-2077,side*112,542),V(-1600,side*112,65),V(1600,side*112,65),V(2077,side*112,542),V(2277,side*112,542)]);
   // ③ 在 2—2 下部贴靠左侧中间箍筋肢，至 3—3 上部进入两箍筋的叠合区。
-  add('bent',3,19,[V(-1693,0,561.5),V(-1493,0,561.5),V(-1000,-21.5,68.5),V(1000,-21.5,68.5),V(1493,0,561.5),V(1693,0,561.5)]);
+  add('bent',3,18,[V(-1693.5,0,562),V(-1493.5,0,562),V(-1000,-22,68.5),V(1000,-22,68.5),V(1493.5,0,562),V(1693.5,0,562)]);
   // ⑤ 共八根：翼缘上层六根，两端下层各一根，均不与 ⑥、⑦ 箍筋断面相交。
   for(const y of [-290,-115,-25,25,115,290])add('top',5,12,[V(-2900,y,565),V(2900,y,565)]);
   for(const y of [-290,290])add('top',5,12,[V(-2900,y,535),V(2900,y,535)]);
@@ -34,15 +34,15 @@
       add('stirrup',6,8,[V(x,left,25),V(x,right,25),V(x,right,575),V(x,left,575),V(x,left,25)],color);
     add('stirrup',7,8,[V(x,-300,525),V(x,300,525),V(x,300,575),V(x,-300,575),V(x,-300,525)]);
   }
-  for(const x of [-1975,1975])add('hoist',8,19,[V(x,-48,530),V(x,-48,680),V(x,-36,704),V(x,36,704),V(x,48,680),V(x,48,530)]);
+  for(const x of [-1975,1975])add('hoist',8,18,[V(x,-48,530),V(x,-48,680),V(x,-36,704),V(x,36,704),V(x,48,680),V(x,48,530)]);
 
   const steps=[
     {title:'先认清 T 形断面与梁长',text:'立面图确定纵向外形；断面图确定翼缘和腹板的组合。将 T 形断面沿梁长方向延伸，得到梁体。',points:['翼缘宽 650 mm、厚 100 mm；腹板宽 300 mm。','翼缘下腹板高 500 mm，总高 600 mm。'],layers:['concrete','bottom','bent','top','stirrup','hoist'],opacity:100},
     {title:'放入 ① 号底部纵筋',text:'腹板下部放置 4 根 Φ22 纵筋。观察端面：外侧两根贴靠外箍筋肢，其余两根也贴靠箍筋的底部内表面。',points:['①：4Φ22，单根下料长度 6580 mm。','三维弯钩仅作识图示意，长度以钢筋表为准。'],layers:['concrete','bottom','stirrup'],opacity:13},
-    {title:'辨认 ②③④ 号弯起筋',text:'对照 2—2、3—3 断面追踪 Φ19 钢筋：② 左根贴红箍下横肢、右根贴蓝箍下横肢；④ 左根贴红箍外侧竖肢、右根贴蓝箍外侧竖肢；③ 在 2—2 下部贴蓝箍的中间竖肢，至 3—3 上部进入两箍筋叠合区。',points:['②：2Φ19，7700 mm；③：1Φ19，4060 mm；④：2Φ19，5260 mm。','弯起段按图纸作 45°，各钢筋断面与箍筋断面相切而不重叠。'],layers:['concrete','bottom','bent','stirrup'],opacity:12},
+    {title:'辨认 ②③④ 号弯起筋',text:'对照 1—1、2—2、3—3 断面追踪 Φ18 钢筋：② 在 1—1 位于上部，弯起后两根分别贴红、蓝箍筋下横肢；④ 两根始终贴靠左右外箍筋肢，在 2—2、3—3 位于下部，与②各自独立；③ 在 2—2 下部贴蓝箍中间竖肢，至 3—3 上部进入叠合区。',points:['②：2Φ18，7700 mm；③：1Φ18，4060 mm；④：2Φ18，5260 mm。','各编号对应独立钢筋，随剖切位置核对其截点。'],layers:['concrete','bottom','bent','stirrup'],opacity:12},
     {title:'布置 ⑤ 号顶部纵筋',text:'翼缘内有 8 根 Φ12 顶部纵筋：上层六根，两侧下层各一根。各根钢筋贴在箍筋内侧，断面之间留有净距。',points:['⑤：8Φ12，单根下料长度 6050 mm。','旋转至断面视角，核对六上、两下的分布。'],layers:['concrete','bottom','bent','top','stirrup'],opacity:12},
-    {title:'补全箍筋与吊环',text:'两根 ⑥ 箍筋都是宽 160 mm 的矩形，在腹板中央叠合 70 mm；⑦ 为翼缘箍筋。两处 ⑧ 吊环从梁顶伸出。',points:['⑥：每梁 50 根 Φ8、单根 1570 mm；⑦：25 根 Φ8、单根 1450 mm。','⑧：2 根 Φ19、单根 1620 mm。'],layers:['concrete','bottom','bent','top','stirrup','hoist'],opacity:10},
-    {title:'移动剖切面核对钢筋',text:'选择图纸的 1—1、2—2、3—3 横断面，或拖动滑杆看梁长上的任意横断面；再切换纵剖面，沿梁宽移动剖切位置。',points:['剖切会移去一侧混凝土与钢筋，剖面上的彩色点是被切到的钢筋。','将混凝土滑杆拖至最左只看钢筋，拖至最右查看实体剖面。'],layers:['concrete','bottom','bent','top','stirrup','hoist'],opacity:74,cut:'transverse'},
+    {title:'补全箍筋与吊环',text:'两根 ⑥ 箍筋都是宽 160 mm 的矩形，在腹板中央叠合 70 mm；⑦ 为翼缘箍筋。两处 ⑧ 吊环从梁顶伸出。',points:['⑥：每梁 50 根 Φ8、单根 1570 mm；⑦：25 根 Φ8、单根 1450 mm。','⑧：2 根 Φ18、单根 1620 mm。'],layers:['concrete','bottom','bent','top','stirrup','hoist'],opacity:10},
+    {title:'移动剖切面核对钢筋',text:'选择图纸的 1—1、2—2、3—3 横断面，或拖动滑杆看梁长上的任意横断面；再切换纵剖面，沿梁宽移动剖切位置。',points:['剖面中的圆点按实际截点计算，编号随对应钢筋一起移动。','将混凝土滑杆拖至最左只看钢筋，拖至最右查看实体剖面。'],layers:['concrete','bottom','bent','top','stirrup','hoist'],opacity:74,cut:'transverse'},
     {title:'回到整体配筋图',text:'将混凝土、纵筋、箍筋和吊环叠合，核对原图的立面、钢筋详图、三个断面和钢筋表。',points:['下料长度、直径与根数可在下方钢筋尺寸表逐项查看。','模型沿梁长压缩展示；梁体实际尺寸及弯钩细节均以原始配筋图为准。'],layers:['concrete','bottom','bent','top','stirrup','hoist'],opacity:23,cut:'none'}
   ];
   let step=0,yaw=-.55,pitch=.32,zoom=1,drag=null,cutMode='none',cutX=presets[1],cutY=0,selectedPreset='1';
@@ -146,7 +146,7 @@
   }
   function svgTransverse(){
     const point=(y,z)=>[175+y*113/325,235-z*209/600],xy=(y,z)=>point(y,z).join(',');
-    const shape=cross.map(([y,z])=>xy(y,z)).join(' '),parts=[];
+    const shape=cross.map(([y,z])=>xy(y,z)).join(' '),parts=[],hitsById=new Map();
     if(checks.concrete.checked&&Number(opacityInput.value)>0)parts.push(`<polygon points="${shape}" fill="#244356" stroke="#7bc7db" stroke-width="2"/>`);
     if(checks.stirrup.checked)for(const bar of steel.filter(item=>item.group==='stirrup').slice(0,3))
       parts.push(`<polyline points="${bar.points.map(p=>xy(p.y,p.z)).join(' ')}" fill="none" stroke="${bar.color||colors.stirrup}" stroke-width="2.4"/>`);
@@ -154,7 +154,18 @@
       for(const hit of planeIntersections(bar.points,'x',cutX-L/2)){
         const [x,y]=point(hit.y,hit.z),r=Math.max(3.2,bar.dia*.24);
         parts.push(`<circle cx="${x}" cy="${y}" r="${r}" fill="${bar.color||colors[bar.group]}" stroke="#071a2a" stroke-width="1"/>`);
+        if(!hitsById.has(bar.id))hitsById.set(bar.id,[]);
+        hitsById.get(bar.id).push({...hit,group:bar.group,color:bar.color||colors[bar.group]});
       }
+    }
+    // 编号由当前剖切截点生成，移动剖切面时不沿用上一个断面的静态位置。
+    for(const id of [1,2,3,4,5]){
+      const hits=hitsById.get(id);if(!hits?.length)continue;
+      const hit=id===5?hits.filter(p=>p.z>550).at(-1)||hits.at(-1):id===2||id===4?hits.at(-1):hits[0];
+      const [x,y]=point(hit.y,hit.z);
+      const [dx,dy]=id===1?[-55,-10]:id===2?hit.z>300?[28,27]:[57,-10]:id===3?[-32,hit.z>300?29:-28]:id===4?[28,-38]:[31,25];
+      const bx=Math.max(12,Math.min(338,x+dx)),by=Math.max(29,Math.min(241,y+dy));
+      parts.push(`<g class="bar-number" data-bar-id="${id}" data-cut-mm="${Math.round(cutX)}"><title>${id} 号钢筋</title><line x1="${x}" y1="${y}" x2="${bx}" y2="${by}" stroke="${hit.color}" stroke-width="1"/><circle cx="${bx}" cy="${by}" r="9.5" fill="#071a2a" stroke="${hit.color}" stroke-width="1.4"/><text x="${bx}" y="${by+3.2}" text-anchor="middle" fill="#fff" font-size="10" font-weight="700">${id}</text></g>`);
     }
     parts.push('<text x="175" y="17" text-anchor="middle" fill="#a9d4df" font-size="12">翼缘 650 mm</text><text x="175" y="256" text-anchor="middle" fill="#a9d4df" font-size="12">腹板 300 mm · ⑥ 重叠 70 mm</text>');
     return parts.join('');
