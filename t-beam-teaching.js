@@ -42,10 +42,10 @@
     {title:'辨认 ②③④ 号弯起筋',text:'对照 1—1、2—2、3—3 断面追踪 Φ18 钢筋：② 在 1—1 位于上部，弯起后两根分别贴红、蓝箍筋下横肢；④ 两根始终贴靠左右外箍筋肢，在 2—2、3—3 位于下部，与②各自独立；③ 在 2—2 下部贴蓝箍中间竖肢，至 3—3 上部进入叠合区。',points:['②：2Φ18，7700 mm；③：1Φ18，4060 mm；④：2Φ18，5260 mm。','各编号对应独立钢筋，随剖切位置核对其截点。'],layers:['concrete','bottom','bent','stirrup'],opacity:12},
     {title:'布置 ⑤ 号顶部纵筋',text:'翼缘内有 8 根 Φ12 顶部纵筋：上层六根，两侧下层各一根。各根钢筋贴在箍筋内侧，断面之间留有净距。',points:['⑤：8Φ12，单根下料长度 6050 mm。','旋转至断面视角，核对六上、两下的分布。'],layers:['concrete','bottom','bent','top','stirrup'],opacity:12},
     {title:'补全箍筋与吊环',text:'两根 ⑥ 箍筋都是宽 160 mm 的矩形，在腹板中央叠合 70 mm；⑦ 为翼缘箍筋。两处 ⑧ 吊环从梁顶伸出。',points:['⑥：每梁 50 根 Φ8、单根 1570 mm；⑦：25 根 Φ8、单根 1450 mm。','⑧：2 根 Φ18、单根 1620 mm。'],layers:['concrete','bottom','bent','top','stirrup','hoist'],opacity:10},
-    {title:'移动剖切面核对钢筋',text:'选择图纸的 1—1、2—2、3—3 横断面，或拖动滑杆看梁长上的任意横断面；再切换纵剖面，沿梁宽移动剖切位置。',points:['剖面中的圆点按实际截点计算，编号随对应钢筋一起移动。','将混凝土滑杆拖至最左只看钢筋，拖至最右查看实体剖面。'],layers:['concrete','bottom','bent','top','stirrup','hoist'],opacity:74,cut:'transverse'},
+    {title:'移动剖切面核对钢筋',text:'选择图纸的 1—1、2—2、3—3 横断面，或拖动滑杆看梁长上的任意横断面；再切换纵剖面，沿梁宽移动剖切位置。',points:['剖面中的彩色圆点随剖切位置更新，对照原图辨认相应钢筋。','将混凝土滑杆拖至最左只看钢筋，拖至最右查看实体剖面。'],layers:['concrete','bottom','bent','top','stirrup','hoist'],opacity:74,cut:'transverse'},
     {title:'回到整体配筋图',text:'将混凝土、纵筋、箍筋和吊环叠合，核对原图的立面、钢筋详图、三个断面和钢筋表。',points:['下料长度、直径与根数可在下方钢筋尺寸表逐项查看。','模型沿梁长压缩展示；梁体实际尺寸及弯钩细节均以原始配筋图为准。'],layers:['concrete','bottom','bent','top','stirrup','hoist'],opacity:23,cut:'none'}
   ];
-  let step=0,yaw=-.55,pitch=.32,zoom=1,drag=null,cutMode='none',cutX=presets[1],cutY=0,selectedPreset='1';
+  let step=0,yaw=-.55,pitch=.32,zoom=1,panX=0,panY=0,interaction='rotate',drag=null,cutMode='none',cutX=presets[1],cutY=0,selectedPreset='1';
   function projection(p){
     const xx=p.x*LX,cy=Math.cos(yaw),sy=Math.sin(yaw),cp=Math.cos(pitch),sp=Math.sin(pitch);
     const hx=xx*cy-p.y*sy,depth=xx*sy+p.y*cy;
@@ -57,7 +57,7 @@
     const w=canvas.clientWidth,h=canvas.clientHeight;
     return {w,h,s:Math.min((w-72)/(maxx-minx),(h-105)/(maxy-miny))*zoom,cx:(minx+maxx)/2,cy:(miny+maxy)/2};
   }
-  function screen(p,f){const q=projection(p);return {x:f.w/2+(q.x-f.cx)*f.s,y:f.h/2+(q.y-f.cy)*f.s,d:q.d};}
+  function screen(p,f){const q=projection(p);return {x:f.w/2+(q.x-f.cx)*f.s+panX,y:f.h/2+(q.y-f.cy)*f.s+panY,d:q.d};}
   function path(points,color,width,f,alpha=1,close=false){
     if(points.length<2||alpha<=0)return;ctx.save();ctx.globalAlpha=alpha;ctx.strokeStyle=color;ctx.lineWidth=width;ctx.lineCap='round';ctx.lineJoin='round';ctx.beginPath();points.forEach((p,i)=>{const q=screen(p,f);i?ctx.lineTo(q.x,q.y):ctx.moveTo(q.x,q.y)});if(close)ctx.closePath();ctx.stroke();ctx.restore();
   }
@@ -146,7 +146,7 @@
   }
   function svgTransverse(){
     const point=(y,z)=>[175+y*113/325,235-z*209/600],xy=(y,z)=>point(y,z).join(',');
-    const shape=cross.map(([y,z])=>xy(y,z)).join(' '),parts=[],hitsById=new Map();
+    const shape=cross.map(([y,z])=>xy(y,z)).join(' '),parts=[];
     if(checks.concrete.checked&&Number(opacityInput.value)>0)parts.push(`<polygon points="${shape}" fill="#244356" stroke="#7bc7db" stroke-width="2"/>`);
     if(checks.stirrup.checked)for(const bar of steel.filter(item=>item.group==='stirrup').slice(0,3))
       parts.push(`<polyline points="${bar.points.map(p=>xy(p.y,p.z)).join(' ')}" fill="none" stroke="${bar.color||colors.stirrup}" stroke-width="2.4"/>`);
@@ -154,18 +154,7 @@
       for(const hit of planeIntersections(bar.points,'x',cutX-L/2)){
         const [x,y]=point(hit.y,hit.z),r=Math.max(3.2,bar.dia*.24);
         parts.push(`<circle cx="${x}" cy="${y}" r="${r}" fill="${bar.color||colors[bar.group]}" stroke="#071a2a" stroke-width="1"/>`);
-        if(!hitsById.has(bar.id))hitsById.set(bar.id,[]);
-        hitsById.get(bar.id).push({...hit,group:bar.group,color:bar.color||colors[bar.group]});
       }
-    }
-    // 编号由当前剖切截点生成，移动剖切面时不沿用上一个断面的静态位置。
-    for(const id of [1,2,3,4,5]){
-      const hits=hitsById.get(id);if(!hits?.length)continue;
-      const hit=id===5?hits.filter(p=>p.z>550).at(-1)||hits.at(-1):id===2||id===4?hits.at(-1):hits[0];
-      const [x,y]=point(hit.y,hit.z);
-      const [dx,dy]=id===1?[-55,-10]:id===2?hit.z>300?[28,27]:[57,-10]:id===3?[-32,hit.z>300?29:-28]:id===4?[28,-38]:[31,25];
-      const bx=Math.max(12,Math.min(338,x+dx)),by=Math.max(29,Math.min(241,y+dy));
-      parts.push(`<g class="bar-number" data-bar-id="${id}" data-cut-mm="${Math.round(cutX)}"><title>${id} 号钢筋</title><line x1="${x}" y1="${y}" x2="${bx}" y2="${by}" stroke="${hit.color}" stroke-width="1"/><circle cx="${bx}" cy="${by}" r="9.5" fill="#071a2a" stroke="${hit.color}" stroke-width="1.4"/><text x="${bx}" y="${by+3.2}" text-anchor="middle" fill="#fff" font-size="10" font-weight="700">${id}</text></g>`);
     }
     parts.push('<text x="175" y="17" text-anchor="middle" fill="#a9d4df" font-size="12">翼缘 650 mm</text><text x="175" y="256" text-anchor="middle" fill="#a9d4df" font-size="12">腹板 300 mm · ⑥ 重叠 70 mm</text>');
     return parts.join('');
@@ -214,10 +203,17 @@
     if(name==='front'){yaw=0;pitch=0}else if(name==='end'){yaw=-Math.PI/2;pitch=0}else{yaw=-.55;pitch=.32}
     document.querySelectorAll('[data-view]').forEach(el=>el.classList.toggle('active',el.dataset.view===name));render();
   }
+  function setInteraction(mode){
+    interaction=mode;drag=null;canvas.dataset.interaction=mode;
+    document.querySelectorAll('[data-action]').forEach(el=>{
+      const active=el.dataset.action===mode;el.classList.toggle('active',active);el.setAttribute('aria-pressed',String(active));
+    });
+  }
   document.querySelectorAll('[data-step]').forEach(el=>el.addEventListener('click',()=>setStep(Number(el.dataset.step))));
   $('prev-step').addEventListener('click',()=>setStep(step-1));$('next-step').addEventListener('click',()=>setStep(step+1));
   document.querySelectorAll('[data-view]').forEach(el=>el.addEventListener('click',()=>setView(el.dataset.view)));
-  $('reset-view').addEventListener('click',()=>{zoom=1;setView('iso')});
+  document.querySelectorAll('[data-action]').forEach(el=>el.addEventListener('click',()=>setInteraction(el.dataset.action)));
+  $('reset-view').addEventListener('click',()=>{zoom=1;panX=0;panY=0;setInteraction('rotate');setView('iso')});
   document.querySelectorAll('[data-cut]').forEach(el=>el.addEventListener('click',()=>setCutMode(el.dataset.cut)));
   document.querySelectorAll('[data-preset]').forEach(el=>el.addEventListener('click',()=>selectPreset(el.dataset.preset)));
   $('section-select').addEventListener('change',e=>{if(e.target.value==='custom'){cutMode='transverse';selectedPreset='custom';updateCutUI()}else selectPreset(e.target.value)});
@@ -225,9 +221,19 @@
   $('cut-y').addEventListener('input',e=>{cutY=Number(e.target.value);cutMode='longitudinal';updateCutUI()});
   Object.values(checks).forEach(el=>el.addEventListener('change',updateCutUI));
   opacityInput.addEventListener('input',()=>{$('opacity-value').textContent=`${opacityInput.value}%`;drawSection();render()});
-  canvas.addEventListener('pointerdown',e=>{drag={x:e.clientX,y:e.clientY,yaw,pitch};canvas.setPointerCapture(e.pointerId)});
-  canvas.addEventListener('pointermove',e=>{if(!drag)return;yaw=drag.yaw+(e.clientX-drag.x)*.006;pitch=Math.max(-.85,Math.min(.85,drag.pitch+(e.clientY-drag.y)*.004));document.querySelectorAll('[data-view]').forEach(el=>el.classList.remove('active'));render()});
-  for(const event of ['pointerup','pointercancel','lostpointercapture'])canvas.addEventListener(event,()=>{drag=null});
+  canvas.addEventListener('pointerdown',e=>{
+    if(e.button>2)return;
+    drag={pointerId:e.pointerId,mode:e.button===1||e.button===2||e.shiftKey?'pan':interaction,x:e.clientX,y:e.clientY,yaw,pitch,panX,panY};
+    canvas.setPointerCapture(e.pointerId);
+  });
+  canvas.addEventListener('pointermove',e=>{
+    if(!drag||drag.pointerId!==e.pointerId)return;
+    if(drag.mode==='pan'){panX=drag.panX+e.clientX-drag.x;panY=drag.panY+e.clientY-drag.y;}
+    else{yaw=drag.yaw+(e.clientX-drag.x)*.006;pitch=Math.max(-.85,Math.min(.85,drag.pitch+(e.clientY-drag.y)*.004));document.querySelectorAll('[data-view]').forEach(el=>el.classList.remove('active'));}
+    render();
+  });
+  for(const event of ['pointerup','pointercancel','lostpointercapture'])canvas.addEventListener(event,e=>{if(drag?.pointerId===e.pointerId)drag=null});
+  canvas.addEventListener('contextmenu',e=>e.preventDefault());
   canvas.addEventListener('wheel',e=>{e.preventDefault();zoom=Math.max(.55,Math.min(2.6,zoom*(e.deltaY>0?.9:1.1)));render()},{passive:false});
-  new ResizeObserver(render).observe(canvas);setStep(0);
+  new ResizeObserver(render).observe(canvas);setInteraction('rotate');setStep(0);
 })();
