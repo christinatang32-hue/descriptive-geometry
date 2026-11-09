@@ -5,8 +5,8 @@
   const cross=[[-150,0],[150,0],[150,500],[325,500],[325,600],[-325,600],[-325,500],[-150,500]];
   // 立面图给出剖切线的相对位置，未标注距梁端的精确尺寸。
   const presets={1:150,2:2157,3:1430};
-  // 实际直径仅用于颜色和标注；2 mm 示意钢筋相切时，中心线间距为 2 mm。
-  const displayDia=2,contactGap=displayDia;
+  // 实际直径仅用于颜色和标注；18 mm 示意钢筋相切时，中心线间距为 18 mm。
+  const displayDia=18,contactGap=displayDia;
   const diameterColors={8:'#be9cff',12:'#53eafd',18:'#ff806e',22:'#ffd236'};
   const $=id=>document.getElementById(id);
   const canvas=$('model'),ctx=canvas.getContext('2d');
@@ -17,16 +17,17 @@
   const add=(group,id,actualDia,points)=>steel.push({group,id,actualDia,dia:displayDia,points,color:diameterColors[actualDia]});
   document.querySelectorAll('[data-diameter]').forEach(el=>{el.style.backgroundColor=diameterColors[el.dataset.diameter]});
   // ① 底筋：最外侧两根靠外箍筋肢，四根均贴近腹板箍筋底部内表面。
-  for(const y of [-125+contactGap,-20,20,125-contactGap])add('bottom',1,22,[V(-2900,y,205),V(-2900,y,25+contactGap),V(2900,y,25+contactGap),V(2900,y,205)]);
+  for(const y of [-125+contactGap,-35+contactGap,35-contactGap,125-contactGap])add('bottom',1,22,[V(-2900,y,205),V(-2900,y,25+contactGap),V(2900,y,25+contactGap),V(2900,y,205)]);
   // ② 的下水平段分别贴靠两只 ⑥ 箍筋的下横肢。
   for(const y of [-75,75])add('bent',2,18,[V(-2924,y,575-contactGap),V(-2724,y,575-contactGap),V(-2200,y,25+contactGap),V(2200,y,25+contactGap),V(2724,y,575-contactGap),V(2924,y,575-contactGap)]);
   // ④ 全程贴靠两侧外箍筋肢，与 1—1 断面顶部的 ② 保持不同的横向和高度位置。
-  for(const side of [-1,1])add('bent',4,18,[V(-2277,side*(125-contactGap),542),V(-2077,side*(125-contactGap),542),V(-1600,side*(125-contactGap),65),V(1600,side*(125-contactGap),65),V(2077,side*(125-contactGap),542),V(2277,side*(125-contactGap),542)]);
+  for(const side of [-1,1])add('bent',4,18,[V(-2277,side*(125-contactGap),525+contactGap),V(-2077,side*(125-contactGap),525+contactGap),V(-1600,side*(125-contactGap),65),V(1600,side*(125-contactGap),65),V(2077,side*(125-contactGap),525+contactGap),V(2277,side*(125-contactGap),525+contactGap)]);
   // ③ 在 2—2 下部贴靠右箍的中间竖肢，至 3—3 上部进入两箍筋的叠合区。
-  add('bent',3,18,[V(-1693.5,0,575-contactGap),V(-1493.5,0,575-contactGap),V(-1000,-35+contactGap,68.5),V(1000,-35+contactGap,68.5),V(1493.5,0,575-contactGap),V(1693.5,0,575-contactGap)]);
+  add('bent',3,18,[V(-1693.5,0,575-contactGap),V(-1500,0,575-contactGap),V(-1000,-35+contactGap,68.5),V(1000,-35+contactGap,68.5),V(1500,0,575-contactGap),V(1693.5,0,575-contactGap)]);
   // ⑤ 共八根：翼缘上层六根，两端下层各一根，均不与 ⑥、⑦ 箍筋断面相交。
-  for(const y of [-300+contactGap,-125+contactGap,-35+contactGap,35-contactGap,125-contactGap,300-contactGap])add('top',5,12,[V(-2900,y,575-contactGap),V(2900,y,575-contactGap)]);
-  for(const y of [-300+contactGap,300-contactGap])add('top',5,12,[V(-2900,y,525+contactGap),V(2900,y,525+contactGap)]);
+  // 中间四根分列腹板箍筋竖肢外侧；下层两根向内错开，避免与上层角筋重叠。
+  for(const y of [-300+contactGap,-125-contactGap,-35-contactGap,35+contactGap,125+contactGap,300-contactGap])add('top',5,12,[V(-2900,y,575-contactGap),V(2900,y,575-contactGap)]);
+  for(const y of [-300+2*contactGap,300-2*contactGap])add('top',5,12,[V(-2900,y,525+contactGap),V(2900,y,525+contactGap)]);
   // ⑥ 两个 160 mm 宽、550 mm 高的矩形箍筋互相叠合 70 mm：
   // 左箍 y=-125..35，右箍 y=-35..125；腹板两侧各留 25 mm。
   // ⑦ 翼缘箍筋宽 600 mm、高 50 mm，四周按图留 25 mm。
@@ -37,7 +38,8 @@
       add('stirrup',6,8,[V(x,left,25),V(x,right,25),V(x,right,575),V(x,left,575),V(x,left,25)]);
     add('stirrup',7,8,[V(x,-300,525),V(x,300,525),V(x,300,575),V(x,-300,575),V(x,-300,525)]);
   }
-  for(const x of [-1975,1975])add('hoist',8,18,[V(x,-48,530),V(x,-48,680),V(x,-36,704),V(x,36,704),V(x,48,680),V(x,48,530)]);
+  // 吊环两肢避开顶部纵筋，18 mm 示意直径下仍保留净距。
+  for(const x of [-1975,1975])add('hoist',8,18,[V(x,-75,530),V(x,-75,680),V(x,-63,704),V(x,63,704),V(x,75,680),V(x,75,530)]);
 
   const steps=[
     {title:'先认清 T 形断面与梁长',text:'立面图确定纵向外形；断面图确定翼缘和腹板的组合。将 T 形断面沿梁长方向延伸，得到梁体。',points:['翼缘宽 650 mm、厚 100 mm；腹板宽 300 mm。','翼缘下腹板高 500 mm，总高 600 mm。'],layers:['concrete','bottom','bent','top','stirrup','hoist'],opacity:100},
