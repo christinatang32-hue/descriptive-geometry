@@ -3,6 +3,9 @@
   const page=location.pathname.split('/').pop();
   const api=String(window.COURSE_CONFIG?.apiBase||'').replace(/\/$/,'');
   let session;try{session=JSON.parse(sessionStorage.getItem('dg-study-session')||'null')}catch{}
+  let teacherSession;try{teacherSession=JSON.parse(sessionStorage.getItem('dg-teacher-session')||'null')}catch{}
+  const teacherPreview=sessionStorage.getItem('dg-teacher-preview')==='1'&&!!teacherSession?.sessionId&&!!teacherSession?.token;
+  let previewAuthorized=false;
   const hub=document.createElement('section');
   hub.className='assignment-hub';
   hub.setAttribute('aria-label','习题提交与学习流程');
@@ -39,6 +42,20 @@
     return new File([blob],file.name.replace(/\.[^.]+$/,'')+'.jpg',{type:'image/jpeg'});
   }
   async function load(){
+    if(teacherPreview){
+      $('grade-button').disabled=true;
+      $('assignment-photo').disabled=true;
+      if(!api){status('教师预览需要连接登录服务。',true);return}
+      try{
+        const response=await fetch(api+'/api/admin/me',{headers:{Authorization:'Bearer '+teacherSession.token,'X-Session-Id':teacherSession.sessionId}});
+        if(!response.ok)throw Error('教师登录已过期，请重新登录。');
+        previewAuthorized=true;
+        $('start-learning').disabled=false;
+        $('start-learning').textContent='开始学习（教师预览）';
+        status('教师预览模式：可查看学生学习内容，不上传作业，也不计入学生学情。');
+      }catch(error){status(error.message||'无法验证教师身份。',true)}
+      return;
+    }
     if(!session?.studentId){status('请先从首页登录。',true);$('grade-button').disabled=true;return}
     if(!api){status('本地演示模式：批改服务未接入，可预览分步学习。');$('grade-button').disabled=true;$('start-learning').disabled=false;$('start-learning').textContent='开始学习（本地演示）';return}
     try{
@@ -50,6 +67,7 @@
   }
   $('assignment-upload').addEventListener('submit',async event=>{
     event.preventDefault();
+    if(teacherPreview)return;
     const file=$('assignment-photo').files[0];if(!file)return;
     const button=$('grade-button');button.disabled=true;$('view-result').disabled=true;$('start-learning').disabled=true;$('result-panel').hidden=true;
     let seconds=0;
@@ -90,7 +108,7 @@
     }catch(error){status(error.message,true)}
   });
   $('start-learning').addEventListener('click',()=>{
-    if(api&&!latest?.canLearn)return;
+    if((teacherPreview&&!previewAuthorized)||(!teacherPreview&&api&&!latest?.canLearn))return;
     document.body.classList.remove('assignment-locked');
     hub.hidden=true;app.scrollIntoView({block:'start'});
   });

@@ -71,6 +71,7 @@
         if(!response.ok)throw Error('登录服务暂不可用，请稍后重试。');
         const data=await response.json();
         const record={studentId,name,sessionId:data.sessionId,token:data.token,demo:false};
+        sessionStorage.removeItem('dg-teacher-preview');
         if(data.role==='teacher'){
           sessionStorage.removeItem('dg-study-session');
           sessionStorage.setItem('dg-teacher-session',JSON.stringify(record));

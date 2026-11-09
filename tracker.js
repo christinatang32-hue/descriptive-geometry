@@ -2,6 +2,9 @@
 (()=>{
   const config=window.COURSE_CONFIG||{},api=String(config.apiBase||'').replace(/\/$/,'');
   let session;try{session=JSON.parse(sessionStorage.getItem('dg-study-session')||'null')}catch{}
+  let teacher;try{teacher=JSON.parse(sessionStorage.getItem('dg-teacher-session')||'null')}catch{}
+  // Teacher preview can open every learning page, without writing student activity.
+  if(sessionStorage.getItem('dg-teacher-preview')==='1'&&teacher?.sessionId&&teacher?.token)return;
   if(!session?.studentId){
     const here=location.pathname.split('/').pop()+(location.hash||'');
     location.replace('index.html?next='+encodeURIComponent(here));

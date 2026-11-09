@@ -2,6 +2,7 @@
   const $=id=>document.getElementById(id),error=$('error'),upload=$('roster-form'),manual=$('manual-form');
   let session;try{session=JSON.parse(sessionStorage.getItem('dg-teacher-session')||'null')}catch{}
   if(!session?.sessionId||!session?.token){location.replace('index.html?next=admin.html');return}
+  sessionStorage.removeItem('dg-teacher-preview');
   let rows=[],groups=[];
   const fmt=seconds=>{const s=Math.round(seconds||0);return s<60?s+' 秒':Math.floor(s/3600)+' 小时 '+Math.floor(s%3600/60)+' 分钟'};
   const api=()=>String(window.COURSE_CONFIG?.apiBase||'').replace(/\/$/,'');
@@ -17,6 +18,7 @@
       const person=await request('/api/admin/me');
       $('role-badge').textContent=`${person.name} · ${person.isAdmin?'管理员':'教师'}`;
       $('role-badge').hidden=false;
+      $('student-preview').hidden=false;
       $('teacher-management-link').hidden=!person.isAdmin;
     }catch(cause){error.textContent=cause.message||'无法读取教师身份。'}
   }
@@ -125,6 +127,11 @@
   $('manual-year').addEventListener('input',updateManualGroups);
   $('manual-semester').addEventListener('change',updateManualGroups);
   loadIdentity();load();
+  $('student-preview').addEventListener('click',()=>{
+    sessionStorage.removeItem('dg-study-session');
+    sessionStorage.setItem('dg-teacher-preview','1');
+    location.href='catalog.html';
+  });
   $('teacher-management-link').addEventListener('click',async()=>{
     $('teacher-dialog').showModal();await loadTeachers();
   });
