@@ -5,33 +5,36 @@
   const cross=[[-150,0],[150,0],[150,500],[325,500],[325,600],[-325,600],[-325,500],[-150,500]];
   // 立面图给出剖切线的相对位置，未标注距梁端的精确尺寸。
   const presets={1:150,2:2157,3:1430};
-  const colors={bottom:'#ffd236',bent:'#ff806e',top:'#53eafd',stirrup:'#be9cff',hoist:'#f8b65c'};
+  // 实际直径仅用于颜色和标注；2 mm 示意钢筋相切时，中心线间距为 2 mm。
+  const displayDia=2,contactGap=displayDia;
+  const diameterColors={8:'#be9cff',12:'#53eafd',18:'#ff806e',22:'#ffd236'};
   const $=id=>document.getElementById(id);
   const canvas=$('model'),ctx=canvas.getContext('2d');
   const checks=Object.fromEntries([...document.querySelectorAll('[data-layer]')].map(el=>[el.dataset.layer,el]));
   const opacityInput=$('opacity');
   const V=(x,y,z)=>({x,y,z});
   const steel=[];
-  const add=(group,id,dia,points,color)=>steel.push({group,id,dia,points,color});
+  const add=(group,id,actualDia,points)=>steel.push({group,id,actualDia,dia:displayDia,points,color:diameterColors[actualDia]});
+  document.querySelectorAll('[data-diameter]').forEach(el=>{el.style.backgroundColor=diameterColors[el.dataset.diameter]});
   // ① 底筋：最外侧两根靠外箍筋肢，四根均贴近腹板箍筋底部内表面。
-  for(const y of [-110,-20,20,110])add('bottom',1,22,[V(-2900,y,205),V(-2900,y,40),V(2900,y,40),V(2900,y,205)]);
+  for(const y of [-125+contactGap,-20,20,125-contactGap])add('bottom',1,22,[V(-2900,y,205),V(-2900,y,25+contactGap),V(2900,y,25+contactGap),V(2900,y,205)]);
   // ② 的下水平段分别贴靠两只 ⑥ 箍筋的下横肢。
-  for(const y of [-75,75])add('bent',2,18,[V(-2924,y,562),V(-2724,y,562),V(-2200,y,38),V(2200,y,38),V(2724,y,562),V(2924,y,562)]);
+  for(const y of [-75,75])add('bent',2,18,[V(-2924,y,575-contactGap),V(-2724,y,575-contactGap),V(-2200,y,25+contactGap),V(2200,y,25+contactGap),V(2724,y,575-contactGap),V(2924,y,575-contactGap)]);
   // ④ 全程贴靠两侧外箍筋肢，与 1—1 断面顶部的 ② 保持不同的横向和高度位置。
-  for(const side of [-1,1])add('bent',4,18,[V(-2277,side*112,542),V(-2077,side*112,542),V(-1600,side*112,65),V(1600,side*112,65),V(2077,side*112,542),V(2277,side*112,542)]);
-  // ③ 在 2—2 下部贴靠左侧中间箍筋肢，至 3—3 上部进入两箍筋的叠合区。
-  add('bent',3,18,[V(-1693.5,0,562),V(-1493.5,0,562),V(-1000,-22,68.5),V(1000,-22,68.5),V(1493.5,0,562),V(1693.5,0,562)]);
+  for(const side of [-1,1])add('bent',4,18,[V(-2277,side*(125-contactGap),542),V(-2077,side*(125-contactGap),542),V(-1600,side*(125-contactGap),65),V(1600,side*(125-contactGap),65),V(2077,side*(125-contactGap),542),V(2277,side*(125-contactGap),542)]);
+  // ③ 在 2—2 下部贴靠右箍的中间竖肢，至 3—3 上部进入两箍筋的叠合区。
+  add('bent',3,18,[V(-1693.5,0,575-contactGap),V(-1493.5,0,575-contactGap),V(-1000,-35+contactGap,68.5),V(1000,-35+contactGap,68.5),V(1493.5,0,575-contactGap),V(1693.5,0,575-contactGap)]);
   // ⑤ 共八根：翼缘上层六根，两端下层各一根，均不与 ⑥、⑦ 箍筋断面相交。
-  for(const y of [-290,-115,-25,25,115,290])add('top',5,12,[V(-2900,y,565),V(2900,y,565)]);
-  for(const y of [-290,290])add('top',5,12,[V(-2900,y,535),V(2900,y,535)]);
+  for(const y of [-300+contactGap,-125+contactGap,-35+contactGap,35-contactGap,125-contactGap,300-contactGap])add('top',5,12,[V(-2900,y,575-contactGap),V(2900,y,575-contactGap)]);
+  for(const y of [-300+contactGap,300-contactGap])add('top',5,12,[V(-2900,y,525+contactGap),V(2900,y,525+contactGap)]);
   // ⑥ 两个 160 mm 宽、550 mm 高的矩形箍筋互相叠合 70 mm：
-  // 红箍 y=-125..35，蓝箍 y=-35..125；腹板两侧各留 25 mm。
+  // 左箍 y=-125..35，右箍 y=-35..125；腹板两侧各留 25 mm。
   // ⑦ 翼缘箍筋宽 600 mm、高 50 mm，四周按图留 25 mm。
   // 立面 @250 是名义间距，模型均布 25 道以示钢筋表的 50 根 ⑥ 和 25 根 ⑦。
   for(let i=0;i<25;i++){
     const x=-2875+i*5750/24;
-    for(const [left,right,color] of [[-125,35,'#ff5f79'],[-35,125,'#5c9bff']])
-      add('stirrup',6,8,[V(x,left,25),V(x,right,25),V(x,right,575),V(x,left,575),V(x,left,25)],color);
+    for(const [left,right] of [[-125,35],[-35,125]])
+      add('stirrup',6,8,[V(x,left,25),V(x,right,25),V(x,right,575),V(x,left,575),V(x,left,25)]);
     add('stirrup',7,8,[V(x,-300,525),V(x,300,525),V(x,300,575),V(x,-300,575),V(x,-300,525)]);
   }
   for(const x of [-1975,1975])add('hoist',8,18,[V(x,-48,530),V(x,-48,680),V(x,-36,704),V(x,36,704),V(x,48,680),V(x,48,530)]);
@@ -39,7 +42,7 @@
   const steps=[
     {title:'先认清 T 形断面与梁长',text:'立面图确定纵向外形；断面图确定翼缘和腹板的组合。将 T 形断面沿梁长方向延伸，得到梁体。',points:['翼缘宽 650 mm、厚 100 mm；腹板宽 300 mm。','翼缘下腹板高 500 mm，总高 600 mm。'],layers:['concrete','bottom','bent','top','stirrup','hoist'],opacity:100},
     {title:'放入 ① 号底部纵筋',text:'腹板下部放置 4 根 Φ22 纵筋。观察端面：外侧两根贴靠外箍筋肢，其余两根也贴靠箍筋的底部内表面。',points:['①：4Φ22，单根下料长度 6580 mm。','三维弯钩仅作识图示意，长度以钢筋表为准。'],layers:['concrete','bottom','stirrup'],opacity:13},
-    {title:'辨认 ②③④ 号弯起筋',text:'对照 1—1、2—2、3—3 断面追踪 Φ18 钢筋：② 在 1—1 位于上部，弯起后两根分别贴红、蓝箍筋下横肢；④ 两根始终贴靠左右外箍筋肢，在 2—2、3—3 位于下部，与②各自独立；③ 在 2—2 下部贴蓝箍中间竖肢，至 3—3 上部进入叠合区。',points:['②：2Φ18，7700 mm；③：1Φ18，4060 mm；④：2Φ18，5260 mm。','各编号对应独立钢筋，随剖切位置核对其截点。'],layers:['concrete','bottom','bent','stirrup'],opacity:12},
+    {title:'辨认 ②③④ 号弯起筋',text:'对照 1—1、2—2、3—3 断面追踪 Φ18 钢筋：② 在 1—1 位于上部，弯起后两根分别贴左右两只箍筋下横肢；④ 两根始终贴靠左右外箍筋肢，在 2—2、3—3 位于下部，与②各自独立；③ 在 2—2 下部贴右箍中间竖肢，至 3—3 上部进入叠合区。',points:['②：2Φ18，7700 mm；③：1Φ18，4060 mm；④：2Φ18，5260 mm。','各编号对应独立钢筋，随剖切位置核对其截点。'],layers:['concrete','bottom','bent','stirrup'],opacity:12},
     {title:'布置 ⑤ 号顶部纵筋',text:'翼缘内有 8 根 Φ12 顶部纵筋：上层六根，两侧下层各一根。各根钢筋贴在箍筋内侧，断面之间留有净距。',points:['⑤：8Φ12，单根下料长度 6050 mm。','旋转至断面视角，核对六上、两下的分布。'],layers:['concrete','bottom','bent','top','stirrup'],opacity:12},
     {title:'补全箍筋与吊环',text:'两根 ⑥ 箍筋都是宽 160 mm 的矩形，在腹板中央叠合 70 mm；⑦ 为翼缘箍筋。两处 ⑧ 吊环从梁顶伸出。',points:['⑥：每梁 50 根 Φ8、单根 1570 mm；⑦：25 根 Φ8、单根 1450 mm。','⑧：2 根 Φ18、单根 1620 mm。'],layers:['concrete','bottom','bent','top','stirrup','hoist'],opacity:10},
     {title:'移动剖切面核对钢筋',text:'选择图纸的 1—1、2—2、3—3 横断面，或拖动滑杆看梁长上的任意横断面；再切换纵剖面，沿梁宽移动剖切位置。',points:['剖面中的彩色圆点随剖切位置更新，对照原图辨认相应钢筋。','将混凝土滑杆拖至最左只看钢筋，拖至最右查看实体剖面。'],layers:['concrete','bottom','bent','top','stirrup','hoist'],opacity:74,cut:'transverse'},
@@ -112,18 +115,18 @@
   }
   function drawBars(f,alpha){
     if(alpha<=0)return;
-    for(const bar of steel){if(!checks[bar.group].checked)continue;for(const run of activePaths(bar.points))path(run,bar.color||colors[bar.group],Math.max(1.3,bar.dia*f.s),f,alpha);}
+    for(const bar of steel){if(!checks[bar.group].checked)continue;for(const run of activePaths(bar.points))path(run,bar.color,bar.dia*f.s,f,alpha);}
   }
   function drawCutSteel(f){
     if(cutMode==='none')return;
     const axis=cutMode==='transverse'?'x':'y',value=cutMode==='transverse'?cutX-L/2:cutY;
     for(const bar of steel){if(!checks[bar.group].checked||bar.group==='hoist')continue;
       if(cutMode==='transverse'&&bar.group==='stirrup'&&Math.abs(bar.points[0].x-value)<=bar.dia/2)
-        path(bar.points,bar.color||colors.stirrup,Math.max(1.3,bar.dia*f.s),f);
+        path(bar.points,bar.color,bar.dia*f.s,f);
       if(cutMode==='longitudinal'&&['bottom','bent','top'].includes(bar.group)&&bar.points.every(p=>Math.abs(p.y-cutY)<=bar.dia/2))
-        path(bar.points,bar.color||colors[bar.group],Math.max(1.3,bar.dia*f.s),f);
+        path(bar.points,bar.color,bar.dia*f.s,f);
       for(const hit of planeIntersections(bar.points,axis,value)){
-        const q=screen(hit,f);ctx.save();ctx.fillStyle=bar.color||colors[bar.group];ctx.strokeStyle='#06121f';ctx.lineWidth=1.2;ctx.beginPath();ctx.arc(q.x,q.y,Math.max(2,bar.dia*f.s/2),0,Math.PI*2);ctx.fill();ctx.stroke();ctx.restore();
+        const q=screen(hit,f);ctx.save();ctx.fillStyle=bar.color;ctx.beginPath();ctx.arc(q.x,q.y,bar.dia*f.s/2,0,Math.PI*2);ctx.fill();ctx.restore();
       }
     }
   }
@@ -135,7 +138,7 @@
     if(alpha>0)for(const face of faces())polygon(face.points,face.fill,face.stroke,f,alpha);
     drawBars(f,1-alpha);
     if(checks.hoist.checked&&alpha===1)for(const bar of steel.filter(item=>item.group==='hoist')){
-      const outside=bar.points.filter(p=>p.z>=600);if(outside.length>1)path(outside,colors.hoist,Math.max(2,bar.dia*f.s),f);
+      const outside=bar.points.filter(p=>p.z>=600);if(outside.length>1)path(outside,bar.color,bar.dia*f.s,f);
     }
     drawCutSteel(f);
     if(cutMode!=='none'&&alpha>0){
@@ -145,15 +148,15 @@
     ctx.save();ctx.fillStyle='#a0c9d7';ctx.font='12px Microsoft YaHei';ctx.fillText('梁长方向 X',23,f.h-18);ctx.restore();
   }
   function svgTransverse(){
-    const point=(y,z)=>[175+y*113/325,235-z*209/600],xy=(y,z)=>point(y,z).join(',');
+    const sectionScale=113/325,point=(y,z)=>[175+y*sectionScale,235-z*sectionScale],xy=(y,z)=>point(y,z).join(',');
     const shape=cross.map(([y,z])=>xy(y,z)).join(' '),parts=[];
     if(checks.concrete.checked&&Number(opacityInput.value)>0)parts.push(`<polygon points="${shape}" fill="#244356" stroke="#7bc7db" stroke-width="2"/>`);
     if(checks.stirrup.checked)for(const bar of steel.filter(item=>item.group==='stirrup').slice(0,3))
-      parts.push(`<polyline points="${bar.points.map(p=>xy(p.y,p.z)).join(' ')}" fill="none" stroke="${bar.color||colors.stirrup}" stroke-width="2.4"/>`);
+      parts.push(`<polyline points="${bar.points.map(p=>xy(p.y,p.z)).join(' ')}" fill="none" stroke="${bar.color}" stroke-width="${bar.dia*sectionScale}" stroke-linejoin="round"/>`);
     for(const bar of steel){if(!checks[bar.group].checked||!['bottom','bent','top'].includes(bar.group))continue;
       for(const hit of planeIntersections(bar.points,'x',cutX-L/2)){
-        const [x,y]=point(hit.y,hit.z),r=Math.max(3.2,bar.dia*.24);
-        parts.push(`<circle cx="${x}" cy="${y}" r="${r}" fill="${bar.color||colors[bar.group]}" stroke="#071a2a" stroke-width="1"/>`);
+        const [x,y]=point(hit.y,hit.z),r=bar.dia*sectionScale/2;
+        parts.push(`<circle cx="${x}" cy="${y}" r="${r}" fill="${bar.color}"/>`);
       }
     }
     parts.push('<text x="175" y="17" text-anchor="middle" fill="#a9d4df" font-size="12">翼缘 650 mm</text><text x="175" y="256" text-anchor="middle" fill="#a9d4df" font-size="12">腹板 300 mm · ⑥ 重叠 70 mm</text>');
@@ -164,10 +167,10 @@
     const z0=Math.abs(cutY)<150?0:500;
     if(checks.concrete.checked&&Number(opacityInput.value)>0)parts.push(`<rect x="24" y="${zmap(600)}" width="302" height="${zmap(z0)-zmap(600)}" fill="#244356" stroke="#7bc7db" stroke-width="1.7"/>`);
     for(const bar of steel){if(!checks[bar.group].checked||!['bottom','bent','top'].includes(bar.group))continue;
-      if(bar.points.every(p=>Math.abs(p.y-cutY)<=bar.dia/2+2))parts.push(`<polyline points="${bar.points.map(p=>`${xmap(p.x)},${zmap(p.z)}`).join(' ')}" fill="none" stroke="${bar.color||colors[bar.group]}" stroke-width="2"/>`);
+      if(bar.points.every(p=>Math.abs(p.y-cutY)<=bar.dia/2))parts.push(`<polyline points="${bar.points.map(p=>`${xmap(p.x)},${zmap(p.z)}`).join(' ')}" fill="none" stroke="${bar.color}" stroke-width="${bar.dia*.29}"/>`);
     }
     if(checks.stirrup.checked)for(const bar of steel.filter(item=>item.group==='stirrup')){
-      for(const hit of planeIntersections(bar.points,'y',cutY))parts.push(`<circle cx="${xmap(hit.x)}" cy="${zmap(hit.z)}" r="2.2" fill="${bar.color||colors.stirrup}"/>`);
+      for(const hit of planeIntersections(bar.points,'y',cutY))parts.push(`<ellipse cx="${xmap(hit.x)}" cy="${zmap(hit.z)}" rx="${bar.dia*302/L/2}" ry="${bar.dia*.29/2}" fill="${bar.color}"/>`);
     }
     parts.push('<text x="175" y="21" text-anchor="middle" fill="#a9d4df" font-size="12">沿梁长 5950 mm</text><text x="175" y="258" text-anchor="middle" fill="#a9d4df" font-size="12">纵剖位置由上方滑杆控制</text>');
     return parts.join('');
