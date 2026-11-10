@@ -20,14 +20,14 @@
   for(const y of [-125+contactGap,-35+contactGap,35-contactGap,125-contactGap])add('bottom',1,22,[V(-2900,y,205),V(-2900,y,25+contactGap),V(2900,y,25+contactGap),V(2900,y,205)]);
   // ② 的下水平段分别贴靠两只 ⑥ 箍筋的下横肢。
   for(const y of [-75,75])add('bent',2,18,[V(-2924,y,575-contactGap),V(-2724,y,575-contactGap),V(-2200,y,25+contactGap),V(2200,y,25+contactGap),V(2724,y,575-contactGap),V(2924,y,575-contactGap)]);
-  // ④ 全程贴靠两侧外箍筋肢，与 1—1 断面顶部的 ② 保持不同的横向和高度位置。
-  for(const side of [-1,1])add('bent',4,18,[V(-2277,side*(125-contactGap),525+contactGap),V(-2077,side*(125-contactGap),525+contactGap),V(-1600,side*(125-contactGap),65),V(1600,side*(125-contactGap),65),V(2077,side*(125-contactGap),525+contactGap),V(2277,side*(125-contactGap),525+contactGap)]);
+  // ④ 贴靠两侧外箍筋竖肢，上端同时贴住上横肢，与 ② 保持独立横向位置。
+  for(const side of [-1,1])add('bent',4,18,[V(-2277,side*(125-contactGap),575-contactGap),V(-2077,side*(125-contactGap),575-contactGap),V(-1600,side*(125-contactGap),65),V(1600,side*(125-contactGap),65),V(2077,side*(125-contactGap),575-contactGap),V(2277,side*(125-contactGap),575-contactGap)]);
   // ③ 在 2—2 下部贴靠右箍的中间竖肢，至 3—3 上部进入两箍筋的叠合区。
   add('bent',3,18,[V(-1693.5,0,575-contactGap),V(-1500,0,575-contactGap),V(-1000,-35+contactGap,68.5),V(1000,-35+contactGap,68.5),V(1500,0,575-contactGap),V(1693.5,0,575-contactGap)]);
   // ⑤ 共八根：翼缘上层六根，两端下层各一根，均不与 ⑥、⑦ 箍筋断面相交。
-  // 中间四根分列腹板箍筋竖肢外侧；下层两根向内错开，避免与上层角筋重叠。
+  // 中间四根分列腹板箍筋竖肢外侧；翼缘两端上下纵筋均贴侧箍，两层中心距 20 mm。
   for(const y of [-300+contactGap,-125-contactGap,-35-contactGap,35+contactGap,125+contactGap,300-contactGap])add('top',5,12,[V(-2900,y,575-contactGap),V(2900,y,575-contactGap)]);
-  for(const y of [-300+2*contactGap,300-2*contactGap])add('top',5,12,[V(-2900,y,525+contactGap),V(2900,y,525+contactGap)]);
+  for(const y of [-300+contactGap,300-contactGap])add('top',5,12,[V(-2900,y,525+contactGap),V(2900,y,525+contactGap)]);
   // ⑥ 两个 160 mm 宽、550 mm 高的矩形箍筋互相叠合 70 mm：
   // 左箍 y=-125..35，右箍 y=-35..125；腹板两侧各留 25 mm。
   // ⑦ 翼缘箍筋宽 600 mm、高 50 mm，四周按图留 25 mm。
@@ -44,8 +44,8 @@
   const steps=[
     {title:'先认清 T 形断面与梁长',text:'立面图确定纵向外形；断面图确定翼缘和腹板的组合。将 T 形断面沿梁长方向延伸，得到梁体。',points:['翼缘宽 650 mm、厚 100 mm；腹板宽 300 mm。','翼缘下腹板高 500 mm，总高 600 mm。'],layers:['concrete','bottom','bent','top','stirrup','hoist'],opacity:100},
     {title:'放入 ① 号底部纵筋',text:'腹板下部放置 4 根 Φ22 纵筋。观察端面：外侧两根贴靠外箍筋肢，其余两根也贴靠箍筋的底部内表面。',points:['①：4Φ22，单根下料长度 6580 mm。','三维弯钩仅作识图示意，长度以钢筋表为准。'],layers:['concrete','bottom','stirrup'],opacity:13},
-    {title:'辨认 ②③④ 号弯起筋',text:'对照 1—1、2—2、3—3 断面追踪 Φ18 钢筋：② 在 1—1 位于上部，弯起后两根分别贴左右两只箍筋下横肢；④ 两根始终贴靠左右外箍筋肢，在 2—2、3—3 位于下部，与②各自独立；③ 在 2—2 下部贴右箍中间竖肢，至 3—3 上部进入叠合区。',points:['②：2Φ18，7700 mm；③：1Φ18，4060 mm；④：2Φ18，5260 mm。','各编号对应独立钢筋，随剖切位置核对其截点。'],layers:['concrete','bottom','bent','stirrup'],opacity:12},
-    {title:'布置 ⑤ 号顶部纵筋',text:'翼缘内有 8 根 Φ12 顶部纵筋：上层六根，两侧下层各一根。各根钢筋贴在箍筋内侧，断面之间留有净距。',points:['⑤：8Φ12，单根下料长度 6050 mm。','旋转至断面视角，核对六上、两下的分布。'],layers:['concrete','bottom','bent','top','stirrup'],opacity:12},
+    {title:'辨认 ②③④ 号弯起筋',text:'对照 1—1、2—2、3—3 断面追踪 Φ18 钢筋：② 在 1—1 位于上部，弯起后两根分别贴左右两只箍筋下横肢；④ 两根贴靠左右外箍筋肢，上端同时绑在上横肢内侧，在 2—2、3—3 位于下部，与②各自独立；③ 在 2—2 下部贴右箍中间竖肢，至 3—3 上部进入叠合区。',points:['②：2Φ18，7700 mm；③：1Φ18，4060 mm；④：2Φ18，5260 mm。','各编号对应独立钢筋，随剖切位置核对其截点。'],layers:['concrete','bottom','bent','stirrup'],opacity:12},
+    {title:'布置 ⑤ 号顶部纵筋',text:'翼缘内有 8 根 Φ12 顶部纵筋：上层六根，两侧下层各一根。翼缘两端的上下纵筋均绑在侧边箍筋内侧，断面之间留有净距。',points:['⑤：8Φ12，单根下料长度 6050 mm。','旋转至断面视角，核对六上、两下的分布。'],layers:['concrete','bottom','bent','top','stirrup'],opacity:12},
     {title:'补全箍筋与吊环',text:'两根 ⑥ 箍筋都是宽 160 mm 的矩形，在腹板中央叠合 70 mm；⑦ 为翼缘箍筋。两处 ⑧ 吊环从梁顶伸出。',points:['⑥：每梁 50 根 Φ8、单根 1570 mm；⑦：25 根 Φ8、单根 1450 mm。','⑧：2 根 Φ18、单根 1620 mm。'],layers:['concrete','bottom','bent','top','stirrup','hoist'],opacity:10},
     {title:'移动剖切面核对钢筋',text:'选择图纸的 1—1、2—2、3—3 横断面，或拖动滑杆看梁长上的任意横断面；再切换纵剖面，沿梁宽移动剖切位置。',points:['剖面中的彩色圆点随剖切位置更新，对照原图辨认相应钢筋。','将混凝土滑杆拖至最左只看钢筋，拖至最右查看实体剖面。'],layers:['concrete','bottom','bent','top','stirrup','hoist'],opacity:74,cut:'transverse'},
     {title:'回到整体配筋图',text:'将混凝土、纵筋、箍筋和吊环叠合，核对原图的立面、钢筋详图、三个断面和钢筋表。',points:['下料长度、直径与根数可在下方钢筋尺寸表逐项查看。','模型沿梁长压缩展示；梁体实际尺寸及弯钩细节均以原始配筋图为准。'],layers:['concrete','bottom','bent','top','stirrup','hoist'],opacity:23,cut:'none'}
