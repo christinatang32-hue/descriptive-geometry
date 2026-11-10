@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="description" content="根据钢筋混凝土 T 形梁配筋图，互动认识梁体、纵筋、弯起筋、箍筋和三个断面。">
   <title>钢筋混凝土 T 形梁 · 三维互动教学</title>
-  <link rel="stylesheet" href="t-beam-teaching.css?v=20261109-18mm">
+  <link rel="stylesheet" href="t-beam-teaching.css?v=20261110-15mm">
 </head>
 <body>
 <main>
@@ -19,7 +19,7 @@
   <div class="workspace">
     <section class="model-panel" aria-labelledby="model-title">
       <div class="panel-heading"><div><p class="eyebrow">空间模型</p><h2 id="model-title">旋转与移动 · 分层查看</h2></div><span class="drag-hint">选择旋转或移动后拖动 · 滚轮缩放</span></div>
-      <div class="canvas-wrap"><canvas id="model" role="img" aria-label="可旋转的 T 形梁和配筋三维示意图"></canvas><div class="canvas-note">梁长在三维展示中压缩，仅用于辨认空间位置；钢筋统一以 18 mm 示意直径显示，颜色表示实际直径。</div></div>
+      <div class="canvas-wrap"><canvas id="model" role="img" aria-label="可旋转的 T 形梁和配筋三维示意图"></canvas><div class="canvas-note">梁长在三维展示中压缩，仅用于辨认空间位置；钢筋统一以 15 mm 示意直径显示，颜色表示实际直径。</div></div>
       <div class="view-controls" aria-label="观察视角与操作"><button type="button" data-view="iso" class="active">轴测</button><button type="button" data-view="front">立面</button><button type="button" data-view="end">断面</button><button type="button" data-action="rotate" class="active" aria-pressed="true">旋转</button><button type="button" data-action="pan" aria-pressed="false">移动</button><button type="button" id="reset-view">重置视角</button></div>
       <div class="cut-controls"><div class="cut-mode" aria-label="剖切方式"><strong>剖切观察</strong><button type="button" data-cut="none" class="active">完整梁体</button><button type="button" data-cut="transverse">横断面</button><button type="button" data-cut="longitudinal">纵剖面</button></div><div id="transverse-controls" class="cut-detail" hidden><div class="cut-presets" aria-label="图纸剖切位置"><button type="button" data-preset="1">1—1</button><button type="button" data-preset="2">2—2</button><button type="button" data-preset="3">3—3</button></div><label for="cut-x">沿梁长拖动剖切面 <output id="cut-x-value" for="cut-x"></output></label><input id="cut-x" type="range" min="20" max="5930" step="1" value="130"></div><div id="longitudinal-controls" class="cut-detail" hidden><label for="cut-y">沿梁宽拖动纵剖面 <output id="cut-y-value" for="cut-y"></output></label><input id="cut-y" type="range" min="-324" max="324" step="1" value="0"></div></div>
       <fieldset class="layers"><legend>显示内容</legend><label><input type="checkbox" data-layer="concrete" checked><span class="swatch concrete"></span>混凝土</label><label><input type="checkbox" data-layer="bottom" checked><span class="swatch bottom" data-diameter="22"></span>① 底部纵筋</label><label><input type="checkbox" data-layer="bent" checked><span class="swatch bent" data-diameter="18"></span>②③④ 弯起筋</label><label><input type="checkbox" data-layer="top" checked><span class="swatch top" data-diameter="12"></span>⑤ 顶部纵筋</label><label><input type="checkbox" data-layer="stirrup" checked><span class="swatch stirrup" data-diameter="8"></span>⑥⑦ 箍筋</label><label><input type="checkbox" data-layer="hoist" checked><span class="swatch hoist" data-diameter="18"></span>⑧ 吊环</label></fieldset>
@@ -33,12 +33,12 @@
       <div class="section-card"><div class="section-head"><div><p class="eyebrow">剖面核对</p><h3 id="section-title">钢筋在剖面中的位置</h3></div><select id="section-select" aria-label="选择图纸断面"><option value="1">1—1 断面</option><option value="2">2—2 断面</option><option value="3">3—3 断面</option><option value="custom">任意位置</option></select></div><svg id="section-diagram" viewBox="0 0 350 270" role="img" aria-label="T 形梁剖面及钢筋位置"></svg><div class="diameter-legend" aria-label="钢筋实际直径颜色示例">
         <h4>直径示例 <span>颜色对应实际直径</span></h4>
         <ul><li><span class="swatch" data-diameter="8" aria-hidden="true"></span><strong>Φ8</strong><span>⑥⑦ 箍筋</span></li><li><span class="swatch" data-diameter="12" aria-hidden="true"></span><strong>Φ12</strong><span>⑤ 顶部纵筋</span></li><li><span class="swatch" data-diameter="18" aria-hidden="true"></span><strong>Φ18</strong><span>②③④⑧</span></li><li><span class="swatch" data-diameter="22" aria-hidden="true"></span><strong>Φ22</strong><span>① 底部纵筋</span></li></ul>
-        <p>三维模型与剖面中的钢筋统一按 18 mm 示意直径绘制，仅用颜色区分实际直径；箍筋内侧与纵向主筋外侧相切，不重叠。</p>
+        <p>三维模型与剖面中的钢筋统一按 15 mm 示意直径绘制，仅用颜色区分实际直径；箍筋内侧与纵向主筋外侧相切，不重叠。</p>
       </div><p id="section-note"></p></div>
       <details class="schedule"><summary>钢筋尺寸与数量</summary><div class="schedule-scroll"><table><thead><tr><th>编号</th><th>直径</th><th>每梁根数</th><th>单根长度</th></tr></thead><tbody><tr><td>①</td><td>Φ22</td><td>4</td><td>6580 mm</td></tr><tr><td>②</td><td>Φ18</td><td>2</td><td>7700 mm</td></tr><tr><td>③</td><td>Φ18</td><td>1</td><td>4060 mm</td></tr><tr><td>④</td><td>Φ18</td><td>2</td><td>5260 mm</td></tr><tr><td>⑤</td><td>Φ12</td><td>8</td><td>6050 mm</td></tr><tr><td>⑥</td><td>Φ8</td><td>50</td><td>1570 mm</td></tr><tr><td>⑦</td><td>Φ8</td><td>25</td><td>1450 mm</td></tr><tr><td>⑧</td><td>Φ18</td><td>2</td><td>1620 mm</td></tr></tbody></table></div><p>②③④⑧ 的直径按本次修订统一为 Φ18；根数及下料长度沿用原始图纸。三维弯钩仅作示意。</p></details>
     </aside>
   </div>
 </main>
-<script src="t-beam-teaching.js?v=20261109-18mm" defer></script>
+<script src="t-beam-teaching.js?v=20261110-15mm" defer></script>
 </body>
 </html>

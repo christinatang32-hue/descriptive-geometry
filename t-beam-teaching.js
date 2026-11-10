@@ -5,8 +5,8 @@
   const cross=[[-150,0],[150,0],[150,500],[325,500],[325,600],[-325,600],[-325,500],[-150,500]];
   // 立面图给出剖切线的相对位置，未标注距梁端的精确尺寸。
   const presets={1:150,2:2157,3:1430};
-  // 实际直径仅用于颜色和标注；18 mm 示意钢筋相切时，中心线间距为 18 mm。
-  const displayDia=18,contactGap=displayDia;
+  // 实际直径仅用于颜色和标注；15 mm 示意钢筋相切时，中心线间距为 15 mm。
+  const displayDia=15,contactGap=displayDia;
   const diameterColors={8:'#be9cff',12:'#53eafd',18:'#ff806e',22:'#ffd236'};
   const $=id=>document.getElementById(id);
   const canvas=$('model'),ctx=canvas.getContext('2d');
@@ -38,7 +38,7 @@
       add('stirrup',6,8,[V(x,left,25),V(x,right,25),V(x,right,575),V(x,left,575),V(x,left,25)]);
     add('stirrup',7,8,[V(x,-300,525),V(x,300,525),V(x,300,575),V(x,-300,575),V(x,-300,525)]);
   }
-  // 吊环两肢避开顶部纵筋，18 mm 示意直径下仍保留净距。
+  // 吊环两肢避开顶部纵筋，15 mm 示意直径下仍保留净距。
   for(const x of [-1975,1975])add('hoist',8,18,[V(x,-75,530),V(x,-75,680),V(x,-63,704),V(x,63,704),V(x,75,680),V(x,75,530)]);
 
   const steps=[
