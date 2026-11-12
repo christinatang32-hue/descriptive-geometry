@@ -5,18 +5,24 @@
   const $=id=>document.getElementById(id), $$=s=>[...document.querySelectorAll(s)];
   const drawings=[["一层平面图", "A5 建施-3", 3, "平面图"], ["标准层平面图", "A5 建施-4", 4, "平面图"], ["五层平面图", "A5 建施-5", 5, "平面图"], ["①—⑰立面图", "A5 建施-8", 8, "立面图"], ["⑰—①立面图", "A5 建施-9", 9, "立面图"], ["Ⓐ—Ⓓ / Ⓓ—Ⓐ立面图", "A5 建施-10", 10, "立面图"], ["1—1剖面图", "A5 建施-11", 11, "剖面图"], ["墙身节点详图（一）", "A5 建施-12", 12, "构件详图"], ["墙身节点详图（二）", "A5 建施-13", 13, "构件详图"], ["楼梯详图", "A5 建施-14", 14, "构件详图"]];
   const imagePath=i=>`assets/house/v2/a5-${String(drawings[i][2]).padStart(2,'0')}.jpg`;
+  drawings.push(['栏杆扶手详图','A5 建施-15',15,'构件详图'],['厨房、卫生间详图','A5 建施-16',16,'构件详图'],['门窗统计表','A5 建施-18',18,'材料与数量'],['门窗详图','A5 建施-19',19,'构件详图']);
+  const spec=window.HOUSE_COMPONENT_SPEC;
   let drawingIndex=1;
   function showDrawing(i,open=true){drawingIndex=(i+drawings.length)%drawings.length;$('drawing-title').textContent=drawings[drawingIndex].slice(0,2).join(' · ');$('drawing-select').value=drawingIndex;$('drawing-image').src=imagePath(drawingIndex);$('drawing-image').alt=drawings[drawingIndex][0];$('drawing-original').href=imagePath(drawingIndex);if(open&&!$('drawing-dialog').open)$('drawing-dialog').showModal();}
   drawings.forEach((d,i)=>{const o=document.createElement('option');o.value=i;o.textContent=`${i+1} / ${drawings.length} · ${d[0]}`;$('drawing-select').append(o);const b=document.createElement('button');b.className='drawing-card';b.innerHTML=`<img src="${imagePath(i)}" alt="${d[0]}缩略图" loading="lazy"><span>${d[0]}<small>${d[1]}</small></span>`;b.onclick=()=>showDrawing(i);$('drawing-cards').append(b)});
   $('open-drawings').onclick=()=>showDrawing(drawingIndex);$('close-drawings').onclick=()=>$('drawing-dialog').close();$('prev-drawing').onclick=()=>showDrawing(drawingIndex-1);$('next-drawing').onclick=()=>showDrawing(drawingIndex+1);$('drawing-select').onchange=e=>showDrawing(+e.target.value);
   $('drawing-dialog').addEventListener('click',e=>{if(e.target===$('drawing-dialog')){const r=e.target.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)e.target.close()}});
   const C={wall:'#e4d4ac',inner:'#d7c7a4',slab:'#8ca7b4',glass:'#65b4c8',frame:'#e8edf0',door:'#a87b56',stair:'#afb8b6',balcony:'#a9bbb8',roof:'#a74d43',trim:'#e5e6df',base:'#53616c',cap:'#f1b94f'};
-  const parts={walls:['墙体与房间分隔','外围墙按轴外250＋轴内120＝370 mm表达，墙根与勒脚外表面对齐；主要隔墙按120 mm教学示意。真实门窗洞口从墙体中扣除；房间位置由建筑平面确定。'],slabs:['楼板与层高','五层楼面按2.8 m间距设置；阁楼楼面标高+14.000。模型板厚按120 mm教学示意，具体叠层见墙身节点。'],openings:['门窗与洞口','SC-1515、SC-1815、SC-2115分别表示1500、1800、2100 mm宽的窗；M5B-0921为900×2100 mm门。窗框分格经过简化。'],balconies:['阳台与立面节奏','A轴一侧四列阳台外挑约1.2 m，D轴一侧厨房阳台按约0.6 m示意。一至五层为封闭阳台；阁楼四处为敞开露台，设实体栏板、栏杆和后退的玻璃推拉门。'],stairs:['双跑楼梯','两处楼梯间位于⑤—⑥、⑫—⑬轴。标准层两跑各8级，级高175 mm、踏面260 mm，半层平台高1.4 m；首层按9＋7级、半层平台1.575 m表达。两跑之间保留梯井，仅设栏杆扶手。公共梯止于五层，阁楼户内梯因缺定位未补设。'],roof:['坡屋顶与老虎窗','屋脊标高+17.773，阁楼楼面+14.000。南北坡合计16个老虎窗（南坡六樘、北坡十樘），洞口宽1.5 m；红色粘土瓦以逐行搭接缝、弧形瓦垄和檐口瓦形表达；瓦规格为教学示意。']};
+  const parts={walls:['墙体与房间分隔','外围墙按轴外250＋轴内120＝370 mm表达，墙根与勒脚外表面对齐；主要隔墙按平面240 mm、楼梯间370 mm及详图60 mm分别表达。真实门窗洞口从墙体中扣除；房间位置由建筑平面确定。'],slabs:['楼板与层高','五层楼面按2.8 m间距设置；阁楼楼面标高+14.000。模型板厚按120 mm教学示意，具体叠层见墙身节点。'],openings:['门窗与洞口','SC-1515、SC-1815、SC-2115分别表示1500、1800、2100 mm宽的窗；M5B-0921为900×2100 mm门。窗框分格经过简化。'],balconies:['阳台与立面节奏','A轴一侧四列阳台外挑约1.2 m，D轴一侧厨房阳台按约0.6 m示意。一至五层为封闭阳台；阁楼四处为敞开露台，设实体栏板、栏杆和后退的玻璃推拉门。'],stairs:['双跑楼梯','两处楼梯间位于⑤—⑥、⑫—⑬轴。标准层两跑各8级，级高175 mm、踏面260 mm，半层平台高1.4 m；首层按9＋7级、半层平台1.575 m表达。两跑之间保留梯井，仅设栏杆扶手。公共梯止于五层，阁楼户内梯因缺定位未补设。'],roof:['坡屋顶与老虎窗','屋脊标高+17.773，阁楼楼面+14.000。南北坡合计16个老虎窗（南坡六樘、北坡十樘），洞口宽1.5 m；红色粘土瓦以逐行搭接缝、弧形瓦垄和檐口瓦形表达；瓦规格为教学示意。']};
+  parts.fixtures=['厨房与卫生设备','按建施16的尺寸链定位洗手盆、坐便器、浴缸、洗衣机、厨房洗涤池与灶台；520×250烟道及240×240 GRC通风道按标注。成品器具未标注的外形、安装高度和材质仅作识读示意。'];
   const state={floor:'all',planFloor:1,explode:0,cut:'none',cutValue:.5,opacity:1,layers:Object.fromEntries(Object.keys(parts).map(k=>[k,true])),yaw:-1.13,pitch:.40,zoom:1,pan:[0,0],selected:null,room:null,step:0,auto:false};
-  const objects=[],rooms=[];
+  const objects=[],rooms=[],components=[];
+  let activeComponent=null;
+  function component(code,floor,details,fn){const rec={id:'c'+components.length,code,floor,...details};components.push(rec);const old=activeComponent;activeComponent=rec.id;if(fn)fn();activeComponent=old;return rec;}
+  function within(rec,fn){const old=activeComponent;activeComponent=rec.id;fn();activeComponent=old;}
   const rgb=h=>[parseInt(h.slice(1,3),16)/255,parseInt(h.slice(3,5),16)/255,parseInt(h.slice(5,7),16)/255];
-  function box(x0,y0,z0,x1,y1,z1,group,floor,name,color,extra={}){if(x1-x0<.001||y1-y0<.001||z1-z0<.001)return;objects.push({min:[x0,y0,z0],max:[x1,y1,z1],group,floor,name,color:rgb(color||C[group]||C.wall),...extra});}
-  function poly(points,group,floor,name,color,extra={}){objects.push({points,group,floor,name,color:rgb(color),...extra})}
+  function box(x0,y0,z0,x1,y1,z1,group,floor,name,color,extra={}){if(x1-x0<.001||y1-y0<.001||z1-z0<.001)return;objects.push({componentId:activeComponent,min:[x0,y0,z0],max:[x1,y1,z1],group,floor,name,color:rgb(color||C[group]||C.wall),...extra});}
+  function poly(points,group,floor,name,color,extra={}){objects.push({componentId:activeComponent,points,group,floor,name,color:rgb(color),...extra})}
   function quad(a,b,c,d,...args){poly([a,b,c],...args);poly([a,c,d],...args)}
   function railBeam(a,b,w,floor,name,color){
     const d=b.map((v,i)=>v-a[i]),h=Math.hypot(d[0],d[1]),len=Math.hypot(...d),n=h?[-d[1]/h,d[0]/h,0]:[1,0,0],v=h?[-d[2]*d[0]/(len*h),-d[2]*d[1]/(len*h),h/len]:[0,1,0];
@@ -27,32 +33,56 @@
   const southBays=[0,3.4,6.4,9.3,13.2,16.2,19.2,23.1,26,29,32.4];
   const northBays=[0,3.6,6.6,9.3,12.8,16.2,19.6,23.1,25.8,28.8,32.4];
   const balconyBays=[[0,3.4],[9.3,13.2],[19.2,23.1],[29,32.4]];
+  // 圆管外径按详图；壁厚未标，不虚构内壁。
+  function tube(a,b,diameter,floor,name,color='#617b84',group='stairs'){
+    const d=b.map((v,i)=>v-a[i]),len=Math.hypot(...d);if(len<1e-7)return;
+    const u=d.map(v=>v/len),n=Math.abs(u[2])>.9?[1,0,0]:[-u[1],u[0],0],nl=Math.hypot(...n),nn=n.map(v=>v/nl),v=[u[1]*nn[2]-u[2]*nn[1],u[2]*nn[0]-u[0]*nn[2],u[0]*nn[1]-u[1]*nn[0]];
+    const ring=p=>Array.from({length:8},(_,i)=>p.map((x,k)=>x+diameter/2*(nn[k]*Math.cos(i*Math.PI/4)+v[k]*Math.sin(i*Math.PI/4))));
+    const aa=ring(a),bb=ring(b);for(let i=0;i<8;i++){const j=(i+1)%8;quad(aa[i],aa[j],bb[j],bb[i],group,floor,name,color,{diameter:diameter*1000});}
+    poly(aa,group,floor,name,color,{diameter:diameter*1000});poly(bb.slice().reverse(),group,floor,name,color,{diameter:diameter*1000});
+  }
   // 由洞口边界分块成墙，门窗不贴在实心墙面上。
   function wall(axis,a,b,cross,z,h,t,floor,holes=[],inner=false){
     const cuts=[a,b,...holes.flatMap(o=>[Math.max(a,o.c-o.w/2),Math.min(b,o.c+o.w/2)])].sort((a,b)=>a-b);
     function segment(lo,hi,z0,z1){if(axis==='x')box(lo,cross-t/2,z0,hi,cross+t/2,z1,'walls',floor,inner?'室内隔墙':'外墙',inner?C.inner:C.wall);else box(cross-t/2,lo,z0,cross+t/2,hi,z1,'walls',floor,inner?'室内隔墙':'山墙',inner?C.inner:C.wall)}
     for(let i=0;i<cuts.length-1;i++){let lo=cuts[i],hi=cuts[i+1];if(hi-lo<.001)continue;const hole=holes.find(o=>(lo+hi)/2>o.c-o.w/2-.001&&(lo+hi)/2<o.c+o.w/2+.001);if(hole){segment(lo,hi,z,z+hole.b);segment(lo,hi,z+hole.b+hole.h,z+h)}else segment(lo,hi,z,z+h);}
-    for(const o of holes){if(o.kind==='empty')continue;const lo=o.c-o.w/2,hi=o.c+o.w/2,z0=z+o.b,z1=z0+o.h;const g='openings',name=o.code||'室内门';function block(l,r,d,depth,bot,top,col){if(axis==='x')box(l,d-depth/2,bot,r,d+depth/2,top,g,floor,name,col);else box(d-depth/2,l,bot,d+depth/2,r,top,g,floor,name,col)}
-      const door=o.kind==='door',security=o.kind==='security',sliding=o.kind==='sliding';
-      if(security){
-        // 两扇各650，闭合表达；避免内开门扇与后方楼梯平台相交。
-        for(const sign of[-1,1]){
-          const hinge=sign<0?lo:hi,dx=-sign*(o.w/2-.002),dy=0,d=.028;
-          const pt=(u,v,k)=>[hinge+dx*u,cross+dy*u+v,z0+k];
-          for(const v of[-d,d])quad(pt(0,v,.03),pt(1,v,.03),pt(1,v,o.h-.03),pt(0,v,o.h-.03),g,floor,'双开防盗门 · 650门扇','#596a70');
-          quad(pt(0,-d,o.h-.03),pt(1,-d,o.h-.03),pt(1,d,o.h-.03),pt(0,d,o.h-.03),g,floor,'双开防盗门上边','#d0d4d3');
-          const hx=hinge+dx*.88;box(hx-.0125,cross+.040,z0+.98,hx+.0125,cross+.075,z0+1.10,g,floor,'防盗门小把手',C.frame);
+    for(const o of holes){
+      if(!o.code)continue;
+      const code=o.code,lo=o.c-o.w/2,hi=o.c+o.w/2,z0=z+o.b,z1=z0+o.h,g='openings',name=code;
+      component(code,floor,{width:Math.round(o.w*1000),height:Math.round(o.h*1000),position:axis==='x'?[o.c,cross,z0]:[cross,o.c,z0],axis,representation:o.kind==='empty'?'仅门洞（保留用户要求）':'实体构件',source:spec.openings[code]?.source||19,...o.info},()=>{
+        if(o.kind==='empty')return;
+        function block(l,r,d,depth,bot,top,col,label=name){if(axis==='x')box(l,d-depth/2,bot,r,d+depth/2,top,g,floor,label,col);else box(d-depth/2,l,bot,d+depth/2,r,top,g,floor,label,col)}
+        const security=o.kind==='security',solid=['door','fire','security'].includes(o.kind),sliding=o.kind==='sliding';
+        if(security){
+          // 建施19：400+900不等宽双扇，L50×30×4框、70×40骨架、1mm包钢板。
+          const meet=lo+.4;
+          for(const [l,r] of [[lo,meet],[meet,hi]]){
+            block(l+.004,r-.004,cross,.001,z0+.004,z1-.004,'#596a70','GM钢板1mm');
+            for(const x of[l,r-.07])block(x,x+.07,cross,.04,z0,z1,'#62747c','GM门扇骨架70×40');
+            for(const zz of[z0,z1-.07])block(l,r,cross,.04,zz,zz+.07,'#62747c','GM门扇骨架70×40');
+          }
+          for(const x of[meet-.055,meet+.055])block(x-.0125,x+.0125,cross+.041,.025,z0+.98,z0+1.10,C.frame,'防盗门小把手');
+          for(const x of[lo,hi-.05]){block(x,x+.05,cross,.004,z0,z1,C.frame,'L50×30×4门框');block(x,x+.004,cross+.013,.03,z0,z1,C.frame,'L50×30×4门框折边')}
+          block(lo,hi,cross,.004,z1-.05,z1,C.frame,'L50×30×4门框');
+        }else if(solid){
+          block(lo+.035,hi-.035,cross,.04,z0+.015,z1-.035,o.kind==='fire'?'#637b84':C.door);
+          block(hi-.13,hi-.10,cross+.04,.03,z0+.98,z0+1.08,C.frame,'门把手');
+        }else{
+          const count=o.segments||(code.startsWith('YC')?4:sliding&&code.startsWith('LM-')?3:2),activeTop=code==='LM1'||code==='LM2'?z0+2:z1,step=o.w/count;
+          for(let i=0;i<count;i++){
+            const split=code==='LM1'?.747:code==='LM2'?.797:step,l=lo+(i===0?0:code==='LM1'||code==='LM2'?split:i*step),r=lo+(i===0&&(code==='LM1'||code==='LM2')?split:(i+1)*step),d=cross+(i%2?.018:-.018);
+            block(l+.025,r-.025,d,.018,z0+.035,activeTop-.035,C.glass,name+'玻璃');
+            for(const x of[l,r-.035])block(x,x+.035,d,.06,z0,activeTop,C.frame,name+'分格框');
+          }
+          if(activeTop<z1){block(lo+.035,hi-.035,cross,.018,activeTop+.035,z1-.035,C.glass,'LM上亮子');block(lo,hi,cross,.08,activeTop-.02,activeTop+.02,C.frame,'LM门扇2000与上亮子横框');}
+          block(lo,hi,cross,.08,z0,z0+.035,C.frame);
         }
-      }else if(sliding){
-        for(const [l,r,d]of[[lo+.045,o.c+.035,-.035],[o.c-.035,hi-.045,.035]]){block(l,r,cross+d,.026,z0+.045,z1-.045,C.glass);for(const k of[l,r-.04])block(k,k+.04,cross+d,.06,z0,z1,C.frame)}
-        block(lo,hi,cross,.12,z0,z0+.045,C.frame);
-      }else block(lo+.045,hi-.045,cross,.045,z0+.045,z1-.045,door?C.door:C.glass);
-      const fw=.045;
-      for(const [l,r]of[[lo,lo+fw],[hi-fw,hi]])block(l,r,cross,.12,z0,z1,C.frame);
-      block(lo,hi,cross,.12,z1-fw,z1,C.frame);if(!door&&!security&&!sliding){block(lo,hi,cross,.12,z0,z0+fw,C.frame);block(o.c-.022,o.c+.022,cross,.13,z0,z1,C.frame);
-        if(axis==='x')box(lo-.10,cross-t/2-.09,z0-.06,hi+.10,cross+t/2+.09,z0,g,floor,'窗台 · '+name,C.trim);
-        else box(cross-t/2-.09,lo-.10,z0-.06,cross+t/2+.09,hi+.10,z0,g,floor,'窗台 · '+name,C.trim);
-      }
+        if(!security){for(const [l,r]of[[lo,lo+.035],[hi-.035,hi]])block(l,r,cross,.08,z0,z1,C.frame);block(lo,hi,cross,.08,z1-.035,z1,C.frame);}
+        if(!solid&&!sliding){
+          if(axis==='x')box(lo-.10,cross-t/2-.09,z0-.06,hi+.10,cross+t/2+.09,z0,g,floor,'窗台 · '+name,C.trim);
+          else box(cross-t/2-.09,lo-.10,z0-.06,cross+t/2+.09,hi+.10,z0,g,floor,'窗台 · '+name,C.trim);
+        }
+      });
     }
   }
   const win=(c,w=1.5,b=.9,h=1.5)=>({c,w,b,h,code:`SC-${Math.round(w*10)}15`});
@@ -65,10 +95,87 @@
   const southRooms=[[0,3.4,'主卧室',0],[3.4,6.4,'卧室',0],[6.4,9.3,'卧室',0],[9.3,13.2,'起居室',1],[13.2,16.2,'主卧室',1],[16.2,19.2,'主卧室',2],[19.2,23.1,'起居室',2],[23.1,26,'卧室',3],[26,29,'卧室',3],[29,32.4,'主卧室',3]];
   southRooms.forEach(([a,b,n,u])=>room(n,a+.15,.15,b-.15,4.4,n==='起居室'?'living':'bed',units[u].name,'位于A—B轴之间；与南侧阳台或外窗相邻。'));
   [[0,3.6,0],[12.8,16.2,1],[16.2,19.6,2],[28.8,32.4,3]].forEach(([a,b,u])=>room('卧室',a+.15,8.5,b-.15,11.85,'bed',units[u].name,'位于C—D轴之间，外窗对应D轴一侧立面。'));
-  [[3.6,6.6,0],[9.3,12.8,1],[19.6,23.1,2],[25.8,28.8,3]].forEach(([a,b,u])=>room('厨房',a+.15,9.7,b-.15,11.85,'wet',units[u].name,'厨房位于D轴一侧，与封闭阳台相邻；室内设备仅在原图中核读。'));
-  [[6.7,9.2,0],[13.3,16.1,1],[16.3,19.1,2],[23.2,25.7,3]].forEach(([a,b,u])=>room('卫生间',a,4.6,b,6.6,'wet',units[u].name,'卫生间集中在B—C轴之间，门洞按700×2100 mm示意。'));
+  [[3.6,6.6,0],[9.3,12.8,1],[19.6,23.1,2],[25.8,28.8,3]].forEach(([a,b,u])=>room('厨房',a+.15,9.78,b-.15,11.88,'wet',units[u].name,'厨房位于D轴一侧，与封闭阳台相邻；LM推拉门、洗涤池、灶台与烟道依据建施16设置。'));
+  [[6.46,9.245,0],[12.92,16.08,1],[16.32,19.48,2],[23.155,25.94,3]].forEach(([a,b,u])=>room('卫生间',a,4.6,b,6.6,'wet',units[u].name,'建施16：端部一门型，中部两门型；700×2100木门，器具按尺寸链定位。'));
   [[6.6,9.3],[23.1,25.8]].forEach(([a,b],i)=>room('楼梯间',a+.15,7,b-.15,11.85,'stair',i===0?'西单元':'东单元','双跑楼梯连接五个住宅楼层与阁楼；在纵向剖切中观察平台与梯段。'));
   [[.15,4.2,'西端户'],[9.45,13.05,'中西户'],[19.35,22.95,'中东户'],[28.2,32.25,'东端户']].forEach(([a,b,u])=>room('起居过厅',a,4.65,b,8.3,'living',u,'联系卧室、厨房和入户空间；模型保留主要通行关系。'));
+  // 厨房和卫浴均以尺寸链建立坐标，不读取扫描像素轮廓。
+  function fixture(name,x,y,w,d,h,z,f,details={}){
+    component('FIX-'+name,f,{item:name,material:'成品；具体材质、未标外形尺寸及安装高度待产品选型',source:16,dimensionNote:'形状及未标规格为教学示意；定位见建施16',...details},()=>{
+      const col=name.includes('烟道')||name.includes('通风')?'#b4b8b2':'#e8edf0';
+      box(x,y,z,x+w,y+d,z+h,'fixtures',f,name,col);
+      if(/洗手盆|洗涤池|浴缸/.test(name)){
+        box(x+.035,y+.035,z+h-.015,x+w-.035,y+d-.035,z+h+.003,'fixtures',f,name+'内缘','#9cb9bf');
+        box(x+.07,y+.07,z+h+.004,x+w-.07,y+d-.07,z+h+.010,'fixtures',f,name+'盆口','#d1e2e5');
+      }
+      if(name.includes('坐便器')){box(x+.05,y+.04,z+h,x+w-.05,y+d-.08,z+h+.035,'fixtures',f,'坐便器座圈','#d1e2e5');box(x,y+d-.15,z+h,x+w,y+d,z+h+.25,'fixtures',f,'坐便器水箱','#e8edf0');}
+      if(name.includes('灶台'))for(const xx of[x+w*.25,x+w*.75]){const r=.10;for(let i=0;i<12;i++){const a=i*Math.PI/6,b=(i+1)*Math.PI/6;poly([[xx,y+d/2,z+h+.003],[xx+Math.cos(a)*r,y+d/2+Math.sin(a)*r,z+h+.003],[xx+Math.cos(b)*r,y+d/2+Math.sin(b)*r,z+h+.003]],'fixtures',f,'灶台炉盘','#465a61');}}
+    });
+  }
+  function makeKitchen(a,b,z,f,code){
+    const west=a<16,mirror=x=>west?x:32.4-x,base=west?a:32.4-b;
+    const stoveRight=code==='LM1',innerL=base+(stoveRight?.12:.185),innerR=base+(b-a)-(stoveRight?.185:.12);
+    const put=(name,x,y,w,d,h,info)=>fixture(name,west?x:mirror(x+w),y,w,d,h,z,f,info);
+    const flueX=stoveRight?innerR-.52:innerL;
+    put('厨房烟道',flueX,11.63,.52,.25,2.68,{width:520,depth:250,material:'成品烟道，材质按图集 DJ91.1（附件未给出详页）',dimensionNote:'520×250截面按标注'});
+    put('灶台',flueX,10.78,.52,.60,.8,{dimensionNote:'520烟道宽、距后墙250按标注；灶台成品外形及高度示意'});
+    const sx=stoveRight?innerL:innerR-.60;
+    put('厨房洗涤池',sx,11.08,.60,.60,.8,{dimensionNote:'距后墙200、平面定位按建施16；池体外形及高度示意'});
+  }
+  function makeBath(type,east,z,f){
+    const mx=x=>east?32.4-x:x;
+    const wallY=(a,b,x,t,holes=[])=>wall('y',a,b,mx(x),z,2.68,t,f,holes,true);
+    const wallX=(a,b,y,t)=>wall('x',east?mx(b):a,east?mx(a):b,y,z,2.68,t,f,[],true);
+    const put=(name,x,y,w,d,h,extra={})=>fixture(name,east?mx(x+w):x,y,w,d,h,z,f,{bathType:type,...extra});
+    if(type===1){
+      // 2900轴距；净深700+1100=1800；右墙轴内55、轴外185。
+      wallY(4.56,6.36,6.4,.12,[door(4.91,.7)]);
+      wallY(4.56,6.36,9.365,.24);
+      wallX(6.34,9.485,6.48,.24);
+      put('洗手盆',6.76,5.87,.60,.42,.80,{dimensionNote:'横向600定位；成品尺寸与高度示意'});
+      put('坐便器',7.66,5.66,.40,.66,.40,{dimensionNote:'横向600+800定位；成品外形示意'});
+      put('浴缸',8.48,4.56,.75,1.56,.52,{width:750,dimensionNote:'宽750；600+800+620定位；长度按空间示意，未提供成品规格'});
+      put('GRC通风道',8.99,6.12,.24,.24,2.68,{width:240,depth:240,material:'GRC成品通风道',dimensionNote:'240×240按标注'});
+      put('洗衣机',7.54,4.64,.60,.60,.85);
+    }else{
+      // X:120+1200+60+575+575+750+120=3400；Y:600+700+680=1980。
+      wallY(4.62,6.60,12.86,.12,[door(5.57,.7)]);
+      wallY(4.62,6.60,14.15,.06,[door(5.47,.7)]);
+      wallY(4.62,6.60,16.14,.12);
+      put('洗手盆',13.17,6.12,.60,.42,.80,{dimensionNote:'洗手间净宽1200；成品外形与高度示意'});
+      put('坐便器',14.555,5.91,.40,.66,.40,{dimensionNote:'厕间575+575定位；成品外形示意'});
+      put('浴缸',15.33,4.86,.75,1.74,.52,{width:750,dimensionNote:'宽750；长度按空间示意，未提供成品规格'});
+      put('GRC通风道',15.84,4.62,.24,.24,2.68,{width:240,depth:240,material:'GRC成品通风道',dimensionNote:'240×240按标注'});
+      put('洗衣机',13.05,4.69,.60,.60,.85);
+    }
+  }
+  function makeStairRail(x1,x2,runY,returnY,landingY,z,landingH,n1,n2,f){
+    component('RAIL-15',f,{height:900,diameter:38,material:'Φ38钢管扶手；Φ16钢筋立杆；Φ9杆；4×50扁钢；节点Φ12钢管',source:15,dimensionNote:'扶手顶高900、端弯R90；管壁厚未标注，按外径表达'},()=>{
+      const H=.881,R=.09;
+      const flat=(x,a,b)=>{const aa=[x-.002,a[0],a[1]-.17],bb=[x+.002,a[0],a[1]-.17],cc=[x+.002,b[0],b[1]-.17],dd=[x-.002,b[0],b[1]-.17];quad(aa,bb,cc,dd,'stairs',f,'栏杆扁钢4×50下边','#617b84');quad(...[aa,dd,cc,bb].map(p=>[p[0],p[1],p[2]+.05]),'stairs',f,'栏杆扁钢4×50上边','#617b84');for(const sign of[-1,1])quad([x+sign*.002,a[0],a[1]-.17],[x+sign*.002,b[0],b[1]-.17],[x+sign*.002,b[0],b[1]-.12],[x+sign*.002,a[0],a[1]-.12],'stairs',f,'栏杆扁钢4×50侧边','#617b84');};
+      for(const [x,start,end,base,endBase,dir,count]of[[x1,runY,landingY,z+.175,z+landingH,1,n1-1],[x2,landingY,returnY,z+landingH,z+2.8,-1,n2-1]]){
+        const slope=(endBase-base)/Math.abs(end-start),alpha=Math.atan(slope),endAt=[x,start,base+H];
+        tube(endAt,[x,end,endBase+H],.038,f,'楼梯斜扶手 Φ38');
+        flat(x,[start,base+H],[end,endBase+H]);
+        // B/4 与 3B/4 两杆，主杆间距260、杆间距130。
+        for(let i=0;i<count;i++)for(const [offset,dia]of[[.065,.016],[.195,.009]]){
+          const y=start+dir*(i*.26+offset),surface=base+i*.175,rail=base+H+(i*.26+offset)*slope;
+          tube([x,y,surface],[x,y,rail-.019],dia,f,dia===.016?'栏杆立杆 Φ16':'栏杆细杆 Φ9');
+          if(dia===.016)tube([x-.012,y,rail-.145],[x+.012,y,rail-.145],.012,f,'栏杆节点连接 Φ12');
+        }
+        if(dir===1){
+          // 圆弧中心半径90，竖向端头平滑转入斜扶手。
+          const cy=start+R*Math.sin(alpha),cz=base+H-R*Math.cos(alpha);
+          const pts=Array.from({length:9},(_,i)=>{const t=Math.PI/2+(alpha-Math.PI/2)*i/8;return[x,cy-R*Math.sin(t),cz+R*Math.cos(t)]});
+          for(let i=0;i<8;i++)tube(pts[i],pts[i+1],.038,f,'扶手端弯 R90');
+          tube([x,pts[0][1],pts[0][2]-.25],pts[0],.038,f,'扶手竖向端头');
+        }
+      }
+      for(const [a,b]of[[[x1,landingY,z+landingH+H],[x1,landingY+.26,z+landingH+H]],[[x1,landingY+.26,z+landingH+H],[x2,landingY+.26,z+landingH+H]],[[x2,landingY+.26,z+landingH+H],[x2,landingY,z+landingH+H]]])tube(a,b,.038,f,'休息平台扶手 Φ38');
+      for(const x of[x1,x2])tube([x,landingY+.26,z+landingH],[x,landingY+.26,z+landingH+.862],.016,f,'平台立杆 Φ16');
+    });
+  }
+
   box(-1.05,-2.1,-.86,33.45,13.55,-.72,'site',-1,'室外地坪',C.base);
   box(-.25,-.25,-.7,32.65,12.25,-.12,'site',-1,'首层基座（非基础设计）','#747c7a');
   // 从实际外围墙/勒脚墙根直接起坡；悬挑阳台下也沿主体墙根连续设置。
@@ -87,23 +194,30 @@
     // 一至五层阳台墙只留门洞，不加门扇；阁楼露台另设玻璃推拉门。
     southH.forEach((o,i)=>{if([0,3,6,9].includes(i)){o.b=0;o.h=1.9;o.kind='empty';o.code=[0,9].includes(i)?'LM-2119':'LM-2419';o.w=[0,9].includes(i)?2.1:2.4}});
     wall('x',-.25,32.65,-.065,z,2.68,.37,f,southH);
-    const northH=northBays.slice(0,-1).map((a,i)=>win((a+northBays[i+1])/2,1.5));
-    if(f===0)for(const i of[2,7]){northH[i]={...door((northBays[i]+northBays[i+1])/2,1.3),h:2.075,kind:'security',code:'GM-1321 双开防盗门'}}
-    for(const i of[1,3,6,8])northH[i]={...northH[i],b:0,h:1.9,w:[1,8].includes(i)?1.495:1.595,kind:'empty'};
+    const northH=[];
+    for(const i of[0,4,5,9])northH.push(win((northBays[i]+northBays[i+1])/2));
+    for(const i of[2,7])northH.push(f===0?{...door((northBays[i]+northBays[i+1])/2,1.3),h:2.075,kind:'security',code:'GM-1321'}:win((northBays[i]+northBays[i+1])/2,1.5,(f===1?1.575:(f-1)*2.8+1.4)+.9-z));
+    for(const [a,b,dl,dr]of[[3.6,6.6,.12,.185],[9.3,12.8,.185,.12],[19.6,23.1,.12,.185],[25.8,28.8,.185,.12]])northH.push({c:(a+dl+b-dr)/2,w:b-a-dl-dr,b:0,h:2.68,kind:'empty'});
+    // 跨层平台窗：下层墙也扣掉落在本层顶部的窗洞，避免遮住窗底。
+    if(f<4)for(const i of[2,7]){const sill=(f===0?1.575:1.4)+.9;northH.push({c:(northBays[i]+northBays[i+1])/2,w:1.5,b:sill,h:2.68-sill,kind:'empty'});}
     wall('x',-.25,32.65,12.065,z,2.68,.37,f,northH);
     for(const x of[0,32.4])wall('y',.12,11.88,x+(x===0?-.065:.065),z,2.68,.37,f,[win(6.45,2.1)]);
-    for(const x of southBays.slice(1,-1))partitionY(.12,4.5,x,z,f,[]);
-    // 南卧室至起居空间的门洞。
-    const southDoors=southRooms.map(([a,b])=>(a+b)/2+(b-a>3.5?.75:0));
-    wall('x',.12,32.28,4.5,z,2.68,.12,f,southDoors.map(c=>door(c)),true);
-    for(const x of[3.6,6.6,9.3,12.8,16.2,19.6,23.1,25.8,28.8])partitionY(8.4,11.87,x,z,f,[]);
-    for(const [a,b]of[[.12,3.6],[12.8,19.6],[28.8,32.28]])wall('x',a,b,8.4,z,2.68,.12,f,[door((a+b)/2)],true);
-    for(const [a,b]of[[3.6,6.6],[9.3,12.8],[19.6,23.1],[25.8,28.8]])wall('x',a,b,9.6,z,2.68,.12,f,[{...door((a+b)/2,1.5),kind:'empty',code:'LM1 / LM2 门洞'}],true);
-    for(const [a,b]of[[6.66,9.24],[13.25,16.08],[16.32,19.15],[23.16,25.74]]){
-      partitionY(4.56,6.7,a,z,f,[]);partitionY(4.56,6.7,b,z,f,[]);wall('x',a,b,6.7,z,2.68,.12,f,[door(a+.55,.7)],true);
+    // 南面八樘卧室木门，阳台门洞不另塞门扇。
+    for(const x of southBays.slice(1,-1))wall('y',.12,4.38,x,z,2.68,.24,f,[9.3,13.2,19.2,23.1].includes(x)?[door(3.93)]:[],true);
+    for(const [a,b,t]of[[.12,6.4,.24],[6.4,9.3,.12],[9.3,23.1,.24],[23.1,26,.12],[26,32.28,.24]])wall('x',a,b,4.5,z,2.68,t,f,[2.83,3.97,28.43,29.57].filter(c=>c>a&&c<b).map(c=>door(c)),true);
+    for(const x of[3.6,12.8,16.2,19.6,28.8])wall('y',x===12.8||x===19.6?6.72:8.4,11.88,x,z,2.68,.24,f,[12.8,19.6].includes(x)?[door(7.29)]:[],true);
+    wall('x',.12,3.6,8.4,z,2.68,.24,f,[door(3.03)],true);
+    wall('x',28.8,32.28,8.4,z,2.68,.24,f,[door(29.37)],true);
+    wall('x',12.8,19.6,6.66,z,2.68,.12,f,[],true);
+    for(const [a,b,code]of[[3.6,6.6,'LM1'],[9.3,12.8,'LM2'],[19.6,23.1,'LM2'],[25.8,28.8,'LM1']]){
+      const c=code==='LM1'?(a<16?5.0675:32.4-5.0675):(a<16?11.0825:32.4-11.0825),w=spec.openings[code].width/1000;
+      wall('x',a+.12,b-.12,9.75,z,2.68,.06,f,[{c,w,b:0,h:2.68,kind:'sliding',code,info:{activeHeight:2000,transomHeight:680}}],true);
+      makeKitchen(a,b,z,f,code);
     }
+    makeBath(1,false,z,f);makeBath(1,true,z,f);makeBath(2,false,z,f);makeBath(2,true,z,f);
     for(const [a,b]of[[6.6,9.3],[23.1,25.8]]){
-      partitionY(6.7,11.87,a,z,f,[7.55]);partitionY(6.7,11.87,b,z,f,[7.55]);
+      const front=f===0?6.48:6.59,dc=front+(f===0?.81:.56)+.45;
+      for(const x of[a,b])wall('y',6.60,11.88,x,z,2.68,.37,f,[{...door(dc),kind:'fire',code:'FM-0921'}],true);
       const n1=f===0?9:8,n2=f===0?7:8,landingY=10.68,runY=landingY-(n1-1)*.26,returnY=landingY-(n2-1)*.26;
       const left=a+.185,leftEnd=a+1.285,right=a+1.415,rightEnd=b-.185,landingH=n1*.175;
       // 地面与平台统一使用楼板材质，颜色不再暗示不同地面材料。
@@ -113,21 +227,18 @@
         box(a+.185,landingY,z+landingH-.12,b-.185,11.88,z+landingH,'stairs',f,'半层休息平台',C.slab);
         for(let i=0;i<n1-1;i++){const y=runY+i*.26;box(left,y,z+Math.max(0,i*.175-.10),leftEnd,y+.26,z+(i+1)*.175,'stairs',f,'上行梯段踏步',C.stair)}
         for(let i=0;i<n2-1;i++){const y=landingY-(i+1)*.26;box(right,y,z+landingH+Math.max(0,i*.175-.10),rightEnd,y+.26,z+landingH+(i+1)*.175,'stairs',f,'折返梯段踏步',C.stair)}
+        for(const [x0,x1,start,count,base,dir]of[[left,leftEnd,runY,n1-1,z,1],[right,rightEnd,landingY,n2-1,z+landingH,-1]])for(let i=0;i<count;i++){
+          const nose=start+dir*i*.26,top=base+(i+1)*.175;
+          for(const back of[.04,.07]){const y=nose+dir*back,yy=y+dir*.01;quad([x0,Math.min(y,yy),top+.0005],[x1,Math.min(y,yy),top+.0005],[x1,Math.max(y,yy),top+.0005],[x0,Math.max(y,yy),top+.0005],'stairs',f,'金刚砂防滑条10mm（40/10/20/10）','#697574');}
+        }
         quad([left,runY,z],[leftEnd,runY,z],[leftEnd,landingY,z+landingH-.175],[left,landingY,z+landingH-.175],'stairs',f,'上行梯段板',C.stair);
         quad([right,returnY,z+2.625],[rightEnd,returnY,z+2.625],[rightEnd,landingY,z+landingH],[right,landingY,z+landingH],'stairs',f,'折返梯段板',C.stair);
-        // 梯井中无墙：仅在两梯段内缘布置细立杆与斜向扶手。
-        const railColor='#617b84',railH=.9;
-        for(const [x,startY,count,base,dir]of[[leftEnd-.035,runY,n1-1,z,1],[right+.035,landingY,n2-1,z+landingH,-1]]){
-          for(let i=0;i<count;i+=2){const yy=startY+dir*i*.26,zz=base+(i+1)*.175;box(x-.015,yy-.015,zz-.02,x+.015,yy+.015,zz+railH,'stairs',f,'楼梯栏杆立杆',railColor)}
-          const endY=dir===1?landingY:returnY,endZ=dir===1?z+landingH:z+2.8;
-          railBeam([x,dir===-1?startY+.26:startY,base+(dir===-1?0:.175)+railH],[x,endY,endZ+railH],.04,f,'楼梯斜扶手',railColor);
-        }
-        railBeam([leftEnd-.035,landingY,z+landingH+railH],[leftEnd-.035,landingY+.26,z+landingH+railH],.04,f,'休息平台扶手转接',railColor);
-        railBeam([leftEnd-.035,landingY+.26,z+landingH+railH],[right+.035,landingY+.26,z+landingH+railH],.04,f,'休息平台扶手转接',railColor);
-        for(const x of[leftEnd-.035,right+.035])box(x-.015,landingY+.245,z+landingH,x+.015,landingY+.275,z+landingH+railH,'stairs',f,'休息平台栏杆立杆',railColor);
+        makeStairRail(leftEnd-.035,right+.035,runY,returnY,landingY,z,landingH,n1,n2,f);
       }else{
-        railBeam([left,runY,z+.9],[leftEnd,runY,z+.9],.04,f,'五层梯井防护扶手','#617b84');
-        for(const x of[left,left+.55,leftEnd])box(x-.015,runY-.015,z,x+.015,runY+.015,z+.9,'stairs',f,'五层梯井防护立杆','#617b84');
+        component('RAIL-15',f,{height:900,diameter:38,material:'钢管扶手、钢筋立杆',source:15},()=>{
+          tube([left,runY,z+.881],[leftEnd,runY,z+.881],.038,f,'五层梯井防护扶手 Φ38');
+          for(let x=left;x<=leftEnd+.001;x+=.13)tube([x,runY,z],[x,runY,z+.862],.016,f,'五层护栏 Φ16');
+        });
       }
       if(f===0){for(let i=0;i<3;i++)box(a+.25,12.1+i*.3,-.7,b-.25,12.4+i*.3,-.7+(3-i)*.175,'stairs',f,'入口台阶',C.stair)}
     }
@@ -136,27 +247,19 @@
       box(a-.12,-1.32,z-.12,b+.12,-.10,z,'balconies',f,'南侧阳台板',C.slab);
       box(a-.08,-1.3,z,b+.08,-1.18,z+1.2,'balconies',f,'阳台栏板',C.balcony);
       for(const x of[a-.08,b-.04])box(x,-1.3,z,x+.12,-.10,z+1.2,'balconies',f,'阳台侧栏板',C.balcony);
-      wall('x',a+.02,b-.02,-1.23,z+1.2,1.48,.075,f,[win((a+b)/2,b-a-.13,0,1.48)]);
-      // 两侧均为下部实体栏板、上部玻璃；前后边框与外窗及外墙连续收口。
-      for(const x of[a,b]){
-        box(x-.035,-1.23,z+1.2,x+.035,-.10,z+2.68,'openings',f,'阳台侧窗',C.glass);
-        box(x-.09,-1.30,z+1.14,x+.09,-.08,z+1.2,'openings',f,'阳台侧窗窗台',C.trim);
-        box(x-.045,-1.28,z+2.64,x+.045,-.08,z+2.70,'openings',f,'阳台侧窗上框',C.frame);
-        for(const y of[-1.23,-.10])box(x-.045,y-.035,z+1.2,x+.045,y+.035,z+2.68,'openings',f,'阳台侧窗竖边框',C.frame);
-      }
+      const faceA=a===0?-.25:a,faceB=b===32.4?32.65:b,code=b-a<3.5?'YC1':'YC2';
+      wall('x',faceA,faceB,-1.23,z+1.2,1.6,.075,f,[{c:(faceA+faceB)/2,w:faceB-faceA,b:0,h:1.6,code}]);
+      for(const x of[a,b])wall('y',-1.2,0,x,z+1.2,1.6,.075,f,[{c:-.6,w:1.2,b:0,h:1.6,code,segments:2,info:{face:'侧窗',countInSchedule:false}}]);
     }
     for(const [a,b]of[[3.6,6.6],[9.3,12.8],[19.6,23.1],[25.8,28.8]]){
-      box(a,12.12,z-.12,b,12.72,z,'balconies',f,'厨房阳台板',C.slab);box(a,12.62,z,b,12.72,z+1.2,'balconies',f,'厨房阳台栏板',C.balcony);box(a+.06,12.64,z+1.2,b-.06,12.70,z+2.68,'openings',f,'厨房阳台封窗 YC3 / YC4',C.glass);
-      box(a-.06,12.53,z+1.14,b+.06,12.81,z+1.2,'openings',f,'厨房阳台封窗窗台',C.trim);
+      const code=b-a<3.1?'YC3':'YC4',w=spec.openings[code].width/1000;
+      box(a,12.12,z-.12,b,12.72,z,'balconies',f,'厨房阳台板',C.slab);
+      box(a,12.62,z,b,12.72,z+1.2,'balconies',f,'厨房阳台栏板',C.balcony);
+      wall('x',a,b,12.67,z+1.2,1.6,.075,f,[{c:(a+b)/2,w,b:0,h:1.6,code}]);
       for(const x of[a,b]){
         box(x-.05,12.18,z,x+.05,12.72,z+1.2,'balconies',f,'北阳台侧栏板',C.balcony);
-        box(x-.03,12.22,z+1.2,x+.03,12.67,z+2.68,'openings',f,'北阳台侧玻璃',C.glass);
-        box(x-.08,12.18,z+1.14,x+.08,12.76,z+1.2,'openings',f,'北阳台侧窗窗台',C.trim);
-        box(x-.04,12.18,z+2.64,x+.04,12.75,z+2.70,'openings',f,'北阳台侧窗上框',C.frame);
-        for(const yy of[12.22,12.67])box(x-.04,yy-.03,z+1.2,x+.04,yy+.03,z+2.68,'openings',f,'北阳台侧窗竖框',C.frame);
+        wall('y',12.18,12.72,x,z+1.2,1.6,.075,f,[{c:12.45,w:.54,b:0,h:1.6,code,segments:1,info:{face:'侧窗',countInSchedule:false,dimensionNote:'侧窗净宽540依据建施12；型材断面示意'}}]);
       }
-      box(a-.04,12.60,z+2.64,b+.04,12.76,z+2.70,'openings',f,'北阳台封窗上框',C.frame);
-      for(let x=a;x<=b+.001;x+=Math.max(.5,(b-a)/3))box(x-.025,12.60,z+1.2,x+.025,12.75,z+2.7,'openings',f,'阳台窗竖框',C.frame);
     }
     // 饰带与窗台形成与原立面对应的水平层次。
     for(const y of[-.17,12.17])box(-.25,y-.035,z+2.65,32.65,y+.035,z+2.73,'walls',f,'楼层水平饰带',C.trim);
@@ -176,7 +279,7 @@
     box(a-.08,-1.29,15.39,b+.08,-1.19,15.43,'balconies',5,'阁楼露台栏杆250',C.frame);
     for(let x=a;x<=b+.001;x+=.4)box(x-.018,-1.265,15.16,x+.018,-1.225,15.41,'balconies',5,'阁楼露台栏杆立杆',C.frame);
     for(const x of[a,b]){box(x-.025,-1.25,15.39,x+.025,back,15.43,'balconies',5,'露台侧扶手',C.frame);for(let y=-1.2;y<back;y+=.4)box(x-.018,y-.018,15.16,x+.018,y+.018,15.41,'balconies',5,'露台侧立杆',C.frame)}
-    wall('x',a,b,back,14,2.39,.25,5,[{c:(a+b)/2,w,b:.25,h:1.9,kind:'sliding',code:`阁楼露台玻璃推拉门 ${w===2.1?'LM-2119':'LM-2419'}`}]);
+    wall('x',a,b,back,14,2.39,.25,5,[{c:(a+b)/2,w,b:.25,h:1.9,kind:'sliding',code:w===2.1?'LM-2119':'LM-2419',info:{countInSchedule:false,dimensionNote:'阁楼露台详图另计，门窗表阁楼栏未列'}}]);
   }
   for(const x of[0,32.4]){
     const top=y=>17.773-Math.abs(y-6)*3.073/6-.035,faces=x===0?[-.25,.12]:[32.28,32.65];
@@ -202,7 +305,7 @@
     const dormerXs=dormerLayout[side];
     const outer=side?12.55:-.55,edge=side?12:0;
     const junction=z=>side?12-(z-14.7)/(3.073/6):(z-14.7)/(3.073/6);
-    const topAt=(x,c)=>{const i=dormerXs.indexOf(c),shoulder=side&&(i===0||i===9)?16.4:16.7;return shoulder+.842+.08-.842*Math.abs(x-c)/.91};
+    const topAt=(x,c)=>{const i=dormerXs.indexOf(c),shoulder=side&&(i===0||i===9)?15.8:16.1;return shoulder+.842+.08-.842*Math.abs(x-c)/.91};
     const corners=[-.45,32.85,...dormerXs.flatMap(x=>[x-.91,x,x+.91]),...(!side?balconyBays.flat():[])].sort((a,b)=>a-b);
     for(let i=0;i<corners.length-1;i++){
       const a=corners[i],b=corners[i+1],c=dormerXs.find(x=>(a+b)/2>x-.91&&(a+b)/2<x+.91),inHole=c!==undefined;
@@ -212,23 +315,29 @@
       if(inHole&&!terrace)quad([a,outer,roofHeight(outer)],[b,outer,roofHeight(outer)],[b,edge,roofHeight(edge)],[a,edge,roofHeight(edge)],'roof',5,'檐口瓦面',C.roof);
     }
     for(const [i,x]of dormerXs.entries()){
-      const y=side?12.04:-.04,bottom=15.6,shoulder=(side&&(i===0||i===9)?16.4:16.7),peak=shoulder+.842;
+      const y=side?12.04:-.04,bottom=14.9,stem=side&&(i===0||i===9)?.7:1,netShoulder=bottom+stem,shoulder=netShoulder+.2,peak=shoulder+.842;
       const w=.75,name=side&&(i===0||i===9)?'TC1 老虎窗':'TC2 老虎窗';
+      const record=component(name.startsWith('TC1')?'TC1':'TC2',5,{width:1500,height:stem===.7?1400:1700,position:[x,y,bottom],source:19});activeComponent=record.id;
+      // 五边形窗洞与外山花之间的实体收口，保留净洞尺寸而不留透空缝。
+      const outerFace=[[x-.91,14.7],[x+.91,14.7],[x+.91,shoulder],[x,peak],[x-.91,shoulder]],innerFace=[[x-w,bottom],[x+w,bottom],[x+w,netShoulder],[x,netShoulder+.7],[x-w,netShoulder]];
+      for(let j=0;j<5;j++){const k=(j+1)%5;quad([outerFace[j][0],y,outerFace[j][1]],[outerFace[k][0],y,outerFace[k][1]],[innerFace[k][0],y,innerFace[k][1]],[innerFace[j][0],y,innerFace[j][1]],'roof',5,'老虎窗窗洞四周山花收口',C.trim);}
       for(const xx of[x-w-.10,x+w])for(const faceX of[xx,xx+.10])poly([[faceX,y,14.7],[faceX,y,shoulder],[faceX,junction(shoulder),shoulder]],'roof',5,'老虎窗三角侧墙',C.trim);
       box(x-w,y-.04,14.7,x+w,y+.04,bottom,'roof',5,'老虎窗窗下墙',C.trim);
       box(x-w-.10,y-.15,bottom-.06,x+w+.10,y+.15,bottom,'openings',5,'老虎窗窗台',C.trim);
-      box(x-w,y-.045,bottom,x+w,y+.045,shoulder,'roof',5,name,C.glass);
-      poly([[x-w,y,bottom],[x+w,y,bottom],[x,y,peak]],'roof',5,name,C.glass);
+      box(x-w,y-.045,bottom,x+w,y+.045,netShoulder,'openings',5,name,C.glass);
+      poly([[x-w,y,netShoulder],[x+w,y,netShoulder],[x,y,netShoulder+.7]],'openings',5,name,C.glass);
+      for(const sign of[-1,1]){const aa=[x+sign*w,y,netShoulder],bb=[x,y,netShoulder+.7],dd=.025;quad([aa[0],y-.07,aa[2]],[bb[0],y-.07,bb[2]],[bb[0],y-.07,bb[2]-dd],[aa[0],y-.07,aa[2]-dd],'openings',5,'老虎窗斜框',C.frame);}
       // 五边形洞口面上保留横框、中框与两坡窗顶边框。
-      box(x-.022,y-.07,bottom,x+.022,y+.07,peak-.06,'roof',5,'老虎窗中框',C.frame);
-      box(x-w,y-.07,shoulder-.025,x+w,y+.07,shoulder+.025,'roof',5,'老虎窗横框',C.frame);
-      for(const xx of[x-w,x+w-.05])box(xx,y-.07,bottom,xx+.05,y+.07,shoulder,'roof',5,'老虎窗边框',C.frame);
+      box(x-.022,y-.07,bottom,x+.022,y+.07,netShoulder+.7,'roof',5,'老虎窗中框',C.frame);
+      box(x-w,y-.07,netShoulder-.025,x+w,y+.07,netShoulder+.025,'roof',5,'老虎窗横框',C.frame);
+      for(const xx of[x-w,x+w-.05])box(xx,y-.07,bottom,xx+.05,y+.07,netShoulder,'roof',5,'老虎窗边框',C.frame);
       for(const sign of[-1,1]){
         const frontY=y+(side?.12:-.12);
         quad([x+sign*(w+.16),frontY,shoulder+.08],[x,frontY,peak+.08],[x,junction(peak+.08),peak+.08],[x+sign*(w+.16),junction(shoulder+.08),shoulder+.08],'roof',5,'老虎窗小坡屋顶',C.roof);
         const a=[x+sign*(w+.16),y-.14,shoulder+.04],b=[x,y-.14,peak+.04];quad(a,b,[b[0],b[1],b[2]-.10],[a[0],a[1],a[2]-.10],'roof',5,'老虎窗白色檐边',C.trim);
       }
     }
+    activeComponent=null;
     const eaves=side?[[-.45,32.85]]:[[-.45,0],[3.4,9.3],[13.2,19.2],[23.1,29],[32.4,32.85]];
     for(const [a,b]of eaves){
       box(a,outer-.06,roofHeight(outer)-.165,b,outer+.06,roofHeight(outer)-.045,'roof',5,'白色檐沟（瓦面以下）',C.trim);
@@ -274,14 +383,15 @@ void main(){vec3 col=shade.rgb;if(tiled>.5){
     const s=Math.min((w-68)/Math.max(sx,1),(h-94)/Math.max(sy,1))*state.zoom;
     return{w,h,toward,right,up,center,s};}
   function project(p){const a=sub(p,frame.center);return[frame.w/2+dot(a,frame.right)*frame.s+state.pan[0],frame.h/2-dot(a,frame.up)*frame.s+state.pan[1]]}
-  function geometry(){const opaque=[],trans=[],cl=clipInfo();let tileMaterial=0;
+  let geometryCache=null,geometryKey='';
+  function geometry(){const key=JSON.stringify([state.floor,state.layers,state.explode,state.cut,state.cutValue,state.opacity,state.selected,state.componentId,state.room,state.opacity<1?[state.yaw,state.pitch]:null]);if(key===geometryKey&&geometryCache)return geometryCache;geometryKey=key;const opaque=[],trans=[],cl=clipInfo();let tileMaterial=0;
     const emit=(a,b,c,color,alpha,list)=>{const n=norm(cross(sub(b,a),sub(c,a)));if(Math.hypot(...cross(sub(b,a),sub(c,a)))<1e-9)return;for(const p of[a,b,c])list.push(...p,...n,...color,alpha,tileMaterial)};
     const sorted=visibleObjects.slice().sort((a,b)=>{const center=o=>o.min?o.min.map((v,i)=>(v+o.max[i])/2):o.points[0];return dot(center(a),frame.toward)-dot(center(b),frame.toward)});
-    for(const o of sorted){tileMaterial=o.group==='roof'&&/坡屋面|瓦面|小坡屋顶|弧形粘土瓦|屋脊/.test(o.name)?1:0;let color=o.color,alpha=o.group==='walls'?state.opacity:1;if(state.selected===o.group)color=color.map((v,i)=>v*.35+[.35,.92,1][i]*.65);const list=alpha<.99?trans:opaque;
+    for(const o of sorted){tileMaterial=o.group==='roof'&&/坡屋面|瓦面|小坡屋顶|弧形粘土瓦|屋脊/.test(o.name)?1:0;let color=o.color,alpha=o.group==='walls'?state.opacity:1;if(state.componentId?state.componentId===o.componentId:state.selected===o.group)color=color.map((v,i)=>v*.35+[.35,.92,1][i]*.65);const list=alpha<.99?trans:opaque;
       if(o.min){for(const face of boxFaces){const pts=face.map(p=>p.map((v,i)=>o.min[i]+v*(o.max[i]-o.min[i])));let col=color;if(o.cap){const ax=o.cap.axis,cutV=o.cap.v+(ax===2?o.dz:0);if(pts.every(p=>Math.abs(p[ax]-cutV)<.0001))col=rgb(C.cap)}emit(pts[0],pts[1],pts[2],col,alpha,list);emit(pts[0],pts[2],pts[3],col,alpha,list)}}else for(let i=1;i<o.points.length-1;i++)emit(o.points[0],o.points[i],o.points[i+1],color,alpha,list);
     }
     if(state.room){tileMaterial=0;const r=state.room,z=state.planFloor*2.8+.03,co=rgb('#53eafd');const a=[r.min[0],r.min[1],z],b=[r.max[0],r.min[1],z],c=[r.max[0],r.max[1],z],d=[r.min[0],r.max[1],z];emit(a,b,c,co,.9,opaque);emit(a,c,d,co,.9,opaque)}
-    return {opaque:new Float32Array(opaque),trans:new Float32Array(trans)};
+    return geometryCache={opaque:new Float32Array(opaque),trans:new Float32Array(trans)};
   }
   function drawOverlay(){ctx.clearRect(0,0,frame.w,frame.h);const line=(a,b,color,width=1,dash=[])=>{const p=project(a),q=project(b);ctx.strokeStyle=color;ctx.lineWidth=width;ctx.setLineDash(dash);ctx.beginPath();ctx.moveTo(...p);ctx.lineTo(...q);ctx.stroke();ctx.setLineDash([])};
     const text=(p,t,color='#a5c6d8',size=10)=>{const q=project(p);ctx.font=`${size}px Microsoft YaHei`;ctx.fillStyle=color;ctx.textAlign='center';ctx.fillText(t,q[0],q[1])};
@@ -292,7 +402,7 @@ void main(){vec3 col=shade.rgb;if(tiled>.5){
   function render(){dirty=false;const dpr=Math.min(devicePixelRatio||1,2);for(const c of[canvas,overlay]){const w=Math.round(canvas.clientWidth*dpr),h=Math.round(canvas.clientHeight*dpr);if(c.width!==w||c.height!==h){c.width=w;c.height=h}}ctx.setTransform(dpr,0,0,dpr,0,0);frame=makeFrame();buildVisible();if(gl){gl.viewport(0,0,canvas.width,canvas.height);gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.uniform3fv(loc.center,frame.center);gl.uniform3fv(loc.right,frame.right);gl.uniform3fv(loc.up,frame.up);gl.uniform3fv(loc.toward,frame.toward);gl.uniform2f(loc.scale,2*frame.s/frame.w,2*frame.s/frame.h);gl.uniform2f(loc.pan,2*state.pan[0]/frame.w,-2*state.pan[1]/frame.h);const geo=geometry();for(const [data,transparent]of[[geo.opaque,false],[geo.trans,true]]){gl.depthMask(!transparent);gl.bufferData(gl.ARRAY_BUFFER,data,gl.DYNAMIC_DRAW);gl.drawArrays(gl.TRIANGLES,0,data.length/11)}gl.depthMask(true)}drawOverlay()}
   const request=()=>{dirty=true};
   function setView(view){state.pan=[0,0];state.zoom=1;const views={iso:[-1.13,.40],south:[-Math.PI/2,0],north:[Math.PI/2,0],ad:[0,0],da:[Math.PI,0],top:[-Math.PI/2,Math.PI/2-.0001]};[state.yaw,state.pitch]=views[view];$$('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===view));request()}
-  function selectPart(group,name){state.selected=group;if(group){$('part-title').textContent=name||parts[group][0];$('part-text').textContent=parts[group][1];$('clear-selection').hidden=false}else{$('part-title').textContent='点选模型中的构件';$('part-text').textContent='认识墙、楼板、门窗、阳台、楼梯和坡屋顶。也可使用右侧构件列表选择。';$('clear-selection').hidden=true}$$('[data-part]').forEach(b=>b.classList.toggle('active',b.dataset.part===group));request()}
+  function selectPart(group,name,id=null){state.selected=group;state.componentId=id;if(group){$('part-title').textContent=name||parts[group][0];$('part-text').textContent=parts[group][1];$('clear-selection').hidden=false}else{$('part-title').textContent='点选模型中的构件';$('part-text').textContent='认识墙、楼板、门窗、阳台、楼梯和坡屋顶。也可使用右侧构件列表选择。';$('clear-selection').hidden=true}const rec=components.find(c=>c.id===id);if(rec){const def=spec.openings[rec.code];$('part-title').textContent=`${rec.floor===5?'阁楼':rec.floor+1+'层'} · ${rec.code}`;$('part-text').textContent=[rec.item,rec.width?`${rec.code.startsWith('FIX')?'截面或标注宽度':'洞口'} ${rec.width}${rec.height?'×'+rec.height:rec.depth?'×'+rec.depth:''} mm`:rec.height?`扶手高 ${rec.height} mm`:'',rec.activeHeight?`门扇高 ${rec.activeHeight}，上亮子 ${rec.transomHeight} mm`:'',def?`${def.category}；${def.material}`:rec.material,rec.representation,rec.dimensionNote,`依据 A5 建施${rec.source||18}`].filter(Boolean).join('；');}$$('[data-part]').forEach(b=>b.classList.toggle('active',b.dataset.part===group));request()}
   Object.entries(parts).forEach(([k,p])=>{const b=document.createElement('button');b.textContent=p[0].split('与')[0];b.dataset.part=k;b.onclick=()=>{state.layers[k]=true;document.querySelector(`[data-layer="${k}"]`).checked=true;selectPart(k)};$('component-buttons').append(b)});
   $('clear-selection').onclick=()=>selectPart(null);
   function sync(){
@@ -301,7 +411,7 @@ void main(){vec3 col=shade.rgb;if(tiled>.5){
     $('cut-detail').hidden=state.cut==='none';$('cut-position').value=state.cutValue*1000;const cl=clipInfo();$('cut-label').textContent=state.cut==='horizontal'?'剖切标高':state.cut==='longitudinal'?'距 A 轴':'距 ① 轴';$('cut-value').textContent=cl?`${cl.axis===2?'+':''}${cl.v.toFixed(3)} m`:'';
     const f=state.floor==='all'?null:+state.floor;$('model-title').textContent=f===null?'整栋观察':f===5?'阁楼层观察':`${['一','二','三','四','五'][f]}层观察`;$('floor-level').textContent=f===null?'整栋 · ±0.000 至 +17.773':`楼面 ${f===0?'±0.000':'+'+(f*2.8).toFixed(3)} m`;
     $('model-badge').textContent=state.cut!=='none'?`${{horizontal:'水平剖切',longitudinal:'纵向剖切',transverse:'横向剖切'}[state.cut]} · 金色为截面`:f===null?(state.explode?'楼层拆分 · 观察竖向关系':'五层住宅 + 坡屋顶阁楼'):f===5?'阁楼 · 坡屋顶内的使用空间':`${f+1}层 · 屋顶与上方楼层已移开`;
-    $('plan-floor').value=String([1,2,3,5].includes(state.planFloor)?1:state.planFloor);drawPlan();request();
+    $('plan-floor').value=String([1,2,3,5].includes(state.planFloor)?1:state.planFloor);if(f!==null){$('schedule-floor').value=String(f);drawSchedule();}drawPlan();request();
   }
   function setFloor(f){state.floor=String(f);state.room=null;state.cut='none';state.pan=[0,0];state.zoom=1;if(f!=='all')state.planFloor=+f;sync()}
   $$('[data-floor]').forEach(b=>b.onclick=()=>setFloor(b.dataset.floor));$$('[data-view]').forEach(b=>b.onclick=()=>setView(b.dataset.view));
@@ -348,8 +458,22 @@ void main(){vec3 col=shade.rgb;if(tiled>.5){
     for(const o of visibleObjects){if(!o.min||o.group==='site')continue;let tmin=0,tmax=Infinity;for(let a=0;a<3;a++){if(Math.abs(dir[a])<1e-9){if(start[a]<o.min[a]||start[a]>o.max[a]){tmin=Infinity;break}}else{let t1=(o.min[a]-start[a])/dir[a],t2=(o.max[a]-start[a])/dir[a];tmin=Math.max(tmin,Math.min(t1,t2));tmax=Math.min(tmax,Math.max(t1,t2))}}if(tmax>=tmin&&tmin<best){best=tmin;hit=o;}}
     // 三角面用于坡屋顶；射线相交由Möller–Trumbore算法计算。
     for(const o of visibleObjects){if(!o.points||o.group==='site')continue;for(let i=1;i<o.points.length-1;i++){const [a,b,c]=[o.points[0],o.points[i],o.points[i+1]],e1=sub(b,a),e2=sub(c,a),h=cross(dir,e2),det=dot(e1,h);if(Math.abs(det)<1e-8)continue;const f=1/det,s=sub(start,a),u=f*dot(s,h);if(u<0||u>1)continue;const q=cross(s,e1),v=f*dot(dir,q);if(v<0||u+v>1)continue;const t=f*dot(e2,q);if(t>0&&t<best){best=t;hit=o;}}}
-    if(hit)selectPart(hit.group,`${hit.floor===5?'阁楼':hit.floor+1+'层'} · ${hit.name}`);else selectPart(null);
+    if(hit)selectPart(hit.group,`${hit.floor===5?'阁楼':hit.floor+1+'层'} · ${hit.name}`,hit.componentId);else selectPart(null);
   }
+  function drawSchedule(){
+    const f=+$('schedule-floor').value;
+    $('opening-schedule').replaceChildren(...Object.entries(spec.openings).map(([code,d])=>{
+      const instances=components.filter(c=>c.code===code&&c.floor===f&&c.countInSchedule!==false),expected=d.byFloor[f],count=instances.length;
+      const pending=expected!=null&&count!==expected;
+      const tr=document.createElement('tr'),first=document.createElement('td'),second=document.createElement('td'),btn=document.createElement('button');
+      btn.className='schedule-pick';btn.textContent=code;btn.disabled=!count;btn.onclick=()=>{const r=instances[0];setFloor(f);selectPart('openings',code,r.id);};first.append(btn,document.createElement('br'),document.createTextNode(`${d.width||'宽度见立面'} × ${d.height||'至板下皮'} mm`));
+      second.append(document.createTextNode(`${d.category} · ${d.material}`));const status=document.createElement('span');status.className='schedule-status'+(pending?' review':'');
+      status.textContent=`表列 ${expected==null?'未列':expected} / 已定位 ${count}`+(pending?' · 待核定位或表图差异':'')+(instances.some(c=>c.representation?.startsWith('仅门洞'))?' · 仅留门洞':'');second.append(status);tr.append(first,second);return tr;
+    }));
+    $('schedule-notes').textContent='洞口尺寸，装修余量须按详图留出。LM1/LM2门扇高2000，上亮子至板下皮。YC按立面宽计，侧窗另列于点选信息。YC3五层表列4而平面2、合计10，按平面保留2。M5B-0616及阁楼部分普通门窗缺定位，未擅自补设。阁楼露台推拉门按建施13另计。';
+  }
+  $('schedule-floor').onchange=drawSchedule;drawSchedule();
+
   let drag=null,pointers=new Map(),pinch=null;
   canvas.addEventListener('contextmenu',e=>e.preventDefault());canvas.addEventListener('pointerdown',e=>{canvas.focus({preventScroll:true});canvas.setPointerCapture(e.pointerId);pointers.set(e.pointerId,[e.clientX,e.clientY]);state.auto=false;$('auto-rotate').setAttribute('aria-pressed','false');if(pointers.size===2){const p=[...pointers.values()];pinch={distance:Math.hypot(p[0][0]-p[1][0],p[0][1]-p[1][1]),zoom:state.zoom};drag=null;return}drag={id:e.pointerId,x:e.clientX,y:e.clientY,yaw:state.yaw,pitch:state.pitch,pan:state.pan.slice(),move:e.shiftKey||e.button===2||e.button===1,moved:0};});
   canvas.addEventListener('pointermove',e=>{if(!pointers.has(e.pointerId))return;pointers.set(e.pointerId,[e.clientX,e.clientY]);if(pinch&&pointers.size===2){const p=[...pointers.values()];state.zoom=Math.max(.4,Math.min(5,pinch.zoom*Math.hypot(p[0][0]-p[1][0],p[0][1]-p[1][1])/pinch.distance));request();return}if(!drag)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;drag.moved=Math.max(drag.moved,Math.hypot(dx,dy));if(drag.move)state.pan=[drag.pan[0]+dx,drag.pan[1]+dy];else{state.yaw=drag.yaw+dx*.007;state.pitch=Math.max(-.12,Math.min(Math.PI/2-.0001,drag.pitch+dy*.005));$$('[data-view]').forEach(b=>b.classList.remove('active'))}request()});
@@ -361,5 +485,5 @@ void main(){vec3 col=shade.rgb;if(tiled>.5){
   let previous=0;function animate(t){if(state.auto){state.yaw+=Math.min(50,t-previous)*.00015;dirty=true}previous=t;if(dirty)render();requestAnimationFrame(animate)}
   setStep(0);requestAnimationFrame(animate);
   // 只读诊断入口，便于核验实际几何及运行状态。
-  window.houseTeaching={getState:()=>JSON.parse(JSON.stringify(state)),getGeometry:()=>({objects:objects.length,rooms:rooms.length,floors:[0,2.8,5.6,8.4,11.2,14],ridge:17.773,axes:{length:32.4,depth:12},external:{length:32.9,depth:12.5},dormers:16,atticTerraces:objects.filter(o=>o.name==='阁楼敞开露台楼板').length,securityDoorLeaves:objects.filter(o=>o.name==='双开防盗门 · 650门扇').length/4,windowSills:objects.filter(o=>/窗台/.test(o.name)).length,tileSurfaces:objects.filter(o=>/弧形粘土瓦/.test(o.name)).length,visible:visibleObjects.length,webgl:!!gl}),getObjects:()=>objects.map(o=>({name:o.name,floor:o.floor,group:o.group,min:o.min,max:o.max,points:o.points,color:o.color})),project:p=>project(p)};
+  window.houseTeaching={getState:()=>JSON.parse(JSON.stringify(state)),getGeometry:()=>({objects:objects.length,rooms:rooms.length,floors:[0,2.8,5.6,8.4,11.2,14],ridge:17.773,axes:{length:32.4,depth:12},external:{length:32.9,depth:12.5},dormers:16,atticTerraces:objects.filter(o=>o.name==='阁楼敞开露台楼板').length,securityDoorLeaves:components.filter(c=>c.code==='GM-1321').length*2,windowSills:objects.filter(o=>/窗台/.test(o.name)).length,tileSurfaces:objects.filter(o=>/弧形粘土瓦/.test(o.name)).length,visible:visibleObjects.length,webgl:!!gl}),getObjects:()=>objects.map(o=>({componentId:o.componentId,diameter:o.diameter,name:o.name,floor:o.floor,group:o.group,min:o.min,max:o.max,points:o.points,color:o.color})),getComponents:()=>structuredClone(components),getSpecification:()=>structuredClone(spec),selectComponent:id=>{const r=components.find(c=>c.id===id);if(r){setFloor(r.floor);selectPart(r.code==='RAIL-15'?'stairs':r.code.startsWith('FIX')?'fixtures':'openings',r.code,id)}},project:p=>project(p)};
 })();
