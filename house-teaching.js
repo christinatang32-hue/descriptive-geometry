@@ -45,7 +45,11 @@
   function wall(axis,a,b,cross,z,h,t,floor,holes=[],inner=false){
     const cuts=[a,b,...holes.flatMap(o=>[Math.max(a,o.c-o.w/2),Math.min(b,o.c+o.w/2)])].sort((a,b)=>a-b);
     function segment(lo,hi,z0,z1){if(axis==='x')box(lo,cross-t/2,z0,hi,cross+t/2,z1,'walls',floor,inner?'室内隔墙':'外墙',inner?C.inner:C.wall);else box(cross-t/2,lo,z0,cross+t/2,hi,z1,'walls',floor,inner?'室内隔墙':'山墙',inner?C.inner:C.wall)}
-    for(let i=0;i<cuts.length-1;i++){let lo=cuts[i],hi=cuts[i+1];if(hi-lo<.001)continue;const hole=holes.find(o=>(lo+hi)/2>o.c-o.w/2-.001&&(lo+hi)/2<o.c+o.w/2+.001);if(hole){segment(lo,hi,z,z+hole.b);segment(lo,hi,z+hole.b+hole.h,z+h)}else segment(lo,hi,z,z+h);}
+    for(let i=0;i<cuts.length-1;i++){
+      const lo=cuts[i],hi=cuts[i+1];if(hi-lo<.001)continue;
+      const voids=holes.filter(o=>(lo+hi)/2>o.c-o.w/2-.001&&(lo+hi)/2<o.c+o.w/2+.001).map(o=>[Math.max(z,z+o.b),Math.min(z+h,z+o.b+o.h)]).filter(v=>v[1]>v[0]).sort((a,b)=>a[0]-b[0]);
+      let cursor=z;for(const [low,high]of voids){if(low>cursor)segment(lo,hi,cursor,low);cursor=Math.max(cursor,high);}if(cursor<z+h)segment(lo,hi,cursor,z+h);
+    }
     for(const o of holes){
       if(!o.code)continue;
       const code=o.code,lo=o.c-o.w/2,hi=o.c+o.w/2,z0=z+o.b,z1=z0+o.h,g='openings',name=code;
@@ -203,8 +207,8 @@
     wall('x',-.25,32.65,12.065,z,2.68,.37,f,northH);
     for(const x of[0,32.4])wall('y',.12,11.88,x+(x===0?-.065:.065),z,2.68,.37,f,[win(6.45,2.1)]);
     // 南面八樘卧室木门，阳台门洞不另塞门扇。
-    for(const x of southBays.slice(1,-1))wall('y',.12,4.38,x,z,2.68,.24,f,[9.3,13.2,19.2,23.1].includes(x)?[door(3.93)]:[],true);
-    for(const [a,b,t]of[[.12,6.4,.24],[6.4,9.3,.12],[9.3,23.1,.24],[23.1,26,.12],[26,32.28,.24]])wall('x',a,b,4.5,z,2.68,t,f,[2.83,3.97,28.43,29.57].filter(c=>c>a&&c<b).map(c=>door(c)),true);
+    for(const x of southBays.slice(1,-1))wall('y',.12,[6.4,9.3,23.1,26].includes(x)?4.44:4.38,x,z,2.68,.24,f,[9.3,13.2,19.2,23.1].includes(x)?[door(3.93)]:[],true);
+    for(const [a,b,t]of[[.12,6.34,.24],[6.34,9.485,.12],[9.485,22.915,.24],[22.915,26.06,.12],[26.06,32.28,.24]])wall('x',a,b,4.5,z,2.68,t,f,[2.83,3.97,28.43,29.57].filter(c=>c>a&&c<b).map(c=>door(c)),true);
     for(const x of[3.6,12.8,16.2,19.6,28.8])wall('y',x===12.8||x===19.6?6.72:8.4,11.88,x,z,2.68,.24,f,[12.8,19.6].includes(x)?[door(7.29)]:[],true);
     wall('x',.12,3.6,8.4,z,2.68,.24,f,[door(3.03)],true);
     wall('x',28.8,32.28,8.4,z,2.68,.24,f,[door(29.37)],true);
