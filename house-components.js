@@ -430,6 +430,14 @@ window.HOUSE_COMPONENT_SPEC = Object.freeze({
       ],
       "representation": "opening-only",
       "reason": "用户确认圈出位置只留门洞，去掉门窗；原表保留作尺寸对照"
+    },
+    "stairs": {
+      "date": "2026-11-13",
+      "spiralStairs": 2,
+      "straightStairs": 2,
+      "wallSideRails": false,
+      "openingEndGuards": 4,
+      "reason": "User requests two steel spiral stairs, no wall-side rails, and all four opening end guards"
     }
   },
   "serviceSpace": {
@@ -513,9 +521,14 @@ window.HOUSE_COMPONENT_SPEC = Object.freeze({
     ],
     "roomPlan": "四户，每户三间卧室；端户原厨房区为起居室延伸，原公共梯上方补卧室",
     "doorSizeSource": "表18/详图19原尺寸，不乘2",
-    "privateTreadStatus": "户内梯踏步未附详图；当前16级175mm及按洞口计算的踏面为教学示意参数",
+    "privateTreadStatus": "两处钢制螺旋梯、两处单跑梯；未提供户内梯构造详图，踏步、柱径和板厚为教学示意",
     "roofHeadReview": "两端北卧室门标称900×2100；与坡顶相交的端部随坡收头，实际净高需门节点核对",
     "scheduleDifference": "表18阁楼SC-1515、SC-1815各6，与平面明确TC标注不一致；模型按TC平面布置并保留差异",
-    "scope": "web model; CAD files retain their previous validated revision"
+    "scope": "web model; CAD files retain their previous validated revision",
+    "spiralStairs": 2,
+    "straightStairs": 2,
+    "wallSideRails": false,
+    "openingSouthEndGuards": 4,
+    "spiralStairStatus": "用户指定两端户钢制螺旋梯；直径1480、中心柱Φ120、钢踏板厚12及16级175为教学示意参数"
   }
 });

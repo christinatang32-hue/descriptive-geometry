@@ -4,7 +4,7 @@
   'use strict';
   const $=id=>document.getElementById(id), $$=s=>[...document.querySelectorAll(s)];
   const drawings=[["一层平面图", "A5 建施-3", 3, "平面图"], ["标准层平面图", "A5 建施-4", 4, "平面图"], ["五层平面图", "A5 建施-5", 5, "平面图"], ["①—⑰立面图", "A5 建施-8", 8, "立面图"], ["⑰—①立面图", "A5 建施-9", 9, "立面图"], ["Ⓐ—Ⓓ / Ⓓ—Ⓐ立面图", "A5 建施-10", 10, "立面图"], ["1—1剖面图", "A5 建施-11", 11, "剖面图"], ["墙身节点详图（一）", "A5 建施-12", 12, "构件详图"], ["墙身节点详图（二）", "A5 建施-13", 13, "构件详图"], ["楼梯详图", "A5 建施-14", 14, "构件详图"]];
-  const imagePath=i=>`assets/house/v2/a5-${String(drawings[i][2]).padStart(2,'0')}.jpg?v=20261113-7`;
+  const imagePath=i=>`assets/house/v2/a5-${String(drawings[i][2]).padStart(2,'0')}.jpg?v=20261113-8`;
   drawings.push(['栏杆扶手详图','A5 建施-15',15,'构件详图'],['厨房、卫生间详图','A5 建施-16',16,'构件详图'],['门窗统计表','A5 建施-18',18,'材料与数量'],['门窗详图','A5 建施-19',19,'构件详图']);
   drawings.push(['屋面排水示意图','A5 建施-7',7,'屋面平面'],['局部详图','A5 建施-17',17,'构件详图']);
   drawings.push(['阁楼层平面图','A5 建施-6',6,'平面图']);
@@ -16,7 +16,7 @@
   $('open-drawings').onclick=()=>showDrawing(drawingIndex);$('close-drawings').onclick=()=>$('drawing-dialog').close();$('prev-drawing').onclick=()=>showDrawing(drawingOrder[(drawingOrder.indexOf(drawingIndex)+drawings.length-1)%drawings.length]);$('next-drawing').onclick=()=>showDrawing(drawingOrder[(drawingOrder.indexOf(drawingIndex)+1)%drawings.length]);$('drawing-select').onchange=e=>showDrawing(+e.target.value);
   $('drawing-dialog').addEventListener('click',e=>{if(e.target===$('drawing-dialog')){const r=e.target.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)e.target.close()}});
   const C={wall:'#e4d4ac',inner:'#d7c7a4',slab:'#8ca7b4',glass:'#65b4c8',frame:'#e8edf0',door:'#a87b56',stair:'#afb8b6',balcony:'#a9bbb8',roof:'#a74d43',trim:'#e5e6df',base:'#53616c',cap:'#f1b94f'};
-  const parts={walls:['墙体与房间分隔','外围墙按轴外250＋轴内120＝370 mm表达，墙根与勒脚外表面对齐；主要隔墙按平面240 mm、楼梯间370 mm及详图60 mm分别表达。真实门窗洞口从墙体中扣除；房间位置由建筑平面确定。'],slabs:['楼板与层高','五层楼面按2.8 m间距设置；阁楼楼面标高+14.000。模型板厚按120 mm教学示意，具体叠层见墙身节点。'],openings:['门窗与洞口','SC-1515、SC-1815、SC-2115分别表示1500、1800、2100 mm宽的窗；M5B-0921为900×2100 mm门。窗框分格经过简化。'],balconies:['阳台与立面节奏','A轴一侧四列阳台外挑约1.2 m，D轴一侧厨房阳台按约0.6 m示意。一至五层为封闭阳台；阁楼四处为敞开露台，设实体栏板、栏杆和后退的玻璃推拉门。'],stairs:['双跑楼梯','两处楼梯间位于⑤—⑥、⑫—⑬轴。标准层两跑各8级，级高175 mm、踏面260 mm，半层平台高1.4 m；首层按9＋7级、半层平台1.575 m表达。两跑之间保留梯井，仅设栏杆扶手。公共梯止于五层；四处户内梯由五层接至阁楼，位置按建施5/6，未标踏步排布为教学示意。'],roof:['坡屋顶与老虎窗','屋脊标高+17.773，阁楼楼面+14.000。南北坡合计16个老虎窗（南坡六樘、北坡十樘），洞口宽1.5 m；红色粘土瓦以逐行搭接缝、弧形瓦垄和檐口瓦形表达；瓦规格为教学示意。']};
+  const parts={walls:['墙体与房间分隔','外围墙按轴外250＋轴内120＝370 mm表达，墙根与勒脚外表面对齐；主要隔墙按平面240 mm、楼梯间370 mm及详图60 mm分别表达。真实门窗洞口从墙体中扣除；房间位置由建筑平面确定。'],slabs:['楼板与层高','五层楼面按2.8 m间距设置；阁楼楼面标高+14.000。模型板厚按120 mm教学示意，具体叠层见墙身节点。'],openings:['门窗与洞口','SC-1515、SC-1815、SC-2115分别表示1500、1800、2100 mm宽的窗；M5B-0921为900×2100 mm门。窗框分格经过简化。'],balconies:['阳台与立面节奏','A轴一侧四列阳台外挑约1.2 m，D轴一侧厨房阳台按约0.6 m示意。一至五层为封闭阳台；阁楼四处为敞开露台，设实体栏板、栏杆和后退的玻璃推拉门。'],stairs:['双跑楼梯','两处楼梯间位于⑤—⑥、⑫—⑬轴。标准层两跑各8级，级高175 mm、踏面260 mm，半层平台高1.4 m；首层按9＋7级、半层平台1.575 m表达。两跑之间保留梯井，仅设栏杆扶手。公共梯止于五层；两端户钢制螺旋梯与中间两户直梯接至阁楼。靠墙侧不设栏杆扶手，四处洞口临空端防护补齐并留出出口；未标构造尺寸为教学示意。'],roof:['坡屋顶与老虎窗','屋脊标高+17.773，阁楼楼面+14.000。南北坡合计16个老虎窗（南坡六樘、北坡十樘），洞口宽1.5 m；红色粘土瓦以逐行搭接缝、弧形瓦垄和檐口瓦形表达；瓦规格为教学示意。']};
   parts.fixtures=['厨房与卫生设备','按建施16的尺寸链定位洗手盆、坐便器、浴缸、洗衣机、厨房洗涤池与灶台；520×250烟道及240×240 GRC通风道按标注。成品器具未标注的外形、安装高度和材质仅作识读示意。'];
   const state={floor:'all',planFloor:1,explode:0,cut:'none',cutValue:.5,opacity:1,layers:Object.fromEntries(Object.keys(parts).map(k=>[k,true])),yaw:-1.13,pitch:.40,zoom:1,pan:[0,0],selected:null,room:null,step:0,auto:false};
   const objects=[],rooms=[],components=[];
@@ -44,8 +44,8 @@
     const d=b.map((v,i)=>v-a[i]),len=Math.hypot(...d);if(len<1e-7)return;
     const u=d.map(v=>v/len),n=Math.abs(u[2])>.9?[1,0,0]:[-u[1],u[0],0],nl=Math.hypot(...n),nn=n.map(v=>v/nl),v=[u[1]*nn[2]-u[2]*nn[1],u[2]*nn[0]-u[0]*nn[2],u[0]*nn[1]-u[1]*nn[0]];
     const ring=p=>Array.from({length:8},(_,i)=>p.map((x,k)=>x+diameter/2*(nn[k]*Math.cos(i*Math.PI/4)+v[k]*Math.sin(i*Math.PI/4))));
-    const aa=ring(a),bb=ring(b);for(let i=0;i<8;i++){const j=(i+1)%8;quad(aa[i],aa[j],bb[j],bb[i],group,floor,name,color,{diameter:diameter*1000});}
-    poly(aa,group,floor,name,color,{diameter:diameter*1000});poly(bb.slice().reverse(),group,floor,name,color,{diameter:diameter*1000});
+    const extra={diameter:diameter*1000,centerline:[a,b]},aa=ring(a),bb=ring(b);for(let i=0;i<8;i++){const j=(i+1)%8;quad(aa[i],aa[j],bb[j],bb[i],group,floor,name,color,extra);}
+    poly(aa,group,floor,name,color,extra);poly(bb.slice().reverse(),group,floor,name,color,extra);
   }
   // 由洞口边界分块成墙，门窗不贴在实心墙面上。
   function wall(axis,a,b,cross,z,h,t,floor,holes=[],inner=false){
@@ -427,16 +427,31 @@
   wall('x',12.68,19.72,4.8,14,3.8,.24,5,[],true);wall('x',12.68,19.72,6.96,14,3.8,.12,5,[],true);
   makeBath(1,false,14,5);makeBath(1,true,14,5);makeBath(2,false,14,5);makeBath(2,true,14,5);
   // 卫生间上方与新北卧室共用120墙带，无住宅层检修柜占位。
-  // 户内梯只按图中洞口定位，不借用公共梯的踏步规格。
-  for(const v of atticStairVoids){
-    const [x0,y0,x1,y1]=v.rect;
-    component('ATTIC-STAIR-OPENING',5,{item:v.unit+' · 户内楼梯洞口',width:v.width,depth:v.length,infoLabel:'洞口平面',material:'洞口及防护；连接梯段的踏步参数为教学示意，待户内梯详图复核',source:6,position:[(x0+x1)/2,(y0+y1)/2,14],dimensionNote:'分尺寸×2；连接五层与阁楼，不将公共梯踏步参数套用于户内梯'},()=>{
-      for(const x of[x0,x1])tube([x,y0,14.881],[x,y1,14.881],.038,5,'阁楼户内梯洞口扶手 Φ38');
-      tube([x0,y1,14.881],[x1,y1,14.881],.038,5,'阁楼户内梯洞口端部扶手 Φ38');
-      for(const x of[x0,x1])for(let y=y0;y<=y1+.001;y+=.26)tube([x,y,14],[x,y,14.862],.016,5,'阁楼洞口防护立杆 Φ16');
-    });
-    atticRoom('户内楼梯洞口',v.unit,[v.rect],'stair','建施6：洞口'+v.width+'×'+v.length+'；梯段连接五层与阁楼，位置按平面，未标踏步为教学示意参数。');
+  // 洞口靠墙边取消防护，临空边补齐；出口按梯型留空，不能用横杆封住。
+  function atticStairSides(v){
+    const [x0,,x1]=v.rect,west=(x0+x1)/2<16,spiral=v.width===1600;
+    return {spiral,wallX:spiral?(west?x1:x0):(west?x0:x1),openX:spiral?(west?x0:x1):(west?x1:x0)};
   }
+  for(const v of atticStairVoids){
+    const [x0,y0,x1,y1]=v.rect,{spiral,wallX,openX}=atticStairSides(v),cy=(y0+y1)/2,exitHalf=.38;
+    v.guardLayout={wallX,openX,southEnd:true,northEnd:spiral,exit:spiral?{axis:'x',coordinate:openX,span:[cy-exitHalf,cy+exitHalf]}:{axis:'y',coordinate:y1,span:[x0,x1]}};
+    component('ATTIC-STAIR-OPENING',5,{item:v.unit+' · 户内楼梯洞口',width:v.width,depth:v.length,infoLabel:'洞口平面',material:'临空边钢管防护，靠墙边不设栏杆扶手；楼梯出口留空',source:6,position:[(x0+x1)/2,cy,14],dimensionNote:'分尺寸×2；四处洞口南端防护补齐，螺旋梯在起居室侧开出口，直梯在上行端开出口。'},()=>{
+      const edge=(a,b,label)=>{
+        const start=objects.length,length=Math.hypot(b[0]-a[0],b[1]-a[1]),n=Math.ceil(length/.13);
+        tube([...a,14.881],[...b,14.881],.038,5,'阁楼洞口'+label+'扶手 Φ38');
+        for(let i=0;i<=n;i++){const t=i/n,x=a[0]+(b[0]-a[0])*t,y=a[1]+(b[1]-a[1])*t;if(Math.abs(x-wallX)<.02)continue;tube([x,y,14],[x,y,14.862],.016,5,'阁楼洞口防护立杆 Φ16');}
+        for(const o of objects.slice(start)){o.guardEdge=label;o.guardOpening=v.unit;}
+      };
+      edge([x0,y0],[x1,y0],'南端');
+      if(spiral){
+        edge([x0,y1],[x1,y1],'北端');
+        edge([openX,y0],[openX,cy-exitHalf],'临空侧南段');
+        edge([openX,cy+exitHalf],[openX,y1],'临空侧北段');
+      }else edge([openX,y0],[openX,y1],'临空侧');
+    });
+    atticRoom('户内楼梯洞口',v.unit,[v.rect],'stair','洞口按建施6；两端户钢制螺旋梯，中间两户单跑梯。靠墙边取消扶手，临空边补齐，出口保持通畅。');
+  }
+
   // 三间卧室/户，四户共十二间，与M5B-0921十二樘相互核对。
   const bedrooms=[
     ['卧室','西端户',[.12,8.52,3.48,11.88]],['卧室','西端户',[6.785,6.48,9.115,11.88]],['卧室','西端户',[3.52,.12,6.28,4.38]],
@@ -471,42 +486,70 @@
   }
   const atticBuilt=objects.splice(atticStart);for(const [solidId,o]of atticBuilt.entries())objects.push(...clipAtticObject(o).map(v=>v.roofClipped?{...v,solidId}:v));
 
-  // 五层至阁楼：洞口与总高有图纸依据；踏步排布为可识读教学参数，待户内梯详图。
+  // 五层至阁楼：位置及层高按平面；两端户按用户要求改为钢制螺旋梯。
   for(const v of atticStairVoids){
-    const startObject=objects.length,[x0,y0,x1,y1]=v.rect,z=11.2,rise=2.8,N=16,R=rise/N,isU=v.width===1600;
-    const gap=.08,flightW=isU?(x1-x0-gap)/2:x1-x0,landingDepth=isU?flightW:0,run=y1-y0-landingDepth,tread=run/(isU?7:15);
-    v.teachingFlight={type:isU?'双跑折返示意':'单跑示意',fromLevel:11200,toLevel:14000,risers:N,riser:175,tread:Math.round(tread*1000*10)/10,status:'示意参数，未作为户内梯已标尺寸'};
-    component('ATTIC-STAIR-LINK',4,{item:v.unit+' · 五层通阁楼户内梯',width:v.width,depth:v.length,infoLabel:'洞口平面',source:6,material:'教学梯段示意；Φ38扶手及Φ16立杆参照建施15',dimensionNote:`连接+11.200至+14.000；16级、级高175、踏面约${Math.round(tread*1000)}mm均为当前教学排布，户内梯未附踏步详图，不作施工尺寸。`},()=>{
-      function flight(a,b,start,end,base,risers){
-        const dir=end>start?1:-1,t=Math.abs(end-start)/(risers-1);
-        for(let i=0;i<risers-1;i++){
-          const ya=start+dir*i*t,yb=ya+dir*t,top=base+(i+1)*R,ua=base+i*R-.12,ub=base+(i+1)*R-.12;
-          const q=[[a,ya,top],[b,ya,top],[b,yb,top],[a,yb,top]],u=[[a,ya,ua],[b,ya,ua],[b,yb,ub],[a,yb,ub]],args=['stairs',4,'户内梯踏步（示意）',C.stair];
-          quad(...(dir>0?q:q.slice().reverse()),...args);quad(...(dir>0?u.slice().reverse():u),...args);
-          for(let k=0;k<4;k++){const j=(k+1)%4;quad(q[k],u[k],u[j],q[j],...args);}
+    const startObject=objects.length,[x0,y0,x1,y1]=v.rect,z=11.2,rise=2.8,N=16,R=rise/N,{spiral,wallX,openX}=atticStairSides(v);
+    const steel='#718b99',tread=(y1-y0)/15,cx=(x0+x1)/2,cy=(y0+y1)/2,radius=.74,postRadius=.06,exitHalf=.38,west=cx<16;
+    v.teachingFlight=spiral?{type:'钢制螺旋楼梯',fromLevel:11200,toLevel:14000,risers:N,riser:175,diameter:1480,turnDegrees:360,center:[cx,cy],centerPostDiameter:120,steelTreadThickness:12,status:'用户指定梯型；未标尺寸为教学示意'}:{type:'单跑示意',fromLevel:11200,toLevel:14000,risers:N,riser:175,tread:176,status:'示意参数，未作为户内梯已标尺寸'};
+    component('ATTIC-STAIR-LINK',4,{item:v.unit+' · 五层通阁楼'+(spiral?'钢制螺旋梯':'户内直梯'),stairType:spiral?'steel-spiral':'straight',width:v.width,depth:v.length,infoLabel:'洞口平面',source:6,material:spiral?'钢制中心柱、扇形钢踏步、钢平台及钢管临空侧扶手':'教学梯段示意；临空侧Φ38扶手及Φ16立杆参照建施15',dimensionNote:spiral?'用户指定钢制螺旋梯；连接+11.200至+14.000，直径1480、中心柱Φ120、钢踏板厚12、16级×175及旋转360°为适配现有洞口的教学示意参数，未作施工定型。':`连接+11.200至+14.000；16级×175、踏面约${Math.round(tread*1000)}mm为教学排布，靠墙侧不设扶手。`},()=>{
+      if(spiral){
+        const exitAngle=west?Math.PI:0,dir=west?1:-1,landingAngle=Math.PI/3,delta=dir*(Math.PI*2-landingAngle)/15,start=exitAngle+dir*landingAngle/2-dir*Math.PI*2;
+        const point=(r,a,h)=>[cx+r*Math.cos(a),cy+r*Math.sin(a),h];
+        tube([cx,cy,z],[cx,cy,14.05],postRadius*2,4,'螺旋梯钢制中心柱 Φ120',steel);
+        function sector(a,b,top,name){
+          const n=4,thickness=.012;
+          for(let j=0;j<n;j++){
+            const aa=a+(b-a)*j/n,bb=a+(b-a)*(j+1)/n,q=[point(postRadius,aa,top),point(radius,aa,top),point(radius,bb,top),point(postRadius,bb,top)],u=q.map(p=>[p[0],p[1],top-thickness]);
+            quad(...(dir>0?q:q.slice().reverse()),'stairs',4,name,steel);quad(...(dir>0?u.slice().reverse():u),'stairs',4,name+'底面',steel);
+            for(const [k,l]of[[1,2],[3,0]])quad(q[k],u[k],u[l],q[l],'stairs',4,'螺旋梯钢踏板边缘',steel);
+          }
+          for(const angle of[a,b])quad(point(postRadius,angle,top),point(postRadius,angle,top-thickness),point(radius,angle,top-thickness),point(radius,angle,top),'stairs',4,'螺旋梯钢踏板径向边',steel);
+          const angle=(a+b)/2;railBeam(point(postRadius,angle,top-.035),point(radius-.03,angle,top-.035),.035,4,'螺旋梯踏步钢支撑',steel);
         }
-        quad([a,end,base+(risers-1)*R],[b,end,base+(risers-1)*R],[b,end,base+risers*R],[a,end,base+risers*R],'stairs',4,'户内梯上层接口踢面（示意）',C.stair);
-      }
-      function rail(x,start,end,base,height,risers){
-        tube([x,start,base+R+.881],[x,end,base+height+.881],.038,4,'户内梯扶手 Φ38');
-        for(let i=0;i<risers;i++){
-          const t=i/(risers-1),y=start+(end-start)*t,bottom=base+Math.min(i+1,risers)*R,top=base+R+.862+(height-R)*t;
-          if(top>bottom+.01)tube([x,y,bottom],[x,y,top],.016,4,'户内梯栏杆 Φ16');
+        for(let i=0;i<15;i++)sector(start+i*delta,start+(i+1)*delta,z+(i+1)*R,'螺旋梯扇形钢踏步（示意）');
+        sector(exitAngle-dir*landingAngle/2,exitAngle+dir*landingAngle/2,14,'螺旋梯上层钢平台');
+        // 扇形平台只向圆周外接至洞边，避免矩形板反压在倒数踏步上方。
+        const arc=Array.from({length:9},(_,i)=>point(radius,exitAngle-landingAngle/2+landingAngle*i/8,14)).sort((a,b)=>a[1]-b[1]);
+        const cap=[[openX,cy-exitHalf,14],...arc,[openX,cy+exitHalf,14]],fan=[openX,cy,14];
+        for(let i=0;i<cap.length-1;i++){
+          const a=cap[i],b=cap[i+1],u=a.map((v,k)=>k===2?13.988:v),v=b.map((v,k)=>k===2?13.988:v);
+          poly([fan,a,b],'stairs',4,'螺旋梯出入口钢平台',steel);poly([[fan[0],fan[1],13.988],v,u],'stairs',4,'螺旋梯出入口钢平台底面',steel);
+          quad(a,u,v,b,'stairs',4,'螺旋梯平台边缘',steel);
         }
-      }
-      if(isU){
-        const mid=y1-landingDepth,leftEnd=x0+flightW,rightStart=x1-flightW;
-        flight(x0,leftEnd,y0,mid,z,8);box(x0,mid,z+1.28,x1,y1,z+1.4,'stairs',4,'户内梯半层平台（示意）',C.slab);flight(rightStart,x1,mid,y0,z+1.4,8);
-        rail(leftEnd-.025,y0,mid,z,1.4,8);rail(rightStart+.025,mid,y0,z+1.4,1.4,8);
-        tube([leftEnd-.025,mid,z+2.281],[rightStart+.025,mid,z+2.281],.038,4,'户内梯平台扶手转接');
+        for(const sign of[-1,1]){
+          const angle=exitAngle+sign*landingAngle/2,p=point(postRadius,angle,14),q=point(radius,angle,14),end=[openX,cy+(q[1]<cy?-exitHalf:exitHalf),14];
+          for(const [a,b]of[[p,q],[q,end]]){
+            tube([a[0],a[1],14.881],[b[0],b[1],14.881],.038,4,'螺旋梯出口平台临空扶手 Φ38',steel);
+            const n=Math.ceil(Math.hypot(b[0]-a[0],b[1]-a[1])/.13);for(let i=0;i<=n;i++){const t=i/n,x=a[0]+(b[0]-a[0])*t,y=a[1]+(b[1]-a[1])*t;tube([x,y,14],[x,y,14.862],.016,4,'螺旋梯平台立杆 Φ16',steel);}
+          }
+        }
+        // 螺旋扶手只覆盖踏步临空圆弧；最靠墙的短弧及上层出口不设杆。
+        const wallFace=west?6.415:25.985,nearWall=p=>Math.abs(p[0]-wallFace)<.22;
+        for(let j=0;j<15*6;j++){
+          const t0=j/(15*6),t1=(j+1)/(15*6),a=start+15*delta*t0,b=start+15*delta*t1,pa=point(radius,a,z+R+15*R*t0+.881),pb=point(radius,b,z+R+15*R*t1+.881);
+          if(!nearWall(point(radius,(a+b)/2,0)))tube(pa,pb,.038,4,'螺旋梯临空侧螺旋扶手 Φ38',steel);
+        }
+        for(let i=0;i<=15;i++){
+          const angle=start+i*delta,p=point(radius,angle,z+Math.min(i+1,16)*R);
+          if(!nearWall(p))tube(p,point(radius,angle,z+R+i*R+.862),.016,4,'螺旋梯临空立杆 Φ16',steel);
+        }
       }else{
-        flight(x0,x1,y0,y1,z,16);rail(x0+.025,y0,y1,z,2.8,16);rail(x1-.025,y0,y1,z,2.8,16);
+        for(let i=0;i<15;i++){
+          const ya=y0+i*tread,yb=ya+tread,top=z+(i+1)*R,ua=z+i*R-.12,ub=z+(i+1)*R-.12;
+          const q=[[x0,ya,top],[x1,ya,top],[x1,yb,top],[x0,yb,top]],u=[[x0,ya,ua],[x1,ya,ua],[x1,yb,ub],[x0,yb,ub]];
+          quad(...q,'stairs',4,'户内梯踏步（示意）',C.stair);quad(...u.slice().reverse(),'stairs',4,'户内梯段底面（示意）',C.stair);
+          for(let k=0;k<4;k++){const j=(k+1)%4;quad(q[k],u[k],u[j],q[j],'stairs',4,'户内梯踏步侧面（示意）',C.stair);}
+        }
+        quad([x0,y1,13.825],[x1,y1,13.825],[x1,y1,14],[x0,y1,14],'stairs',4,'户内梯上层接口踢面（示意）',C.stair);
+        const x=openX+(openX===x0?.025:-.025);
+        tube([x,y0,z+R+.881],[x,y1,14+.881],.038,4,'户内梯临空侧扶手 Φ38');
+        for(let i=0;i<16;i++){const y=y0+(y1-y0)*i/15,bottom=z+(i+1)*R;tube([x,y,bottom],[x,y,bottom+.862],.016,4,'户内梯临空侧栏杆 Φ16');}
       }
     });
     for(const o of objects.slice(startObject)){o.atticLink=true;o.connectedFloors=[4,5];}
-    rooms.push({name:'户内楼梯',unit:v.unit,type:'stair',floor:4,min:[x0,y0],max:[x1,y1],note:'连接五层+11.200与阁楼+14.000，位置按建施5/6。梯段排布为教学示意，踏步参数待户内梯详图。'});
+    rooms.push({name:spiral?'钢制螺旋楼梯':'户内楼梯',unit:v.unit,type:'stair',floor:4,min:[x0,y0],max:[x1,y1],note:'五层+11.200接至阁楼+14.000；'+(spiral?'按用户要求改钢制螺旋梯。':'保留直梯。')+'靠墙侧取消扶手，临空侧防护保留；未标构造参数为教学示意。'});
   }
-  for(const r of atticRooms.filter(r=>r.type==='stair'))r.note='户内梯连接五层+11.200与阁楼+14.000；洞口按建施6分尺寸×2。梯段排布为教学示意，未提供的踏步尺寸待专门详图。';
+  for(const r of atticRooms.filter(r=>r.type==='stair'))r.note='四处洞口南端防护补齐；两端户为钢制螺旋梯、中间两户为直梯。靠墙边无扶手，临空边及出口平台设防护，出口不设横杆。';
 
   // 双坡屋面几何开洞，为16樘老虎窗留下实际空间。
   const dormerLayout=[[4.9,7.85,14.7,17.7,24.55,27.5],[1.8,5.1,7.95,11.05,14.5,17.9,21.35,24.45,27.3,30.6]];
@@ -726,5 +769,5 @@ void main(){vec3 col=shade.rgb;if(tiled>.5){
   let previous=0;function animate(t){if(state.auto){state.yaw+=Math.min(50,t-previous)*.00015;dirty=true}previous=t;if(dirty)render();requestAnimationFrame(animate)}
   setStep(0);requestAnimationFrame(animate);
   // 只读诊断入口，便于核验实际几何及运行状态。
-  window.houseTeaching={getState:()=>JSON.parse(JSON.stringify(state)),getVisibleComponents:()=>[...new Set(visibleObjects.map(o=>o.componentId).filter(Boolean))],getGeometry:()=>({objects:objects.length,rooms:rooms.length,atticRooms:atticRooms.length,privateStairLinks:components.filter(c=>c.code==='ATTIC-STAIR-LINK').length,floors:[0,2.8,5.6,8.4,11.2,14],ridge:17.773,axes:{length:32.4,depth:12},external:{length:32.9,depth:12.5},dormers:16,atticTerraces:objects.filter(o=>o.name==='阁楼敞开露台楼板').length,securityDoorLeaves:components.filter(c=>c.code==='GM-1321').length*2,windowSills:objects.filter(o=>/窗台/.test(o.name)).length,tileSurfaces:objects.filter(o=>/弧形粘土瓦/.test(o.name)).length,visible:visibleObjects.length,atticCutFaces:visibleObjects.filter(o=>o.name==='阁楼墙体剖切截面').length,webgl:!!gl}),getObjects:()=>objects.map(o=>({componentId:o.componentId,atticLink:o.atticLink,connectedFloors:o.connectedFloors,wallSpec:o.wallSpec,apronSlope:o.apronSlope,apronWidth:o.apronWidth,diameter:o.diameter,name:o.name,floor:o.floor,group:o.group,min:o.min,max:o.max,points:o.points,color:o.color})),getApron:()=>structuredClone({slope:apronSlope,width:apronWidth,wallRoot,rootRects:wallRootRects,footprints:apronFootprints,boundary:apronBoundary}),getPlanAlignment:()=>structuredClone(planAlignment),getRooms:floor=>structuredClone(+floor===5?atticRooms:rooms.filter(r=>r.floor===undefined||r.floor===+floor)),getAttic:()=>structuredClone({dimensionFactor:2,doorLayout:atticDoorLayout,stairVoids:atticStairVoids,rooms:atticRooms}),getComponents:()=>structuredClone(components),getSpecification:()=>structuredClone(spec),selectComponent:id=>{const r=components.find(c=>c.id===id);if(r){setFloor(r.floor);selectPart(r.code==='RAIL-15'?'stairs':r.code.startsWith('FIX')?'fixtures':'openings',r.code,id)}},project:p=>project(p)};
+  window.houseTeaching={getState:()=>JSON.parse(JSON.stringify(state)),getVisibleComponents:()=>[...new Set(visibleObjects.map(o=>o.componentId).filter(Boolean))],getGeometry:()=>({objects:objects.length,rooms:rooms.length,atticRooms:atticRooms.length,privateStairLinks:components.filter(c=>c.code==='ATTIC-STAIR-LINK').length,floors:[0,2.8,5.6,8.4,11.2,14],ridge:17.773,axes:{length:32.4,depth:12},external:{length:32.9,depth:12.5},dormers:16,atticTerraces:objects.filter(o=>o.name==='阁楼敞开露台楼板').length,securityDoorLeaves:components.filter(c=>c.code==='GM-1321').length*2,windowSills:objects.filter(o=>/窗台/.test(o.name)).length,tileSurfaces:objects.filter(o=>/弧形粘土瓦/.test(o.name)).length,visible:visibleObjects.length,atticCutFaces:visibleObjects.filter(o=>o.name==='阁楼墙体剖切截面').length,webgl:!!gl}),getObjects:()=>objects.map(o=>({guardEdge:o.guardEdge,guardOpening:o.guardOpening,componentId:o.componentId,atticLink:o.atticLink,connectedFloors:o.connectedFloors,wallSpec:o.wallSpec,apronSlope:o.apronSlope,apronWidth:o.apronWidth,diameter:o.diameter,centerline:o.centerline,name:o.name,floor:o.floor,group:o.group,min:o.min,max:o.max,points:o.points,color:o.color})),getApron:()=>structuredClone({slope:apronSlope,width:apronWidth,wallRoot,rootRects:wallRootRects,footprints:apronFootprints,boundary:apronBoundary}),getPlanAlignment:()=>structuredClone(planAlignment),getRooms:floor=>structuredClone(+floor===5?atticRooms:rooms.filter(r=>r.floor===undefined||r.floor===+floor)),getAttic:()=>structuredClone({dimensionFactor:2,doorLayout:atticDoorLayout,stairVoids:atticStairVoids,rooms:atticRooms}),getComponents:()=>structuredClone(components),getSpecification:()=>structuredClone(spec),selectComponent:id=>{const r=components.find(c=>c.id===id);if(r){setFloor(r.floor);selectPart(r.code==='RAIL-15'?'stairs':r.code.startsWith('FIX')?'fixtures':'openings',r.code,id)}},project:p=>project(p)};
 })();
