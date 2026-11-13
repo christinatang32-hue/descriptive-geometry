@@ -84,7 +84,7 @@ window.HOUSE_COMPONENT_SPEC = Object.freeze({
       "width": 600,
       "height": 1600,
       "category": "木制门",
-      "material": "木制；建施17已补局部定位，模型待复核",
+      "material": "木制；建施17/1检修门，每处两樘",
       "byFloor": [
         4,
         4,
@@ -389,7 +389,7 @@ window.HOUSE_COMPONENT_SPEC = Object.freeze({
     "所有门窗尺寸均为洞口尺寸，非成品加工净尺寸；按建施19注须留装修量、现场校核。",
     "LM1／LM2总高随相应板底；当前层高2800、板厚120，计算总高2680，门扇2000，上亮子680。",
     "YC3五层表列4与总数10、五层平面2处不一致：模型按平面2处定位，保留差异。",
-    "建施17已补充M5B-0616局部定位，模型待复核；阁楼木门与SC窗位置仍待核。",
+    "建施17两处设备检修空间已按平面定位，每层4樘M5B-0616；阁楼木门与SC窗位置仍待核。",
     "洁具图只给成品名称和部分定位尺寸；未标注的成品外形、材料与门窗型材截面仍用教学表达。",
     "阁楼露台玻璃推拉门由既有立面与建施13定位，表18未单独列入阁楼数量。"
   ],
@@ -430,5 +430,36 @@ window.HOUSE_COMPONENT_SPEC = Object.freeze({
       "representation": "opening-only",
       "reason": "用户确认圈出位置只留门洞，去掉门窗；原表保留作尺寸对照"
     }
+  },
+  "serviceSpace": {
+    "axesWidth": 2700,
+    "sideWallHalf": 185,
+    "clearWidth": 2330,
+    "widthChain": [
+      300,
+      600,
+      530,
+      600,
+      300
+    ],
+    "clearDepth": 500,
+    "frontWall": 60,
+    "rearBand": 250,
+    "adjacentWall": 120,
+    "doorSize": [
+      600,
+      1600
+    ],
+    "sideReservedOpening": [
+      500,
+      50
+    ],
+    "rearReservedOpening": [
+      200,
+      50
+    ],
+    "reservedOpeningBottom": -30,
+    "source": 17,
+    "use": "图纸未注明具体用途，按检修/设备空间识读"
   }
 });

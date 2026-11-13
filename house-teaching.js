@@ -137,7 +137,7 @@
       // 2900轴距；净深700+1100=1800；右墙轴内55、轴外185。
       wallY(4.56,6.36,6.4,.12,[door(4.91,.7)]);
       wallY(4.56,6.36,9.365,.24);
-      wallX(6.34,9.485,6.48,.24);
+      wall('x',east?mx(9.485):6.34,east?mx(6.34):9.485,6.42,z,2.68,.12,f,[{c:east?23.385:6.885,w:.2,b:-.03,h:.05,kind:'empty',code:'RES-20050',info:{representation:'预留洞',source:17,dimensionNote:'预留洞200×50，洞底距楼面−0.030m；建施17/1'}}],true);
       put('洗手盆',6.76,5.87,.60,.42,.80,{dimensionNote:'横向600定位；成品尺寸与高度示意'});
       put('坐便器',7.66,5.66,.40,.66,.40,{dimensionNote:'横向600+800定位；成品外形示意'});
       put('浴缸',8.48,4.56,.75,1.56,.52,{width:750,dimensionNote:'宽750；600+800+620定位；长度按空间示意，未提供成品规格'});
@@ -155,6 +155,18 @@
       put('洗衣机',13.05,4.69,.60,.60,.85);
     }
   }
+  // 建施17/1：轴距2700，两侧185；300+600+530+600+300=2330。
+  function makeServiceSpace(a,b,z,f){
+    const left=a+.185,right=b-.185,backY=6.48,clearY=6.73,frontY=7.23,faceY=7.29;
+    component('SERVICE-17',f,{item:'楼梯前检修／设备空间',width:2330,depth:500,infoLabel:'平面净空',material:'周边墙体及M5B-0616木制检修门；内部设备原图未标',source:17,position:[(a+b)/2,(clearY+frontY)/2,z],dimensionNote:'每处两樘600×1600木门；前壁60、背部250及相邻120墙带；具体用途未注明，未预设配电设备'},()=>{
+      // 厚250背墙与相邻120卫生间墙带组成图示370深的后部构造。
+      wall('x',a-.185,b+.185,(backY+clearY)/2,z,2.68,.25,f,[],true);
+      box(left,clearY,z-.12,right,frontY,z,'slabs',f,'检修空间地面',C.slab);
+      const holes=[a+.785,a+1.915].map(c=>({c,w:.6,b:0,h:1.6,kind:'door',code:'M5B-0616',info:{source:17,dimensionNote:'建施17/1：门600×1600；横向定位300+600+530+600+300'}}));
+      wall('x',left,right,(frontY+faceY)/2,z,2.68,.06,f,holes,true);
+    });
+  }
+
   function makeStairRail(x1,x2,runY,returnY,landingY,z,landingH,n1,n2,f){
     component('RAIL-15',f,{height:900,diameter:38,material:'Φ38钢管扶手；Φ16钢筋立杆；Φ9杆；4×50扁钢；节点Φ12钢管',source:15,dimensionNote:'扶手顶高900、端弯R90；管壁厚未标注，按外径表达'},()=>{
       const H=.881,R=.09;
@@ -182,6 +194,7 @@
     });
   }
 
+  for(const [a,b,unit]of[[6.6,9.3,'西单元'],[23.1,25.8,'东单元']])room('检修／设备空间',a+.185,6.73,b-.185,7.23,'wet',unit,'建施17/1：净宽2330、净深500；两樘600×1600木门，具体用途未注明。');
   box(-1.45,-2.5,-1.04,33.85,14.2,-.90,'site',-1,'室外地坪',C.base);
   box(-.25,-.25,-.7,32.65,12.25,-.12,'site',-1,'首层基座（非基础设计）','#747c7a');
   // 一层散水：普通外墙段600；阳台/入口按已建尺寸轮廓向外转折。
@@ -246,7 +259,7 @@
     for(const x of[0,32.4])wall('y',.12,11.88,x+(x===0?-.065:.065),z,2.68,.37,f,[win(6.45,2.1)]);
     // 南面八樘卧室木门，阳台门洞不另塞门扇。
     for(const x of southBays.slice(1,-1))wall('y',.12,[6.4,9.3,23.1,26].includes(x)?4.44:4.38,x,z,2.68,.24,f,[9.3,13.2,19.2,23.1].includes(x)?[door(3.93)]:[],true);
-    for(const [a,b,t]of[[.12,6.34,.24],[6.34,9.485,.12],[9.485,22.915,.24],[22.915,26.06,.12],[26.06,32.28,.24]])wall('x',a,b,4.5,z,2.68,t,f,[2.83,3.97,28.43,29.57].filter(c=>c>a&&c<b).map(c=>door(c)),true);
+    for(const [a,b,t]of[[.12,6.34,.24],[6.34,9.485,.12],[9.485,22.915,.24],[22.915,26.06,.12],[26.06,32.28,.24]]){const livingGaps=[[9.3,13.2],[19.2,23.1]].map(([l,h])=>({c:(l+h)/2,w:h-l,b:0,h:2.68,kind:'empty'})).filter(o=>o.c+o.w/2>a&&o.c-o.w/2<b);wall('x',a,b,4.5,z,2.68,t,f,[...livingGaps,...[2.83,3.97,28.43,29.57].filter(c=>c>a&&c<b).map(c=>door(c))],true);}
     for(const x of[3.6,12.8,16.2,19.6,28.8])wall('y',x===12.8||x===19.6?6.72:8.4,11.88,x,z,2.68,.24,f,[12.8,19.6].includes(x)?[door(7.29)]:[],true);
     wall('x',.12,3.6,8.4,z,2.68,.24,f,[door(3.03)],true);
     wall('x',28.8,32.28,8.4,z,2.68,.24,f,[door(29.37)],true);
@@ -259,7 +272,8 @@
     makeBath(1,false,z,f);makeBath(1,true,z,f);makeBath(2,false,z,f);makeBath(2,true,z,f);
     for(const [a,b]of[[6.6,9.3],[23.1,25.8]]){
       const front=f===0?6.48:6.59,dc=front+(f===0?.81:.56)+.45;
-      for(const x of[a,b])wall('y',6.60,11.88,x,z,2.68,.37,f,[{...door(dc),kind:'fire',code:'FM-0921'}],true);
+      for(const x of[a,b])wall('y',6.60,11.88,x,z,2.68,.37,f,[{...door(dc),kind:'fire',code:'FM-0921'},{c:6.98,w:.5,b:-.03,h:.05,kind:'empty',code:'RES-50050',info:{representation:'预留洞',source:17,dimensionNote:'预留洞500×50，洞底距楼面−0.030m；建施17/1'}}],true);
+      makeServiceSpace(a,b,z,f);
       const n1=f===0?9:8,n2=f===0?7:8,landingY=10.68,runY=landingY-(n1-1)*.26,returnY=landingY-(n2-1)*.26;
       const left=a+.185,leftEnd=a+1.285,right=a+1.415,rightEnd=b-.185,landingH=n1*.175;
       // 地面与平台统一使用楼板材质，颜色不再暗示不同地面材料。
@@ -444,7 +458,7 @@ void main(){vec3 col=shade.rgb;if(tiled>.5){
   function render(){dirty=false;const dpr=Math.min(devicePixelRatio||1,2);for(const c of[canvas,overlay]){const w=Math.round(canvas.clientWidth*dpr),h=Math.round(canvas.clientHeight*dpr);if(c.width!==w||c.height!==h){c.width=w;c.height=h}}ctx.setTransform(dpr,0,0,dpr,0,0);frame=makeFrame();buildVisible();if(gl){gl.viewport(0,0,canvas.width,canvas.height);gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.uniform3fv(loc.center,frame.center);gl.uniform3fv(loc.right,frame.right);gl.uniform3fv(loc.up,frame.up);gl.uniform3fv(loc.toward,frame.toward);gl.uniform2f(loc.scale,2*frame.s/frame.w,2*frame.s/frame.h);gl.uniform2f(loc.pan,2*state.pan[0]/frame.w,-2*state.pan[1]/frame.h);const geo=geometry();for(const [data,transparent]of[[geo.opaque,false],[geo.trans,true]]){gl.depthMask(!transparent);gl.bufferData(gl.ARRAY_BUFFER,data,gl.DYNAMIC_DRAW);gl.drawArrays(gl.TRIANGLES,0,data.length/11)}gl.depthMask(true)}drawOverlay()}
   const request=()=>{dirty=true};
   function setView(view){state.pan=[0,0];state.zoom=1;const views={iso:[-1.13,.40],south:[-Math.PI/2,0],north:[Math.PI/2,0],ad:[0,0],da:[Math.PI,0],top:[-Math.PI/2,Math.PI/2-.0001]};[state.yaw,state.pitch]=views[view];$$('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===view));request()}
-  function selectPart(group,name,id=null){state.selected=group;state.componentId=id;if(group){$('part-title').textContent=name||parts[group][0];$('part-text').textContent=parts[group][1];$('clear-selection').hidden=false}else{$('part-title').textContent='点选模型中的构件';$('part-text').textContent='认识墙、楼板、门窗、阳台、楼梯和坡屋顶。也可使用右侧构件列表选择。';$('clear-selection').hidden=true}const rec=components.find(c=>c.id===id);if(rec){const def=spec.openings[rec.code];$('part-title').textContent=`${rec.floor===5?'阁楼':rec.floor+1+'层'} · ${rec.code}`;$('part-text').textContent=[rec.item,rec.width?`${rec.code.startsWith('FIX')?'截面或标注宽度':'洞口'} ${rec.width}${rec.height?'×'+rec.height:rec.depth?'×'+rec.depth:''} mm`:rec.height?`扶手高 ${rec.height} mm`:'',rec.activeHeight?`门扇高 ${rec.activeHeight}，上亮子 ${rec.transomHeight} mm`:'',def?`${def.category}；${def.material}`:rec.material,rec.representation,rec.dimensionNote,`依据 A5 建施${rec.source||18}`].filter(Boolean).join('；');}$$('[data-part]').forEach(b=>b.classList.toggle('active',b.dataset.part===group));request()}
+  function selectPart(group,name,id=null){state.selected=group;state.componentId=id;if(group){$('part-title').textContent=name||parts[group][0];$('part-text').textContent=parts[group][1];$('clear-selection').hidden=false}else{$('part-title').textContent='点选模型中的构件';$('part-text').textContent='认识墙、楼板、门窗、阳台、楼梯和坡屋顶。也可使用右侧构件列表选择。';$('clear-selection').hidden=true}const rec=components.find(c=>c.id===id);if(rec){const def=spec.openings[rec.code];$('part-title').textContent=`${rec.floor===5?'阁楼':rec.floor+1+'层'} · ${rec.code}`;$('part-text').textContent=[rec.item,rec.width?`${rec.infoLabel||(rec.code.startsWith('FIX')?'截面或标注宽度':'洞口')} ${rec.width}${rec.height?'×'+rec.height:rec.depth?'×'+rec.depth:''} mm`:rec.height?`扶手高 ${rec.height} mm`:'',rec.activeHeight?`门扇高 ${rec.activeHeight}，上亮子 ${rec.transomHeight} mm`:'',def?`${def.category}；${def.material}`:rec.material,rec.representation,rec.dimensionNote,`依据 A5 建施${rec.source||18}`].filter(Boolean).join('；');}$$('[data-part]').forEach(b=>b.classList.toggle('active',b.dataset.part===group));request()}
   Object.entries(parts).forEach(([k,p])=>{const b=document.createElement('button');b.textContent=p[0].split('与')[0];b.dataset.part=k;b.onclick=()=>{state.layers[k]=true;document.querySelector(`[data-layer="${k}"]`).checked=true;selectPart(k)};$('component-buttons').append(b)});
   $('clear-selection').onclick=()=>selectPart(null);
   function sync(){
@@ -512,7 +526,7 @@ void main(){vec3 col=shade.rgb;if(tiled>.5){
       second.append(document.createTextNode(`${d.category} · ${d.material}`));const status=document.createElement('span');status.className='schedule-status'+(pending?' review':'');
       status.textContent=`表列 ${expected==null?'未列':expected} / 已定位 ${count}`+(pending?' · 待核定位或表图差异':'')+(instances.some(c=>c.representation?.startsWith('仅门洞'))?' · 仅留门洞':'');second.append(status);tr.append(first,second);return tr;
     }));
-    $('schedule-notes').textContent='洞口尺寸，装修余量须按详图留出。LM1/LM2门扇高2000，上亮子至板下皮。YC按立面宽计，侧窗另列于点选信息。YC3五层表列4而平面2、合计10，按平面保留2。建施17已补充小门局部定位，M5B-0616模型待复核；阁楼部分普通门窗定位仍待核。阁楼露台推拉门按建施13另计。';
+    $('schedule-notes').textContent='洞口尺寸，装修余量须按详图留出。LM1/LM2门扇高2000，上亮子至板下皮。YC按立面宽计，侧窗另列于点选信息。YC3五层表列4而平面2、合计10，按平面保留2。建施17两处检修／设备空间已补齐，每层4樘M5B-0616；阁楼部分普通门窗定位仍待核。阁楼露台推拉门按建施13另计。';
   }
   $('schedule-floor').onchange=drawSchedule;drawSchedule();
 
