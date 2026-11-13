@@ -182,23 +182,59 @@
     });
   }
 
-  box(-1.05,-2.1,-.86,33.45,13.55,-.72,'site',-1,'室外地坪',C.base);
+  box(-1.45,-2.5,-1.04,33.85,14.2,-.90,'site',-1,'室外地坪',C.base);
   box(-.25,-.25,-.7,32.65,12.25,-.12,'site',-1,'首层基座（非基础设计）','#747c7a');
-  // 从实际外围墙/勒脚墙根直接起坡；悬挑阳台下也沿主体墙根连续设置。
-  // 与外围墙250+120的偏轴关系共用边界，不再把散水起点移到阳台板外沿。
-  const apronSlope=.03,apronWidth=.6,outline=[[-.25,-.25],[32.65,-.25],[32.65,12.25],[-.25,12.25]];
-  const outsideNormal=(a,b)=>{const dx=b[0]-a[0],dy=b[1]-a[1],len=Math.hypot(dx,dy);return[dy/len,-dx/len]};
-  const normals=outline.map((v,i)=>outsideNormal(v,outline[(i+1)%outline.length]));
-  const apronOuter=outline.map((v,i)=>{const a=normals[(i+outline.length-1)%outline.length],b=normals[i],d=1+a[0]*b[0]+a[1]*b[1];return[v[0]+apronWidth*(a[0]+b[0])/d,v[1]+apronWidth*(a[1]+b[1])/d]});
-  for(let i=0;i<outline.length;i++){const j=(i+1)%outline.length;quad([...outline[j],-.7],[...outline[i],-.7],[...apronOuter[i],-.7-apronWidth*apronSlope],[...apronOuter[j],-.7-apronWidth*apronSlope],'site',-1,'散水 · 3%向外坡降（宽度示意）','#909797',{apronSlope});}
+  // 一层散水：普通外墙段600；阳台/入口按已建尺寸轮廓向外转折。
+  // 所有坡面从主体墙根连续起坡5%，不从悬挑阳台板外沿重新计坡。
+  const apronSlope=.05,apronWidth=.6,wallRoot={x0:-.25,y0:-.25,x1:32.65,y1:12.25};
+  const apronFootprints=[[-.25,-.25,32.65,12.25],
+    ...balconyBays.map(([a,b])=>[a-.12,-1.32,b+.12,-.10]),
+    ...[[3.6,6.6],[9.3,12.8],[19.6,23.1],[25.8,28.8]].map(([a,b])=>[a,12.12,b,12.72]),
+    ...[[6.6,9.3],[23.1,25.8]].map(([a,b])=>[a+.25,12.1,b-.25,13.0])];
+  const apronRects=apronFootprints.map(([a,b,c,d])=>[a-apronWidth,b-apronWidth,c+apronWidth,d+apronWidth]);
+  const apronXs=[...new Set([wallRoot.x0,wallRoot.x1,...apronRects.flatMap(r=>[r[0],r[2]])])].sort((a,b)=>a-b);
+  const apronYs=[...new Set([wallRoot.y0,wallRoot.y1,...apronRects.flatMap(r=>[r[1],r[3]])])].sort((a,b)=>a-b);
+  const apronDx=x=>Math.max(wallRoot.x0-x,x-wallRoot.x1,0),apronDy=y=>Math.max(wallRoot.y0-y,y-wallRoot.y1,0);
+  const apronZ=([x,y])=>-.7-apronSlope*Math.max(apronDx(x),apronDy(y));
+  const apronCells=new Set(),apronBoundary=[];
+  for(let i=0;i<apronXs.length-1;i++)for(let j=0;j<apronYs.length-1;j++){
+    const x=(apronXs[i]+apronXs[i+1])/2,y=(apronYs[j]+apronYs[j+1])/2;
+    if(x>wallRoot.x0&&x<wallRoot.x1&&y>wallRoot.y0&&y<wallRoot.y1)continue;
+    if(apronRects.some(r=>x>r[0]&&x<r[2]&&y>r[1]&&y<r[3]))apronCells.add(`${i},${j}`);
+  }
+  const splitApron=(points,sign)=>{
+    const out=[],value=p=>sign*(apronDx(p[0])-apronDy(p[1]));
+    for(let i=0;i<points.length;i++){
+      const a=points[i],b=points[(i+1)%points.length],fa=value(a),fb=value(b),insideA=fa>=-1e-10,insideB=fb>=-1e-10;
+      if(insideA)out.push(a);if(insideA!==insideB){const t=fa/(fa-fb);out.push(a.map((v,k)=>v+t*(b[k]-v)));}
+    }
+    return out;
+  };
+  for(const key of apronCells){
+    const [i,j]=key.split(',').map(Number),x0=apronXs[i],x1=apronXs[i+1],y0=apronYs[j],y1=apronYs[j+1];
+    const corners=[[x0,y0],[x1,y0],[x1,y1],[x0,y1]];
+    // 角部沿等落差线分缝，每片都是精确5%的平面，避免一张斜四边形扭曲。
+    const both=apronDx((x0+x1)/2)>0&&apronDy((y0+y1)/2)>0;
+    for(const pts of both?[splitApron(corners,1),splitApron(corners,-1)]:[corners])for(let k=1;k<pts.length-1;k++){
+      const tri=[pts[0],pts[k],pts[k+1]],area=Math.abs((tri[1][0]-tri[0][0])*(tri[2][1]-tri[0][1])-(tri[1][1]-tri[0][1])*(tri[2][0]-tri[0][0]));
+      if(area>1e-10)poly(tri.map(p=>[...p,apronZ(p)]),'site',-1,'散水 · 从墙根向外5%（普通墙段宽600）','#909797',{apronSlope,apronWidth});
+    }
+    for(const [a,b,neighbor]of[[corners[0],corners[1],`${i},${j-1}`],[corners[1],corners[2],`${i+1},${j}`],[corners[2],corners[3],`${i},${j+1}`],[corners[3],corners[0],`${i-1},${j}`]]){
+      if(apronCells.has(neighbor))continue;
+      if(Math.max(apronDx(a[0]),apronDy(a[1]),apronDx(b[0]),apronDy(b[1]))<1e-9)continue;
+      apronBoundary.push([[...a,apronZ(a)],[...b,apronZ(b)]]);
+      quad([...a,apronZ(a)],[...b,apronZ(b)],[...b,-.90],[...a,-.90],'site',-1,'室外地形侧面（教学示意）',C.base);
+    }
+  }
+
   for(let f=0;f<5;f++){
     const z=f*2.8;
     // 楼梯间贯通洞口，分区拼接板面。
     for(const [a,b]of[[-.25,6.6],[9.3,23.1],[25.8,32.65]])box(a,-.25,z-.12,b,12.25,z,'slabs',f,'楼板',C.slab);
     for(const [a,b]of[[6.6,9.3],[23.1,25.8]])box(a,-.25,z-.12,b,7.0,z,'slabs',f,'楼梯口前楼板',C.slab);
     const southH=southBays.slice(0,-1).map((a,i)=>{let b=southBays[i+1],isBal=balconyBays.some(([l,r])=>l===a&&r===b);return win((a+b)/2,isBal?Math.min(b-a-.4,3.34):1.8,isBal?1.2:.9,isBal?1.6:1.5)});
-    // 一至五层南阳台按建施19恢复塑钢玻璃推拉门，三等分；阁楼露台门保留。
-    southH.forEach((o,i)=>{if([0,3,6,9].includes(i)){o.b=0;o.h=1.9;o.kind='sliding';o.code=[0,9].includes(i)?'LM-2119':'LM-2419';o.w=[0,9].includes(i)?2.1:2.4}});
+    // 一至五层南阳台按用户最新确认仅保留门洞，去掉玻璃门扇与门框；阁楼露台门保留。
+    southH.forEach((o,i)=>{if([0,3,6,9].includes(i)){o.b=0;o.h=1.9;o.kind='empty';o.code=[0,9].includes(i)?'LM-2119':'LM-2419';o.w=[0,9].includes(i)?2.1:2.4}});
     wall('x',-.25,32.65,-.065,z,2.68,.37,f,southH);
     const northH=[];
     for(const i of[0,4,5,9])northH.push(win((northBays[i]+northBays[i+1])/2));
@@ -491,5 +527,5 @@ void main(){vec3 col=shade.rgb;if(tiled>.5){
   let previous=0;function animate(t){if(state.auto){state.yaw+=Math.min(50,t-previous)*.00015;dirty=true}previous=t;if(dirty)render();requestAnimationFrame(animate)}
   setStep(0);requestAnimationFrame(animate);
   // 只读诊断入口，便于核验实际几何及运行状态。
-  window.houseTeaching={getState:()=>JSON.parse(JSON.stringify(state)),getGeometry:()=>({objects:objects.length,rooms:rooms.length,floors:[0,2.8,5.6,8.4,11.2,14],ridge:17.773,axes:{length:32.4,depth:12},external:{length:32.9,depth:12.5},dormers:16,atticTerraces:objects.filter(o=>o.name==='阁楼敞开露台楼板').length,securityDoorLeaves:components.filter(c=>c.code==='GM-1321').length*2,windowSills:objects.filter(o=>/窗台/.test(o.name)).length,tileSurfaces:objects.filter(o=>/弧形粘土瓦/.test(o.name)).length,visible:visibleObjects.length,webgl:!!gl}),getObjects:()=>objects.map(o=>({componentId:o.componentId,diameter:o.diameter,name:o.name,floor:o.floor,group:o.group,min:o.min,max:o.max,points:o.points,color:o.color})),getComponents:()=>structuredClone(components),getSpecification:()=>structuredClone(spec),selectComponent:id=>{const r=components.find(c=>c.id===id);if(r){setFloor(r.floor);selectPart(r.code==='RAIL-15'?'stairs':r.code.startsWith('FIX')?'fixtures':'openings',r.code,id)}},project:p=>project(p)};
+  window.houseTeaching={getState:()=>JSON.parse(JSON.stringify(state)),getGeometry:()=>({objects:objects.length,rooms:rooms.length,floors:[0,2.8,5.6,8.4,11.2,14],ridge:17.773,axes:{length:32.4,depth:12},external:{length:32.9,depth:12.5},dormers:16,atticTerraces:objects.filter(o=>o.name==='阁楼敞开露台楼板').length,securityDoorLeaves:components.filter(c=>c.code==='GM-1321').length*2,windowSills:objects.filter(o=>/窗台/.test(o.name)).length,tileSurfaces:objects.filter(o=>/弧形粘土瓦/.test(o.name)).length,visible:visibleObjects.length,webgl:!!gl}),getObjects:()=>objects.map(o=>({componentId:o.componentId,apronSlope:o.apronSlope,apronWidth:o.apronWidth,diameter:o.diameter,name:o.name,floor:o.floor,group:o.group,min:o.min,max:o.max,points:o.points,color:o.color})),getApron:()=>structuredClone({slope:apronSlope,width:apronWidth,wallRoot,footprints:apronFootprints,boundary:apronBoundary}),getComponents:()=>structuredClone(components),getSpecification:()=>structuredClone(spec),selectComponent:id=>{const r=components.find(c=>c.id===id);if(r){setFloor(r.floor);selectPart(r.code==='RAIL-15'?'stairs':r.code.startsWith('FIX')?'fixtures':'openings',r.code,id)}},project:p=>project(p)};
 })();

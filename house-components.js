@@ -405,6 +405,30 @@ window.HOUSE_COMPONENT_SPEC = Object.freeze({
         900
       ],
       "reason": "用户要求开门处在中间位置"
+    },
+    "LM-2119": {
+      "date": "2026-11-13",
+      "floors": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "representation": "opening-only",
+      "reason": "用户确认圈出位置只留门洞，去掉门窗；原表保留作尺寸对照"
+    },
+    "LM-2419": {
+      "date": "2026-11-13",
+      "floors": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "representation": "opening-only",
+      "reason": "用户确认圈出位置只留门洞，去掉门窗；原表保留作尺寸对照"
     }
   }
 });
