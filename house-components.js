@@ -461,5 +461,34 @@ window.HOUSE_COMPONENT_SPEC = Object.freeze({
     "reservedOpeningBottom": -30,
     "source": 17,
     "use": "图纸未注明具体用途，按检修/设备空间识读"
+  },
+  "planAlignment": {
+    "source": [
+      3,
+      4,
+      16,
+      17
+    ],
+    "centralMainPlanChainMm": [
+      4800,
+      2100,
+      4200
+    ],
+    "centralNorthAxisMm": 11100,
+    "centralBathBottomAxisMm": 4800,
+    "centralBathDetailShiftMm": 300,
+    "bathSideWallMm": 240,
+    "bathAdjacentUpperWallMm": 120,
+    "stairSideMm": 370,
+    "stairBathSouthHalfOffsetsMm": [
+      55,
+      185
+    ],
+    "endBedroomDoorAxis": "vertical wall at x=3600/28800",
+    "endBedroomDoorSpanMm": [
+      8520,
+      9420
+    ],
+    "note": "总平面用于定位；详图内部净尺寸按总平面基准平移，不把局部B标记强行套回4500。"
   }
 });
