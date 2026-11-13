@@ -438,6 +438,18 @@ window.HOUSE_COMPONENT_SPEC = Object.freeze({
       "wallSideRails": false,
       "openingEndGuards": 4,
       "reason": "User requests two steel spiral stairs, no wall-side rails, and all four opening end guards"
+    },
+    "atticEndDoors": {
+      "date": "2026-11-13",
+      "floor": 6,
+      "axes": [
+        3,
+        15
+      ],
+      "actualHeightMm": 1800,
+      "nominalTableHeightMm": 2100,
+      "count": 2,
+      "reason": "User explicitly requests end attic doors at axes 3 and 15 to be 1800 mm high"
     }
   },
   "serviceSpace": {
@@ -522,13 +534,54 @@ window.HOUSE_COMPONENT_SPEC = Object.freeze({
     "roomPlan": "四户，每户三间卧室；端户原厨房区为起居室延伸，原公共梯上方补卧室",
     "doorSizeSource": "表18/详图19原尺寸，不乘2",
     "privateTreadStatus": "两处钢制螺旋梯、两处单跑梯；未提供户内梯构造详图，踏步、柱径和板厚为教学示意",
-    "roofHeadReview": "两端北卧室门标称900×2100；与坡顶相交的端部随坡收头，实际净高需门节点核对",
+    "roofHeadReview": "用户已指定③、⑮轴阁楼门高1800mm，门顶不再被坡屋顶截切。原表标称900×2100保留作对照。",
     "scheduleDifference": "表18阁楼SC-1515、SC-1815各6，与平面明确TC标注不一致；模型按TC平面布置并保留差异",
     "scope": "web model; CAD files retain their previous validated revision",
     "spiralStairs": 2,
     "straightStairs": 2,
     "wallSideRails": false,
     "openingSouthEndGuards": 4,
-    "spiralStairStatus": "用户指定两端户钢制螺旋梯；直径1480、中心柱Φ120、钢踏板厚12及16级175为教学示意参数"
+    "spiralStairStatus": "用户指定两端户钢制螺旋梯；直径1480、中心柱Φ120、钢踏板厚12及16级175为教学示意参数",
+    "endBedroomDoorHeightMm": 1800,
+    "endBedroomDoorAxes": [
+      3,
+      15
+    ],
+    "railJunctions": "螺旋梯末级与平台之间共享边不设横杆；洞口拐角立杆去重；直梯扶手与洞边栏杆相距80mm，顶部短弯回接。"
+  },
+  "facadeRepair": {
+    "sources": [
+      8,
+      9,
+      11,
+      13
+    ],
+    "levelsMm": [
+      0,
+      2800,
+      5600,
+      8400,
+      11200,
+      14000
+    ],
+    "ridgeMm": 17773,
+    "storyHeightMm": 2800,
+    "heightChanged": false,
+    "atticGapCause": "Dormer apertures incorrectly removed knee walls below the 900 mm sill; exposed slab edges and repeated cosmetic bands emphasized the gap.",
+    "fixes": [
+      "Restore 900 mm knee walls at all TC window locations",
+      "Carry residential exterior walls to the next floor datum",
+      "Conceal slab edges inside the external wall thickness",
+      "Remove repeated storey trim strips",
+      "End attic doors at axes 3 and 15: actual 900 x 1800 mm",
+      "Remove first/fifth kitchen flue meshes; retain source records",
+      "Add individual exterior window head canopies",
+      "Connect terrace side parapets and rail tops to the sloping tile surface",
+      "Remove rail across spiral stair-to-landing walking interface and duplicate junction posts"
+    ],
+    "schematicDimensions": [
+      "window canopy section and projection",
+      "private steel spiral stair construction"
+    ]
   }
 });
