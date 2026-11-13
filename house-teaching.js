@@ -4,13 +4,15 @@
   'use strict';
   const $=id=>document.getElementById(id), $$=s=>[...document.querySelectorAll(s)];
   const drawings=[["一层平面图", "A5 建施-3", 3, "平面图"], ["标准层平面图", "A5 建施-4", 4, "平面图"], ["五层平面图", "A5 建施-5", 5, "平面图"], ["①—⑰立面图", "A5 建施-8", 8, "立面图"], ["⑰—①立面图", "A5 建施-9", 9, "立面图"], ["Ⓐ—Ⓓ / Ⓓ—Ⓐ立面图", "A5 建施-10", 10, "立面图"], ["1—1剖面图", "A5 建施-11", 11, "剖面图"], ["墙身节点详图（一）", "A5 建施-12", 12, "构件详图"], ["墙身节点详图（二）", "A5 建施-13", 13, "构件详图"], ["楼梯详图", "A5 建施-14", 14, "构件详图"]];
-  const imagePath=i=>`assets/house/v2/a5-${String(drawings[i][2]).padStart(2,'0')}.jpg`;
+  const imagePath=i=>`assets/house/v2/a5-${String(drawings[i][2]).padStart(2,'0')}.jpg?v=20261113-2`;
   drawings.push(['栏杆扶手详图','A5 建施-15',15,'构件详图'],['厨房、卫生间详图','A5 建施-16',16,'构件详图'],['门窗统计表','A5 建施-18',18,'材料与数量'],['门窗详图','A5 建施-19',19,'构件详图']);
+  drawings.push(['屋面排水示意图','A5 建施-7',7,'屋面平面'],['局部详图','A5 建施-17',17,'构件详图']);
+  const drawingOrder=drawings.map((_,i)=>i).sort((a,b)=>drawings[a][2]-drawings[b][2]);
   const spec=window.HOUSE_COMPONENT_SPEC;
   let drawingIndex=1;
   function showDrawing(i,open=true){drawingIndex=(i+drawings.length)%drawings.length;$('drawing-title').textContent=drawings[drawingIndex].slice(0,2).join(' · ');$('drawing-select').value=drawingIndex;$('drawing-image').src=imagePath(drawingIndex);$('drawing-image').alt=drawings[drawingIndex][0];$('drawing-original').href=imagePath(drawingIndex);if(open&&!$('drawing-dialog').open)$('drawing-dialog').showModal();}
-  drawings.forEach((d,i)=>{const o=document.createElement('option');o.value=i;o.textContent=`${i+1} / ${drawings.length} · ${d[0]}`;$('drawing-select').append(o);const b=document.createElement('button');b.className='drawing-card';b.innerHTML=`<img src="${imagePath(i)}" alt="${d[0]}缩略图" loading="lazy"><span>${d[0]}<small>${d[1]}</small></span>`;b.onclick=()=>showDrawing(i);$('drawing-cards').append(b)});
-  $('open-drawings').onclick=()=>showDrawing(drawingIndex);$('close-drawings').onclick=()=>$('drawing-dialog').close();$('prev-drawing').onclick=()=>showDrawing(drawingIndex-1);$('next-drawing').onclick=()=>showDrawing(drawingIndex+1);$('drawing-select').onchange=e=>showDrawing(+e.target.value);
+  drawingOrder.forEach((i,ordinal)=>{const d=drawings[i];const o=document.createElement('option');o.value=i;o.textContent=`${ordinal+1} / ${drawings.length} · ${d[0]}`;$('drawing-select').append(o);const b=document.createElement('button');b.className='drawing-card';b.innerHTML=`<img src="${imagePath(i)}" alt="${d[0]}缩略图" loading="lazy"><span>${d[0]}<small>${d[1]}</small></span>`;b.onclick=()=>showDrawing(i);$('drawing-cards').append(b)});
+  $('open-drawings').onclick=()=>showDrawing(drawingIndex);$('close-drawings').onclick=()=>$('drawing-dialog').close();$('prev-drawing').onclick=()=>showDrawing(drawingOrder[(drawingOrder.indexOf(drawingIndex)+drawings.length-1)%drawings.length]);$('next-drawing').onclick=()=>showDrawing(drawingOrder[(drawingOrder.indexOf(drawingIndex)+1)%drawings.length]);$('drawing-select').onchange=e=>showDrawing(+e.target.value);
   $('drawing-dialog').addEventListener('click',e=>{if(e.target===$('drawing-dialog')){const r=e.target.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)e.target.close()}});
   const C={wall:'#e4d4ac',inner:'#d7c7a4',slab:'#8ca7b4',glass:'#65b4c8',frame:'#e8edf0',door:'#a87b56',stair:'#afb8b6',balcony:'#a9bbb8',roof:'#a74d43',trim:'#e5e6df',base:'#53616c',cap:'#f1b94f'};
   const parts={walls:['墙体与房间分隔','外围墙按轴外250＋轴内120＝370 mm表达，墙根与勒脚外表面对齐；主要隔墙按平面240 mm、楼梯间370 mm及详图60 mm分别表达。真实门窗洞口从墙体中扣除；房间位置由建筑平面确定。'],slabs:['楼板与层高','五层楼面按2.8 m间距设置；阁楼楼面标高+14.000。模型板厚按120 mm教学示意，具体叠层见墙身节点。'],openings:['门窗与洞口','SC-1515、SC-1815、SC-2115分别表示1500、1800、2100 mm宽的窗；M5B-0921为900×2100 mm门。窗框分格经过简化。'],balconies:['阳台与立面节奏','A轴一侧四列阳台外挑约1.2 m，D轴一侧厨房阳台按约0.6 m示意。一至五层为封闭阳台；阁楼四处为敞开露台，设实体栏板、栏杆和后退的玻璃推拉门。'],stairs:['双跑楼梯','两处楼梯间位于⑤—⑥、⑫—⑬轴。标准层两跑各8级，级高175 mm、踏面260 mm，半层平台高1.4 m；首层按9＋7级、半层平台1.575 m表达。两跑之间保留梯井，仅设栏杆扶手。公共梯止于五层，阁楼户内梯因缺定位未补设。'],roof:['坡屋顶与老虎窗','屋脊标高+17.773，阁楼楼面+14.000。南北坡合计16个老虎窗（南坡六樘、北坡十樘），洞口宽1.5 m；红色粘土瓦以逐行搭接缝、弧形瓦垄和檐口瓦形表达；瓦规格为教学示意。']};
@@ -53,13 +55,13 @@
     for(const o of holes){
       if(!o.code)continue;
       const code=o.code,lo=o.c-o.w/2,hi=o.c+o.w/2,z0=z+o.b,z1=z0+o.h,g='openings',name=code;
-      component(code,floor,{width:Math.round(o.w*1000),height:Math.round(o.h*1000),position:axis==='x'?[o.c,cross,z0]:[cross,o.c,z0],axis,representation:o.kind==='empty'?'仅门洞（保留用户要求）':'实体构件',source:spec.openings[code]?.source||19,...o.info},()=>{
+      component(code,floor,{width:Math.round(o.w*1000),height:Math.round(o.h*1000),position:axis==='x'?[o.c,cross,z0]:[cross,o.c,z0],axis,representation:o.kind==='empty'?'仅门洞（保留用户要求）':'实体构件',source:spec.openings[code]?.source||19,...(code==='GM-1321'?{leafWidths:[650,650],dimensionNote:'用户确认中央对开，两扇各650；原建施19分扇400+900'}:{}),...o.info},()=>{
         if(o.kind==='empty')return;
         function block(l,r,d,depth,bot,top,col,label=name){if(axis==='x')box(l,d-depth/2,bot,r,d+depth/2,top,g,floor,label,col);else box(d-depth/2,l,bot,d+depth/2,r,top,g,floor,label,col)}
         const security=o.kind==='security',solid=['door','fire','security'].includes(o.kind),sliding=o.kind==='sliding';
         if(security){
-          // 建施19：400+900不等宽双扇，L50×30×4框、70×40骨架、1mm包钢板。
-          const meet=lo+.4;
+          // 按用户2026-11-13要求中央对开650+650；原建施19为400+900，材料规格保留。
+          const meet=o.c;
           for(const [l,r] of [[lo,meet],[meet,hi]]){
             block(l+.004,r-.004,cross,.001,z0+.004,z1-.004,'#596a70','GM钢板1mm');
             for(const x of[l,r-.07])block(x,x+.07,cross,.04,z0,z1,'#62747c','GM门扇骨架70×40');
@@ -195,8 +197,8 @@
     for(const [a,b]of[[-.25,6.6],[9.3,23.1],[25.8,32.65]])box(a,-.25,z-.12,b,12.25,z,'slabs',f,'楼板',C.slab);
     for(const [a,b]of[[6.6,9.3],[23.1,25.8]])box(a,-.25,z-.12,b,7.0,z,'slabs',f,'楼梯口前楼板',C.slab);
     const southH=southBays.slice(0,-1).map((a,i)=>{let b=southBays[i+1],isBal=balconyBays.some(([l,r])=>l===a&&r===b);return win((a+b)/2,isBal?Math.min(b-a-.4,3.34):1.8,isBal?1.2:.9,isBal?1.6:1.5)});
-    // 一至五层阳台墙只留门洞，不加门扇；阁楼露台另设玻璃推拉门。
-    southH.forEach((o,i)=>{if([0,3,6,9].includes(i)){o.b=0;o.h=1.9;o.kind='empty';o.code=[0,9].includes(i)?'LM-2119':'LM-2419';o.w=[0,9].includes(i)?2.1:2.4}});
+    // 一至五层南阳台按建施19恢复塑钢玻璃推拉门，三等分；阁楼露台门保留。
+    southH.forEach((o,i)=>{if([0,3,6,9].includes(i)){o.b=0;o.h=1.9;o.kind='sliding';o.code=[0,9].includes(i)?'LM-2119':'LM-2419';o.w=[0,9].includes(i)?2.1:2.4}});
     wall('x',-.25,32.65,-.065,z,2.68,.37,f,southH);
     const northH=[];
     for(const i of[0,4,5,9])northH.push(win((northBays[i]+northBays[i+1])/2));
@@ -474,7 +476,7 @@ void main(){vec3 col=shade.rgb;if(tiled>.5){
       second.append(document.createTextNode(`${d.category} · ${d.material}`));const status=document.createElement('span');status.className='schedule-status'+(pending?' review':'');
       status.textContent=`表列 ${expected==null?'未列':expected} / 已定位 ${count}`+(pending?' · 待核定位或表图差异':'')+(instances.some(c=>c.representation?.startsWith('仅门洞'))?' · 仅留门洞':'');second.append(status);tr.append(first,second);return tr;
     }));
-    $('schedule-notes').textContent='洞口尺寸，装修余量须按详图留出。LM1/LM2门扇高2000，上亮子至板下皮。YC按立面宽计，侧窗另列于点选信息。YC3五层表列4而平面2、合计10，按平面保留2。M5B-0616及阁楼部分普通门窗缺定位，未擅自补设。阁楼露台推拉门按建施13另计。';
+    $('schedule-notes').textContent='洞口尺寸，装修余量须按详图留出。LM1/LM2门扇高2000，上亮子至板下皮。YC按立面宽计，侧窗另列于点选信息。YC3五层表列4而平面2、合计10，按平面保留2。建施17已补充小门局部定位，M5B-0616模型待复核；阁楼部分普通门窗定位仍待核。阁楼露台推拉门按建施13另计。';
   }
   $('schedule-floor').onchange=drawSchedule;drawSchedule();
 

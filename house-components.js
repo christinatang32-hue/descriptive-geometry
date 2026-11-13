@@ -3,8 +3,10 @@ window.HOUSE_COMPONENT_SPEC = Object.freeze({
   "version": "2026-11-12-components",
   "units": "mm",
   "sources": [
+    7,
     15,
     16,
+    17,
     18,
     19
   ],
@@ -82,7 +84,7 @@ window.HOUSE_COMPONENT_SPEC = Object.freeze({
       "width": 600,
       "height": 1600,
       "category": "木制门",
-      "material": "木制；平面未找到完整定位，不补造实体",
+      "material": "木制；建施17已补局部定位，模型待复核",
       "byFloor": [
         4,
         4,
@@ -387,8 +389,22 @@ window.HOUSE_COMPONENT_SPEC = Object.freeze({
     "所有门窗尺寸均为洞口尺寸，非成品加工净尺寸；按建施19注须留装修量、现场校核。",
     "LM1／LM2总高随相应板底；当前层高2800、板厚120，计算总高2680，门扇2000，上亮子680。",
     "YC3五层表列4与总数10、五层平面2处不一致：模型按平面2处定位，保留差异。",
-    "M5B-0616缺平面定位；阁楼木门与SC窗位置未获闭合尺寸链，不为满足统计表数量虚构构件。",
+    "建施17已补充M5B-0616局部定位，模型待复核；阁楼木门与SC窗位置仍待核。",
     "洁具图只给成品名称和部分定位尺寸；未标注的成品外形、材料与门窗型材截面仍用教学表达。",
     "阁楼露台玻璃推拉门由既有立面与建施13定位，表18未单独列入阁楼数量。"
-  ]
+  ],
+  "userOverrides": {
+    "GM-1321": {
+      "date": "2026-11-13",
+      "leafWidths": [
+        650,
+        650
+      ],
+      "originalDrawingLeafWidths": [
+        400,
+        900
+      ],
+      "reason": "用户要求开门处在中间位置"
+    }
+  }
 });
