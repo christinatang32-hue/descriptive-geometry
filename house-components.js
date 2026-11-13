@@ -3,6 +3,7 @@ window.HOUSE_COMPONENT_SPEC = Object.freeze({
   "version": "2026-11-12-components",
   "units": "mm",
   "sources": [
+    6,
     7,
     15,
     16,
@@ -389,7 +390,7 @@ window.HOUSE_COMPONENT_SPEC = Object.freeze({
     "所有门窗尺寸均为洞口尺寸，非成品加工净尺寸；按建施19注须留装修量、现场校核。",
     "LM1／LM2总高随相应板底；当前层高2800、板厚120，计算总高2680，门扇2000，上亮子680。",
     "YC3五层表列4与总数10、五层平面2处不一致：模型按平面2处定位，保留差异。",
-    "建施17两处设备检修空间已按平面定位，每层4樘M5B-0616；阁楼木门与SC窗位置仍待核。",
+    "建施17两处设备检修空间已按平面定位，每层4樘M5B-0616；阁楼木门已依建施6补齐；表中SC窗与平面TC标注差异保留。",
     "洁具图只给成品名称和部分定位尺寸；未标注的成品外形、材料与门窗型材截面仍用教学表达。",
     "阁楼露台玻璃推拉门由既有立面与建施13定位，表18未单独列入阁楼数量。"
   ],
@@ -490,5 +491,31 @@ window.HOUSE_COMPONENT_SPEC = Object.freeze({
       9420
     ],
     "note": "总平面用于定位；详图内部净尺寸按总平面基准平移，不把局部B标记强行套回4500。"
+  },
+  "attic": {
+    "source": 6,
+    "dimensionFactor": 2,
+    "factorConfirmedByUser": true,
+    "axisDimensionsMm": [
+      32400,
+      12000
+    ],
+    "overallWidthMm": 32900,
+    "bedrooms": 12,
+    "livingRooms": 4,
+    "bathrooms": 4,
+    "bedroomDoors": 12,
+    "bathroomDoors": 6,
+    "privateStairLinks": 4,
+    "levelsMm": [
+      11200,
+      14000
+    ],
+    "roomPlan": "四户，每户三间卧室；端户原厨房区为起居室延伸，原公共梯上方补卧室",
+    "doorSizeSource": "表18/详图19原尺寸，不乘2",
+    "privateTreadStatus": "户内梯踏步未附详图；当前16级175mm及按洞口计算的踏面为教学示意参数",
+    "roofHeadReview": "两端北卧室门标称900×2100；与坡顶相交的端部随坡收头，实际净高需门节点核对",
+    "scheduleDifference": "表18阁楼SC-1515、SC-1815各6，与平面明确TC标注不一致；模型按TC平面布置并保留差异",
+    "scope": "web model; CAD files retain their previous validated revision"
   }
 });
