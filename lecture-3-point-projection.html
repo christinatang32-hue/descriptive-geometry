@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="点的三面投影、坐标、相对位置和重影点可见性。">
+  <title>讲义3 点的投影 · 画法几何</title>
+  <link rel="stylesheet" href="lecture-1-projection.css?v=lectures-1-4">
+  <script defer src="lecture-3-point-projection-data.js"></script>
+  <script defer src="lecture-1-projection.js?v=lectures-1-4"></script>
+  <script defer src="config.js"></script>
+  <script defer src="tracker.js"></script>
+</head>
+<body>
+<main id="app">
+  <header class="topbar">
+    <a href="catalog.html#lectures" class="home-link">← 首页</a>
+    <div class="topbar-title">
+      <h1>讲义3 点的投影</h1>
+      <p id="page-title"></p>
+    </div>
+    <button type="button" id="fullscreen">全屏</button>
+  </header>
+
+  <section class="viewer" aria-label="课件画面">
+    <div class="stage-slot">
+      <div class="stage-wrapper">
+      <button type="button" id="stage" aria-label="放大当前课件画面">
+        <img id="slide-image" width="1800" height="1350" alt="">
+        <span id="stage-status" role="status" hidden></span>
+      </button>
+      <div id="slide-links" aria-label="原课件导航"></div>
+      </div>
+    </div>
+    <p id="page-note" hidden></p>
+  </section>
+
+  <aside id="step-panel" aria-labelledby="step-heading" hidden>
+    <div class="step-heading">
+      <h2 id="step-heading">作图过程</h2>
+      <output id="step-count"></output>
+    </div>
+    <p id="step-caption" aria-live="polite"></p>
+    <ol id="step-list" aria-label="选择作图步骤"></ol>
+  </aside>
+
+  <nav class="toolbar" aria-label="讲义导航">
+    <div class="nav-pages">
+      <button type="button" id="menu" aria-haspopup="dialog">☰ 目录</button>
+      <button type="button" id="prev-page" aria-label="上一页">‹</button>
+      <output id="page-count" aria-label="课件页码"></output>
+      <button type="button" id="next-page" aria-label="下一页">›</button>
+    </div>
+    <div class="nav-steps" id="step-controls" aria-label="演示控制" hidden>
+      <button type="button" id="restart">重播起点</button>
+      <button type="button" id="prev-step">上一步</button>
+      <button type="button" id="next-step" class="primary">下一步 →</button>
+      <button type="button" id="finish">看完成图</button>
+      <button type="button" id="play" aria-pressed="false">自动演示</button>
+    </div>
+    <div class="nav-tools">
+      <button type="button" id="show-text" aria-haspopup="dialog">本页文字</button>
+      <button type="button" id="zoom" aria-haspopup="dialog">放大</button>
+    </div>
+  </nav>
+
+  <dialog id="menu-dialog" aria-labelledby="menu-heading">
+    <div class="dialog-top">
+      <h2 id="menu-heading">课件目录</h2>
+      <button type="button" data-close aria-label="关闭目录">×</button>
+    </div>
+    <div id="menu-list" class="dialog-content menu-list"></div>
+  </dialog>
+
+  <dialog id="text-dialog" aria-labelledby="text-heading">
+    <div class="dialog-top">
+      <h2 id="text-heading">本页文字</h2>
+      <button type="button" data-close aria-label="关闭本页文字">×</button>
+    </div>
+    <div id="text-content" class="dialog-content"></div>
+  </dialog>
+
+  <dialog id="zoom-dialog" aria-labelledby="zoom-heading">
+    <div class="dialog-top">
+      <h2 id="zoom-heading">放大课件</h2>
+      <div class="zoom-controls">
+        <button type="button" id="zoom-out" aria-label="缩小">−</button>
+        <output id="zoom-value">100%</output>
+        <button type="button" id="zoom-in" aria-label="放大">＋</button>
+        <button type="button" id="zoom-fit">适合窗口</button>
+        <button type="button" data-close aria-label="关闭放大图">×</button>
+      </div>
+    </div>
+    <div id="zoom-scroll"><img id="zoom-image" width="1800" height="1350" alt=""></div>
+  </dialog>
+
+  <noscript><p>请启用 JavaScript，以浏览课件和作图步骤。</p></noscript>
+</main>
+</body>
+</html>

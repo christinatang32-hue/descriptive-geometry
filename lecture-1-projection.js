@@ -1,12 +1,13 @@
 (() => {
   'use strict';
 
-  const { pages, sections } = window.lectureOne;
+  const { pages, sections, assetBase = 'assets/lecture-1/' } = window.projectionLecture ?? window.lectureOne;
   const $ = id => document.getElementById(id);
   const app = $('app');
   const stage = $('stage');
   const stageImage = $('slide-image');
   const stageStatus = $('stage-status');
+  const slideLinks = $('slide-links');
   const stepList = $('step-list');
   const menu = $('menu-dialog');
   const textDialog = $('text-dialog');
@@ -16,6 +17,7 @@
   const dialogs = [menu, textDialog, zoomDialog];
   let page = pageFromHash();
   let drawnStepPage = -1;
+  let linkedPage = -1;
   let stepButtons = [];
   let frameVersion = 0;
   let playVersion = 0;
@@ -33,7 +35,7 @@
   const position = () => stepPositions[page];
   const lastStep = () => slide().frames.length - 1;
   const frame = () => slide().frames[position()];
-  const asset = entry => `assets/lecture-1/${entry.image}`;
+  const asset = entry => assetBase + entry.image;
   const ordinal = n => String(n).padStart(2, '0');
 
   function makeButton(number, label) {
@@ -106,6 +108,25 @@
     if (target.bottom > container.bottom) stepList.scrollTop += target.bottom - container.bottom + 3;
   }
 
+  function updateSlideLinks() {
+    if (!slideLinks || linkedPage === page) return;
+    linkedPage = page;
+    const buttons = (slide().links ?? []).map(({ label, target, rect }) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'slide-link';
+      button.setAttribute('aria-label', label);
+      button.title = label;
+      button.disabled = target === null;
+      for (const [i, property] of ['left', 'top', 'width', 'height'].entries()) {
+        button.style[property] = rect[i] + '%';
+      }
+      if (target !== null) button.addEventListener('click', () => go(target - 1));
+      return button;
+    });
+    slideLinks.replaceChildren(...buttons);
+  }
+
   function setPlayLabel() {
     const button = $('play');
     button.textContent = playing ? '暂停' : '自动演示';
@@ -176,6 +197,7 @@
     $('step-count').value = `${position()} / ${lastStep()} 步`;
     $('step-caption').textContent = frame().caption ?? '';
     setPlayLabel();
+    updateSlideLinks();
     buildStepList();
     updateStepList();
     return drawFrame();

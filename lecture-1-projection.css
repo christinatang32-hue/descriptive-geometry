@@ -84,6 +84,19 @@ button:focus-visible, a:focus-visible {
   cursor: zoom-in;
 }
 #slide-image { display: block; width: 100%; height: 100%; object-fit: contain; }
+.stage-wrapper { position: relative; width: min(100cqw, calc(100cqh * 4 / 3)); }
+.stage-wrapper #stage { width: 100%; }
+#slide-links { position: absolute; inset: 1px; pointer-events: none; }
+.slide-link {
+  position: absolute;
+  pointer-events: auto;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  padding: 0;
+}
+.slide-link:hover:not(:disabled) { background: #f3fffa40; border-color: var(--accent); }
+.slide-link:disabled { opacity: 1; background: #ffffffa6; }
 #stage-status {
   position: absolute;
   inset: auto 10px 10px 10px;
@@ -223,7 +236,7 @@ dialog::backdrop { background: #142f2994; }
   .topbar { gap: 10px; min-height: 50px; }
   .home-link { font-size: .8rem; }
   .stage-slot { container-type: normal; }
-  #stage { width: min(100%, 860px); }
+  #stage, .stage-wrapper { width: min(100%, 860px); }
   #step-panel { max-height: 240px; }
   .toolbar { justify-content: space-between; flex-wrap: wrap; gap: 5px; padding: 6px 0; }
   #step-controls { order: 3; width: 100%; flex-wrap: wrap; justify-content: center; }
