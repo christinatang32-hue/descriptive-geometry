@@ -46,10 +46,11 @@
     $('sessions').textContent=rows.reduce((n,r)=>n+r.sessions,0);
     $('duration').textContent=fmt(rows.reduce((n,r)=>n+r.totalSeconds,0));
     $('rows').replaceChildren();
-    if(!rows.length){const tr=document.createElement('tr'),td=document.createElement('td');td.colSpan=9;td.className='empty';td.textContent='该授课班级尚无学生名单';tr.append(td);$('rows').append(tr)}
+    if(!rows.length){const tr=document.createElement('tr'),td=document.createElement('td');td.colSpan=8;td.className='empty';td.textContent='该授课班级尚无学生名单';tr.append(td);$('rows').append(tr)}
     for(const r of rows){
       const tr=document.createElement('tr');
-      for(const [index,value] of [r.studentId,r.name,r.cohort||'—',r.sessions,fmt(r.lectureSeconds),fmt(r.exampleSeconds),fmt(r.assignmentSeconds),fmt(r.totalSeconds)].entries()){
+      const lectureSeconds=Number(r.lectureSeconds||0)+Number(r.exampleSeconds||0);
+      for(const [index,value] of [r.studentId,r.name,r.cohort||'—',r.sessions,fmt(lectureSeconds),fmt(r.assignmentSeconds),fmt(r.totalSeconds)].entries()){
         const td=document.createElement('td');td.textContent=String(value);if(index>=3)td.className='num';tr.append(td);
       }
       const action=document.createElement('td'),button=document.createElement('button');button.type='button';button.className='row-delete';button.textContent='删除';

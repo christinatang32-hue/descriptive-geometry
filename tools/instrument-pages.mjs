@@ -11,9 +11,10 @@ for(const name of fs.readdirSync(root)){
   let source=fs.readFileSync(file,'utf8');
   const original=source;
   if(/^(lecture-|example-|ex-)/.test(name)){
-    source=source.replace(/<a href="index\.html#(lectures|examples|assignments)">← 课程目录<\/a>/,
-      (_match,module)=>`<a href="catalog.html#${module}">← 首页</a>`);
-    if(!/<a href="catalog\.html#(?:lectures|examples|assignments)">← 首页<\/a>/.test(source)){
+    const module=name.startsWith('ex-')?'assignments':'lectures';
+    const homeLink=`<a href="catalog.html#${module}">← 首页</a>`;
+    source=source.replace(/<a href="(?:index|catalog)\.html#(?:lectures|examples|assignments)">← (?:课程目录|首页)<\/a>/,homeLink);
+    if(!source.includes(homeLink)){
       throw Error(`Missing course home link: ${name}`);
     }
   }
