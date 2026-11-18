@@ -17,7 +17,7 @@
   const dialogs = [menu, textDialog, zoomDialog];
   let page = pageFromHash();
   let drawnStepPage = -1;
-  let linkedPage = -1;
+  let renderedLinks;
   let stepButtons = [];
   let frameVersion = 0;
   let playVersion = 0;
@@ -109,9 +109,11 @@
   }
 
   function updateSlideLinks() {
-    if (!slideLinks || linkedPage === page) return;
-    linkedPage = page;
-    const buttons = (slide().links ?? []).map(({ label, target, rect }) => {
+    if (!slideLinks) return;
+    const links = frame().links ?? slide().links;
+    if (links === renderedLinks) return;
+    renderedLinks = links;
+    const buttons = (links ?? []).map(({ label, target, rect }) => {
       const button = document.createElement('button');
       button.type = 'button';
       button.className = 'slide-link';
@@ -317,7 +319,10 @@
     $('fullscreen').textContent = document.fullscreenElement ? '退出全屏' : '全屏';
     if (zoomDialog.open) updateZoom();
   });
-  window.addEventListener('resize', () => { if (zoomDialog.open) updateZoom(); });
+  window.addEventListener('resize', () => {
+    if (zoomDialog.open) updateZoom();
+    updateStepList();
+  });
   for (const button of document.querySelectorAll('[data-close]')) {
     button.addEventListener('click', () => button.closest('dialog').close());
   }
