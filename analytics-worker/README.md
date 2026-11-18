@@ -25,6 +25,19 @@ npx wrangler deploy
 
 `wrangler.jsonc` 应使用实际数据库 ID。Worker 用 `ALLOWED_ORIGIN` 限制网页来源，默认与本站的 GitHub Pages 域名一致。师生会话令牌只存在于浏览器当前标签页的 `sessionStorage`，教师统计与名单上传接口均在服务端核验教师会话。D1 保存名单、带盐密码哈希、学生登记的手机号、登录、学习时长与批改意见；学生上传的照片存放于私有 R2，不公开直链，读取时核对当前学生会话。照片会发送给 Cloudflare Workers AI 视觉模型作即时初评。系统不采集 IP 地址或鼠标轨迹。因为名单没有手机号，注册时不能证明填表者本人就是该学生；如需防止抢先注册，应另接短信验证或由学校身份认证确认。
 
+## 登录后台的备用入口
+
+当原 `workers.dev` 域名在手机网络上无法访问时，可以在同一 Cloudflare 账号部署 `pages-api/`。Pages 通过服务绑定将 `/api/` 请求交给原 Worker，继续使用现有账号、会话、学习记录和作业数据。课程页面仍由原 GitHub Pages 地址提供。
+
+在 `pages-api/` 中执行以下命令。部署后用实际的 `pages.dev` 域名验证跨域请求及原 Worker 的账号校验，再更新网站 `config.js` 中的 `apiBase`。回退时恢复 `apiBase` 为原 Worker 地址并重新发布。
+
+```text
+npx wrangler pages project create descriptive-geometry-api --production-branch main --force
+npx wrangler pages deploy public --project-name descriptive-geometry-api --branch main
+```
+
+## 记录与保留
+
 客户端每约 15 秒上传一次正在前台、获得焦点且未闲置的学习时间；闲置超过 2 分钟停止累计。网络中断或浏览器强制结束可能使最后一小段时间未被记录，因此统计是“有效学习时长估计”，不是精确在场证明。
 
 学习记录以每次登录时间为起点保留五年，学生名单与授课班级以最近一次更新为起点保留五年，作业照片与批改意见自提交之日起保留五年。Worker 的 Cron Trigger 每日 18:00 UTC（北京时间次日 02:00）删除超期记录与 R2 照片，并删除没有剩余记录的学生身份；教师读取统计时也先执行同一清理。上线前还应向学生说明课程记录的管理人及更正/删除方式。
