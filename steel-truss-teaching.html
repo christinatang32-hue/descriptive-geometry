@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="依据钢结构图07制作。旋转钢屋架模型，分层识读弦杆、腹杆、支座和跨中节点，对照原图核对构造。">
+  <title>钢屋架 · 三维互动教学</title>
+  <link rel="stylesheet" href="t-beam-teaching.css">
+  <link rel="stylesheet" href="steel-truss-teaching.css">
+  <script defer src="steel-truss-model.js"></script>
+  <script defer src="steel-truss-teaching.js"></script>
+</head>
+<body>
+<main>
+  <header class="intro">
+    <div>
+      <p class="eyebrow">专题教学 · 钢结构识图</p>
+      <h1>钢屋架</h1>
+      <p>从屋架简图认清杆件位置，再对照立面和节点详图，观察双角钢、节点板与支座怎样连接。</p>
+    </div>
+    <button type="button" class="source-link" data-drawing="sheet">查看原始图纸 ↗</button>
+  </header>
+
+  <section class="dimensions" aria-label="图纸主要尺寸">
+    <div><small>屋架总跨</small><strong>18,000 <em>mm</em></strong></div>
+    <div><small>端部高度</small><strong>1,990 <em>mm</em></strong></div>
+    <div><small>跨中高度</small><strong>2,890 <em>mm</em></strong></div>
+    <div><small>上弦水平节距</small><strong>1,500 <em>mm</em></strong></div>
+    <div><small>上弦坡度</small><strong>1:10</strong></div>
+  </section>
+
+  <div class="workspace">
+    <section class="model-panel" aria-labelledby="model-title">
+      <div class="panel-heading">
+        <div><p class="eyebrow">空间模型</p><h2 id="model-title">整榀屋架</h2></div>
+        <div class="heading-actions">
+          <button type="button" id="auto-rotate" aria-pressed="false">自动旋转</button>
+          <button type="button" id="fullscreen">全屏 ⛶</button>
+        </div>
+      </div>
+      <div class="canvas-wrap" id="viewport">
+        <canvas id="model" tabindex="0" aria-label="钢屋架三维模型。拖动旋转，滚轮缩放，点击构件。方向键旋转，加减键缩放。"></canvas>
+        <canvas id="overlay" aria-hidden="true"></canvas>
+        <p id="render-error" hidden>当前浏览器无法显示 WebGL 模型。仍可使用右侧立面和下方原始图纸。</p>
+      </div>
+      <p class="model-hint">拖动旋转 · 滚轮缩放 · Shift 或右键拖动平移 · 点选构件</p>
+      <div class="view-controls" aria-label="观察视角">
+        <button type="button" data-view="iso">三维总览</button>
+        <button type="button" data-view="front">立面</button>
+        <button type="button" data-view="top">俯视</button>
+        <button type="button" data-view="end">端视</button>
+        <button type="button" id="zoom-in" aria-label="放大模型">＋</button>
+        <button type="button" id="zoom-out" aria-label="缩小模型">−</button>
+        <button type="button" id="reset-view">重置视角</button>
+      </div>
+      <div class="cut-controls">
+        <div class="cut-mode" aria-label="观察范围">
+          <strong>观察范围</strong>
+          <button type="button" data-scene="all">整榀屋架</button>
+          <button type="button" data-scene="support">① 支座</button>
+          <button type="button" data-scene="midspan">② 跨中</button>
+        </div>
+        <div class="cut-detail" id="explode-controls" hidden>
+          <label for="explode">沿屋架厚度方向拆分 <output id="explode-value" for="explode">0%</output></label>
+          <input id="explode" type="range" min="0" max="100" value="0">
+        </div>
+      </div>
+      <fieldset class="layers">
+        <legend>构件显示</legend>
+        <label><input type="checkbox" data-layer="top" checked><span class="swatch" data-color="top"></span>上弦杆</label>
+        <label><input type="checkbox" data-layer="bottom" checked><span class="swatch" data-color="bottom"></span>下弦杆</label>
+        <label><input type="checkbox" data-layer="diagonal" checked><span class="swatch" data-color="diagonal"></span>斜腹杆</label>
+        <label><input type="checkbox" data-layer="vertical" checked><span class="swatch" data-color="vertical"></span>竖腹杆</label>
+        <label><input type="checkbox" data-layer="plates" checked><span class="swatch" data-color="plates"></span>连接板</label>
+        <label><input type="checkbox" data-layer="bearing" checked><span class="swatch" data-color="bearing"></span>支座构造</label>
+        <label><input type="checkbox" id="show-guides" checked>尺寸与节点索引</label>
+      </fieldset>
+      <div class="selection" aria-live="polite">
+        <div><strong id="part-title">点选模型或立面上的构件</strong><p id="part-text">选择后可查看构件名称、图纸编号和对应位置。</p></div>
+        <button type="button" id="clear-selection" hidden aria-label="取消构件选择">×</button>
+      </div>
+    </section>
+
+    <aside class="lesson-panel" aria-labelledby="lesson-title">
+      <div class="panel-heading">
+        <div><p class="eyebrow">分步学习</p><h2 id="lesson-title">识图顺序</h2></div>
+        <span id="step-counter"></span>
+      </div>
+      <div class="steps" role="tablist" aria-label="教学步骤"></div>
+      <article class="lesson-copy" id="lesson-copy" role="tabpanel" tabindex="0">
+        <h3 id="step-title"></h3>
+        <p id="step-text"></p>
+        <ul id="step-points"></ul>
+        <button type="button" class="text-button" id="step-drawing">对照本步图纸 ↗</button>
+      </article>
+      <div class="step-actions">
+        <button type="button" id="prev-step">← 上一步</button>
+        <a class="text-button mobile-model-link" href="#model-title">查看模型 ↑</a>
+        <button type="button" id="next-step">下一步 →</button>
+      </div>
+      <section class="section-card linked-elevation" aria-labelledby="elevation-title">
+        <div class="section-head">
+          <div><p class="eyebrow">二维 ↔ 三维</p><h3 id="elevation-title">立面联动</h3></div>
+          <button type="button" class="text-button" data-drawing="elevation">查看立面原图 ↗</button>
+        </div>
+        <svg id="elevation" viewBox="0 0 400 131" role="group" aria-label="立面简图，可选择杆件及两个详图节点"></svg>
+        <p>点击彩色杆件可定位构件。点击 ① 或 ② 可切换到节点近景。</p>
+      </section>
+      <details class="schedule">
+        <summary>构件编号速查</summary>
+        <div class="schedule-scroll">
+          <table>
+            <thead><tr><th>构件</th><th>原图编号</th><th>图中位置</th></tr></thead>
+            <tbody>
+              <tr><td>上弦杆</td><td>1</td><td>沿两侧屋坡</td></tr>
+              <tr><td>下弦杆</td><td>2</td><td>屋架底部</td></tr>
+              <tr><td>左半斜腹杆</td><td>4、5、7、8、10、11</td><td>由支座至跨中</td></tr>
+              <tr><td>竖腹杆</td><td>3、6、9、13</td><td>端部及部分节点</td></tr>
+              <tr><td>支座构造</td><td>17、18、19、20、21、31</td><td>① 支座节点</td></tr>
+              <tr><td>跨中拼接</td><td>15、28、35</td><td>② 跨中节点</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+    </aside>
+  </div>
+
+  <section class="drawing-strip" aria-labelledby="drawings-title">
+    <div class="drawing-head">
+      <div><p class="eyebrow">图纸对照 · 钢结构图 07</p><h2 id="drawings-title">从简图读到节点详图</h2></div>
+      <button type="button" class="text-button" data-drawing="sheet">打开整张图纸 ↗</button>
+    </div>
+    <div class="drawing-cards" id="drawing-cards"></div>
+  </section>
+  <details class="model-notes">
+    <summary>模型依据与简化说明</summary>
+    <p>依据《3-钢结构图（手绘）》的布局 1。杆件轴线取自 1:100 简图，跨中高度和坡度由轴线坐标求得。立面只画到跨中附近，右半未详示的构件按简图杆系布置，编号按对应位置识读。</p>
+    <p>三维近景依据 1:5 详图表达双角钢夹板、支座底板、连接板及孔位。整体视图加粗杆件并放大板件以便辨认。角钢腿宽、部分板厚及细部轮廓按识图需要简化，焊缝按原图符号阅读。原图说明中的螺栓直径数值缺失，页面保留其孔径 Φ21.5 标注。</p>
+  </details>
+</main>
+
+<dialog id="drawing-dialog" aria-labelledby="drawing-title">
+  <div class="dialog-head">
+    <div><p class="eyebrow">原始图纸</p><h2 id="drawing-title"></h2></div>
+    <button type="button" id="close-drawing" aria-label="关闭原始图纸">×</button>
+  </div>
+  <div class="drawing-nav">
+    <button type="button" id="prev-drawing" aria-label="上一张图纸">←</button>
+    <select id="drawing-select" aria-label="选择原始图纸"></select>
+    <button type="button" id="next-drawing" aria-label="下一张图纸">→</button>
+    <button type="button" id="zoom-drawing" aria-pressed="false">放大</button>
+    <a id="drawing-original" target="_blank" rel="noopener">新窗口 ↗</a>
+  </div>
+  <div class="drawing-image-wrap"><img id="drawing-image" alt=""></div>
+</dialog>
+</body>
+</html>
