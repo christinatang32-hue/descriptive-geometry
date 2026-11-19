@@ -24,6 +24,7 @@
   let renderedLinks;
   let stepButtons = [];
   let frameVersion = 0;
+  let frameObjectUrl;
   let playVersion = 0;
   let timer;
   let playing = false;
@@ -156,31 +157,74 @@
     }
   }
 
+  async function loadImage(url, isCurrent) {
+    const image = new Image();
+    let loadTimer;
+    try {
+      image.src = url;
+      const deadline = new Promise((_, reject) => {
+        loadTimer = setTimeout(() => reject(new Error('Image load timed out')), 4000);
+      });
+      await Promise.race([image.decode(), deadline]);
+      return { src: url };
+    } catch (error) {
+      image.removeAttribute('src');
+      if (!isCurrent() || !['http:', 'https:'].includes(location.protocol)) throw error;
+    } finally {
+      clearTimeout(loadTimer);
+    }
+
+    const response = await fetch(url, { cache: 'reload', signal: AbortSignal.timeout(10000) });
+    if (!response.ok || !isCurrent()) throw new Error('Image retry did not complete');
+    const objectUrl = URL.createObjectURL(await response.blob());
+    try {
+      image.src = objectUrl;
+      await image.decode();
+      return { src: objectUrl, objectUrl };
+    } catch (error) {
+      URL.revokeObjectURL(objectUrl);
+      throw error;
+    }
+  }
+
+  function setStageImage(url, loaded) {
+    if (loaded) {
+      stageImage.src = loaded.src;
+      stageImage.dataset.asset = url;
+    } else {
+      stageImage.removeAttribute('src');
+      delete stageImage.dataset.asset;
+    }
+    if (frameObjectUrl) URL.revokeObjectURL(frameObjectUrl);
+    frameObjectUrl = loaded?.objectUrl;
+  }
+
   async function drawFrame() {
     const version = ++frameVersion;
+    const isCurrent = () => version === frameVersion;
     const current = frame();
     const url = asset(current);
     const title = `第 ${page + 1} 页，${slide().title}${current.caption ? '，' + current.caption : ''}`;
+    stageImage.alt = title;
     stageStatus.hidden = true;
-    if (stageImage.getAttribute('src') === url && stageImage.complete && stageImage.naturalWidth > 0) {
+    if (stageImage.dataset.asset === url && stageImage.complete && stageImage.naturalWidth > 0) {
       stage.removeAttribute('aria-busy');
       return true;
     }
     stage.setAttribute('aria-busy', 'true');
-    const ready = new Image();
-    ready.src = url;
     try {
-      await ready.decode();
-      if (version !== frameVersion) return false;
-      stageImage.src = url;
-      stageImage.alt = title;
+      const loaded = await loadImage(url, isCurrent);
+      if (!isCurrent()) {
+        if (loaded.objectUrl) URL.revokeObjectURL(loaded.objectUrl);
+        return false;
+      }
+      setStageImage(url, loaded);
       stage.removeAttribute('aria-busy');
       prefetch();
       return true;
     } catch {
-      if (version !== frameVersion) return false;
-      stageImage.removeAttribute('src');
-      stageImage.alt = title;
+      if (!isCurrent()) return false;
+      setStageImage(url);
       stage.removeAttribute('aria-busy');
       stageStatus.textContent = '画面加载失败，点击此处重试。';
       stageStatus.hidden = false;
@@ -298,7 +342,8 @@
       drawFrame();
       return;
     }
-    $('zoom-image').src = asset(frame());
+    const url = asset(frame());
+    $('zoom-image').src = stageImage.dataset.asset === url ? stageImage.src : url;
     $('zoom-image').alt = `第 ${page + 1} 页，${slide().title}`;
     $('zoom-heading').textContent = `第 ${page + 1} 页`;
     zoom = 1;
