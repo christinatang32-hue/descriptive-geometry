@@ -113,20 +113,24 @@
     const links = frame().links ?? slide().links;
     if (links === renderedLinks) return;
     renderedLinks = links;
-    const buttons = (links ?? []).map(({ label, target, rect }) => {
-      const button = document.createElement('button');
-      button.type = 'button';
-      button.className = 'slide-link';
-      button.setAttribute('aria-label', label);
-      button.title = label;
-      button.disabled = target === null;
-      for (const [i, property] of ['left', 'top', 'width', 'height'].entries()) {
-        button.style[property] = rect[i] + '%';
+    const hotspots = (links ?? []).map(({ label, target, href, rect }) => {
+      const hotspot = document.createElement(href ? 'a' : 'button');
+      if (href) {
+        hotspot.href = href;
+      } else {
+        hotspot.type = 'button';
+        hotspot.disabled = target === null;
+        if (target !== null) hotspot.addEventListener('click', () => go(target - 1));
       }
-      if (target !== null) button.addEventListener('click', () => go(target - 1));
-      return button;
+      hotspot.className = 'slide-link';
+      hotspot.setAttribute('aria-label', label);
+      hotspot.title = label;
+      for (const [i, property] of ['left', 'top', 'width', 'height'].entries()) {
+        hotspot.style[property] = rect[i] + '%';
+      }
+      return hotspot;
     });
-    slideLinks.replaceChildren(...buttons);
+    slideLinks.replaceChildren(...hotspots);
   }
 
   function setPlayLabel() {
