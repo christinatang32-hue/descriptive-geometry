@@ -72,8 +72,8 @@ button:focus-visible, a:focus-visible {
 }
 #stage {
   position: relative;
-  width: min(100cqw, calc(100cqh * 4 / 3));
-  aspect-ratio: 4 / 3;
+  width: min(100cqw, calc(100cqh * var(--slide-ratio, 4 / 3)));
+  aspect-ratio: var(--slide-ratio, 4 / 3);
   display: block;
   padding: 0;
   border: 1px solid var(--border);
@@ -84,7 +84,7 @@ button:focus-visible, a:focus-visible {
   cursor: zoom-in;
 }
 #slide-image { display: block; width: 100%; height: 100%; object-fit: contain; }
-.stage-wrapper { position: relative; width: min(100cqw, calc(100cqh * 4 / 3)); }
+.stage-wrapper { position: relative; width: min(100cqw, calc(100cqh * var(--slide-ratio, 4 / 3))); }
 .stage-wrapper #stage { width: 100%; }
 #slide-links { position: absolute; inset: 1px; pointer-events: none; }
 .slide-link {

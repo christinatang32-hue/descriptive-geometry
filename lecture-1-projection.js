@@ -6,6 +6,10 @@
   const app = $('app');
   const stage = $('stage');
   const stageImage = $('slide-image');
+  const sourceWidth = Number(stageImage.getAttribute('width'));
+  const sourceHeight = Number(stageImage.getAttribute('height'));
+  const slideRatio = sourceWidth > 0 && sourceHeight > 0 ? sourceWidth / sourceHeight : 4 / 3;
+  app.style.setProperty('--slide-ratio', String(slideRatio));
   const stageStatus = $('stage-status');
   const slideLinks = $('slide-links');
   const stepList = $('step-list');
@@ -280,7 +284,7 @@
 
   function updateZoom(reset = false) {
     const scroll = $('zoom-scroll');
-    const fitWidth = Math.min(scroll.clientWidth, scroll.clientHeight * 4 / 3);
+    const fitWidth = Math.min(scroll.clientWidth, scroll.clientHeight * slideRatio);
     $('zoom-image').style.width = `${Math.floor(fitWidth * zoom)}px`;
     $('zoom-value').value = `${Math.round(zoom * 100)}%`;
     $('zoom-out').disabled = zoom === 1;
