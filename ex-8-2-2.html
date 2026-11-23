@@ -1,0 +1,672 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>作业 8.2-2 · 全剖面图和半剖面图</title>
+<style>
+:root{--ink:#20333e;--muted:#687b83;--accent:#007f79;--line:#dce5e5;--paper:#fff;--bg:#f3f6f5;--new:#dd663c;--given:#354b55;--guide:#a4b3b9;--done:#008b84}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 "Microsoft YaHei","PingFang SC",sans-serif}button,input{font:inherit}button{border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:8px;padding:8px 13px;cursor:pointer}button:hover{border-color:var(--accent);background:#f0f8f6}button:focus-visible,input:focus-visible,#modelStage:focus-visible{outline:3px solid #f4b77b;outline-offset:3px}button:disabled{opacity:.42;cursor:default}.primary{background:var(--accent);border-color:var(--accent);color:#fff}.primary:hover{background:#006b66;color:#fff}[hidden]{display:none!important}
+.course-nav{display:flex;gap:20px;flex-wrap:wrap;padding:12px 24px;background:#fff;border-bottom:1px solid var(--line)}.course-nav a{color:#176b8b;text-underline-offset:3px}.shell{max-width:1530px;margin:auto;padding:22px 30px 30px}.page-head{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:14px}.page-head h1{font-size:21px;font-weight:500;margin:0}.workspace{display:grid;grid-template-columns:minmax(0,1fr) 360px;border:1px solid var(--line);border-radius:16px;background:#fff;overflow:hidden}.drawing{min-width:0;border-right:1px solid var(--line)}.toolbar{padding:10px 15px;border-bottom:1px solid #edf1f0;display:flex;justify-content:space-between;align-items:center;gap:10px}.toolbar strong{font-size:14px}.tools{display:flex;align-items:center;gap:5px}.tools button{padding:3px 10px}.tools output{min-width:46px;text-align:center;font-size:12px;color:var(--muted)}.canvas{height:min(57vw,635px);min-height:430px;overflow:hidden;touch-action:none;cursor:grab;background:#fff}.canvas:active{cursor:grabbing}svg{display:block;width:100%;height:100%}#diagram line,#diagram path,#diagram rect{vector-effect:non-scaling-stroke}#diagram .given{stroke:var(--given);fill:none;stroke-width:2}#diagram .hidden-line{stroke:var(--given);fill:none;stroke-width:1.45;stroke-dasharray:8 5}#diagram .axis-line{stroke:#8a9aa2;fill:none;stroke-width:1.2;stroke-dasharray:4mm 5px 1.8px 5px}#diagram .axis-line.cut-active{stroke:var(--new);stroke-width:2.3}#diagram .guide{stroke:var(--guide);fill:none;stroke-width:1.15}#diagram .process{stroke:var(--done);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}#diagram .measure-edge,#diagram .measure-brace,#diagram .drawing-edge{stroke:var(--new);fill:none;stroke-linecap:round;stroke-linejoin:round}#diagram .measure-edge,#diagram .drawing-edge{stroke-width:1.7}#diagram .measure-brace{stroke-width:1.3}#diagram .result-cut{stroke:var(--new);fill:none;stroke-width:4;stroke-linecap:round;stroke-linejoin:round}#diagram .result-behind{stroke:var(--given);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}#diagram .cut-symbol{stroke-width:2.5;stroke-linecap:butt;stroke-linejoin:miter}#diagram .metal-line{fill:none;stroke:#77868b;stroke-width:.85}#diagram .transfer-point{fill:#fff;stroke:var(--new);stroke-width:1.25;vector-effect:non-scaling-stroke}#diagram .axon-cut{fill:#eaf3f1;stroke:none}#diagram .axon-edge{stroke-width:1.25}#diagram text{font:14px "Microsoft YaHei",sans-serif;fill:var(--given);paint-order:stroke;stroke:#fff;stroke-width:4px;stroke-linejoin:round}#diagram text.view-title{font-size:15px;font-weight:700}#diagram text.section-name{font-size:18px;font-weight:700}#diagram .symmetry-mark,#diagram .section-underline{stroke:var(--given);stroke-width:1.25}#diagram .symmetry-axis{stroke:#8a9aa2;stroke-width:1.2}
+aside{padding:20px 19px;display:flex;flex-direction:column;min-width:0}.count{color:var(--accent);font-size:12px;font-weight:700;letter-spacing:1px}h2{font-size:23px;line-height:1.35;margin:7px 0 12px}.explain-label{font-size:12px;color:var(--muted);margin:0 0 5px}.explain{font-size:14px;line-height:1.55;white-space:pre-line;margin:0 0 12px}.model-card{margin-top:auto;border-top:1px solid #e6eeee;padding-top:12px}.model-heading{display:flex;justify-content:space-between;gap:10px;align-items:baseline}.model-heading strong{font-size:15px}.model-heading small{font-size:11px;color:var(--muted)}.model-stage{position:relative;width:100%;height:260px;background:#edf5f3;border:1px solid var(--line);border-radius:11px;overflow:hidden;touch-action:none;cursor:grab}.model-stage:active{cursor:grabbing}#modelCanvas{width:100%;height:100%;display:block}.model-help{font-size:11px;color:var(--muted);margin:5px 0}.model-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:7px}.model-row button{font-size:12px;padding:5px 8px}.model-row button[aria-pressed=true]{background:#d7efea;border-color:#75b7ab;color:#075b55}.model-row input{flex:1;min-width:100px;accent-color:var(--accent)}.model-row output{font-size:11px;color:var(--muted);min-width:44px;text-align:right}
+.controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px;padding:12px 16px;background:#fff;border:1px solid var(--line);border-radius:12px}.controls .progress-wrap{display:flex;align-items:center;gap:10px;flex:1;min-width:180px}.controls input{width:100%;accent-color:var(--accent)}.controls span{font-size:13px;color:var(--muted);white-space:nowrap}.steps{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}.steps button{font-size:12px;padding:7px 10px;background:transparent}.steps button[aria-current=step]{background:var(--ink);border-color:var(--ink);color:#fff}.foot{font-size:12px;color:var(--muted)}.shell:fullscreen{max-width:none;overflow:auto;background:var(--bg)}
+@media(max-width:1050px){.workspace{grid-template-columns:minmax(0,1fr) 320px}.canvas{min-height:410px}.model-stage{height:220px}}@media(max-width:750px){.shell{padding:14px 10px}.page-head{align-items:flex-start;flex-direction:column}.page-head h1{font-size:18px}.workspace{display:flex;flex-direction:column}.drawing{width:100%;border-right:0;border-bottom:1px solid var(--line)}.canvas{width:100%;height:auto;min-height:0;aspect-ratio:818/961}.toolbar{padding:8px;flex-wrap:wrap}.toolbar strong{flex-basis:100%}.tools{width:100%;justify-content:flex-end}aside{padding:16px}.model-card{margin-top:12px}.model-stage{height:260px}.controls{padding:10px}.controls .progress-wrap{flex-basis:100%}}@media(prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+<link rel="stylesheet" href="assignment-flow.css">
+<script defer src="config.js"></script><script defer src="tracker.js"></script><script defer src="assignment-flow.js"></script>
+</head>
+<body class="assignment-locked">
+<nav class="course-nav" aria-label="课程导航"><a href="catalog.html#assignments">← 首页</a></nav>
+<main class="shell" id="app">
+  <header class="page-head"><h1>【8.2-2】根据形体的投影图和轴测图，作 1—1 剖面图与 2—2 半剖面图（金属）</h1><button id="fullscreen" type="button">全屏</button></header>
+  <section class="workspace">
+    <div class="drawing"><div class="toolbar"><strong>1—1 全剖 · 2—2 半剖</strong><div class="tools"><button id="zoomOut" type="button" aria-label="缩小">−</button><output id="zoomValue">100%</output><button id="zoomIn" type="button" aria-label="放大">＋</button><button id="fit" type="button">复位</button></div></div><div id="canvas" class="canvas"><svg id="diagram" viewBox="0 0 1092 652" role="img" aria-label="由两面投影逐步作 1—1 全剖和 2—2 半剖"><title>全剖面图和半剖面图作图过程</title><g id="scene"></g></svg></div></div>
+    <aside aria-live="polite"><div class="count" id="count"></div><h2 id="stepTitle"></h2><p class="explain-label">作图解析</p><p class="explain" id="action"></p>
+      <div class="model-card"><div class="model-heading"><strong>3D 剖切演示</strong><small>拖动旋转 · 滚轮缩放</small></div><div id="modelStage" class="model-stage" tabindex="0" aria-label="金属形体，可切换全剖和半剖，可旋转、平移和缩放"><canvas id="modelCanvas" role="img" aria-label="可沿 1—1 和 2—2 剖开的金属实体"></canvas></div><div class="model-row" role="group" aria-label="选择剖切方式"><button id="cutFull" type="button" aria-pressed="true">1—1 全剖</button><button id="cutHalf" type="button" aria-pressed="false">2—2 半剖</button></div><div class="model-row"><button id="openModel" type="button" class="primary">播放剖开动画</button><input id="openRange" type="range" min="0" max="100" value="0" aria-label="剖开进度"><output id="openValue">合拢</output></div><div class="model-row"><button id="rotateMode" type="button" aria-pressed="true">旋转</button><button id="panMode" type="button" aria-pressed="false">平移</button><button id="modelReset" type="button">复位视角</button></div></div>
+    </aside>
+  </section>
+  <div class="controls"><button id="prev" type="button">← 上一步</button><button id="next" class="primary" type="button">下一步 →</button><button id="play" type="button">播放</button><div class="progress-wrap"><input id="progress" type="range" min="0" max="7" value="0" aria-label="选择作图步骤"><span id="progressText"></span></div><button id="restart" type="button">重新开始</button><button id="complete" type="button">完整解答</button></div>
+  <nav id="steps" class="steps" aria-label="作图步骤"></nav><div class="foot">方向键切换作图步骤 · 空格播放或暂停 · 放大二维图后可拖动</div>
+</main>
+<script id="lesson-data" type="application/json">{"problem":"根据形体的投影图和轴测图，求作 1—1 剖面图、2—2 半剖面图。材料为金属。"}</script>
+<script>
+(()=>{
+  'use strict';
+  const G={"length":300,"width":201,"height":249,"floor":30,"shoulder":200,"notchFloor":230,"lowerInset":30,"upperInset":59,"notchInset":79,"wallThickness":30.5,"measurement":{"source":"空白作业/8.2-1&2.jpg","unit":"相对制图单位，正面投影总长取 300","imageCropOrigin":[1535,980],"elevation":{"outerX":[153.5,607],"lowerX":[198.5,562],"upperX":[241.5,517],"notchX":[272.5,486],"heightY":[433.5,388.5,131.5,86.5,56.5]},"plan":{"outerX":[154,605.5],"wallY":[605.5,651.5,863,908.5],"cutX":377.5,"cutY":757}}};
+  const {length:L,width:W,height:H,floor:F,shoulder:S,notchFloor:N,
+    lowerInset:A,upperInset:B,notchInset:C,wallThickness:T}=G;
+  const midX=L/2,midY=W/2;
+  const steps=[
+    {title:'读题',action:'对照两面投影和轴测图，找出底板、下宽上窄的内腔，以及前后壁顶缘中央的凹槽。台肩下沿和凹槽底在不同高程。以下按题图比例转移尺寸。'},
+    {title:'定剖切位置和视向',short:'定视向',action:'1. 1—1 通过前后中点，由水平投影的下方向上观察。\n2. 2—2 通过左右中点，由水平投影的右方向左观察。侧向投影的左半画外观，右半画剖面。'},
+    {title:'定位 1—1 全剖外框',short:'全剖外框',action:'从正面投影量取总长和总高。在剖面图中先画底边，再从两端竖起左右外壁，定位顶面高程。'},
+    {title:'画 1—1 的切面轮廓',short:'全剖切面',action:'1. 从底边量取内腔底面和台肩下沿的高程。\n2. 从水平投影的左右对称中心，分别向两侧量取下部内腔和上部开口的半宽。\n3. 依次连接两侧上段、台肩、下段和内腔底边，围成 U 形切面。'},
+    {title:'补画 1—1 后方顶口',short:'全剖顶口',action:'从正面投影量取凹槽两端距中心的位置，以及由顶面到槽底的高差。将两端向下作短竖线并连接，在两侧接上后方顶缘。'},
+    {title:'定位 2—2 半剖外框',short:'半剖外框',action:'先画竖向细点划中心线，从水平投影的前后中心向两侧分别转移半宽，由正面投影转移总高。沿视向，前半投到左侧作外观，后半投到右侧作剖面。'},
+    {title:'画 2—2 右半剖面',short:'右半剖面',action:'1. 从水平投影量取后壁厚度，从正面投影转移内腔底、槽底和台肩下沿的高程。\n2. 画出底板和后壁组成的 L 形切面。\n3. 补画后方可见的顶缘和竖向轮廓，并从中心线向右画台肩下沿，到后壁内缘为止。'},
+    {title:'加剖面线并核对',short:'完整结果',action:'在实际切到的金属区域内画等距的 45° 连续细实线，加粗切面轮廓。核对两图的底板、台肩与槽底高程，2—2 两半以细点划中心线分界。'}
+  ];
+  const $=id=>document.getElementById(id),diagram=$('diagram'),scene=$('scene');
+  const media=matchMedia('(max-width: 750px)'),reduced=matchMedia('(prefers-reduced-motion: reduce)');
+  const wide={size:[1092,652],front:[91,306],plan:[91,388],full:[455,306],half:[818,306],axon:[635,598]};
+  const narrow={size:[818,961],front:[96,301],plan:[96,392],full:[487,301],half:[544,650],axon:[294,905]};
+  let layout=media.matches?narrow:wide;
+  let step=0,phase=0,playing=false,stepTimer=0,playTimer=0,zoom=1,panX=0,panY=0,diagramDrag=null;
+  const n=v=>Math.round(v*100)/100;
+  const xy=([x,y])=>`${n(x)} ${n(y)}`;
+  const line=(a,b,cls)=>`<line class="${cls}" x1="${n(a[0])}" y1="${n(a[1])}" x2="${n(b[0])}" y2="${n(b[1])}"/>`;
+  const path=(d,cls)=>`<path class="${cls}" d="${d}"/>`;
+  const trace=(points,close=false)=>'M'+points.map(xy).join(' L')+(close?' Z':'');
+  const txt=([x,y],label,cls='',anchor='start')=>`<text class="${cls}" x="${x}" y="${y}" text-anchor="${anchor}">${label}</text>`;
+  const chain=points=>points.slice(1).map((point,index)=>[points[index],point]);
+  const elevation=(view,[x,z])=>[layout[view][0]+x,layout[view][1]-z];
+  const plan=([x,y])=>[layout.plan[0]+x,layout.plan[1]+y];
+  function viewPoint(view,point){return view==='plan'?plan(point):elevation(view,point)}
+  const viewLine=(view,a,b,cls)=>line(viewPoint(view,a),viewPoint(view,b),cls);
+  const viewPath=(view,points,cls,close=false)=>path(trace(points.map(point=>viewPoint(view,point)),close),cls);
+  const frontOutline=[[0,0],[L,0],[L,H],[L-C,H],[L-C,N],[C,N],[C,H],[0,H]];
+  const cavityOutline=[[B,H],[B,S],[A,S],[A,F],[L-A,F],[L-A,S],[L-B,S],[L-B,H]];
+  const fullBoundary=[[0,H],[0,0],[L,0],[L,H],...cavityOutline.slice().reverse()];
+  const fullBehind=[[B,H],[C,H],[C,N],[L-C,N],[L-C,H],[L-B,H]];
+  const halfBoundary=[[midY,0],[W,0],[W,N],[W-T,N],[W-T,F],[midY,F]];
+  const halfBehind=[[[W,N],[W,H]],[[W-T,N],[W-T,H]],[[midY,S],[W-T,S]]];
+  const halfExterior=[[[midY,0],[0,0]],[[0,0],[0,H]],[[0,H],[midY,H]],[[midY,H],[W,H]]];
+  const planTop=[[B,T],[L-B,T],[L-B,W-T],[B,W-T]];
+
+  function givenViews(){
+    let out=viewPath('front',frontOutline,'given',true)+viewPath('front',cavityOutline,'hidden-line');
+    out+=viewPath('plan',[[0,0],[L,0],[L,W],[0,W]],'given',true)+viewPath('plan',planTop,'given',true);
+    for(const [x,upper] of [[A,B],[L-A,L-B]]){
+      out+=viewPath('plan',[[upper,T],[x,T],[x,W-T],[upper,W-T]],'hidden-line');
+    }
+    for(const x of [C,L-C]){
+      out+=viewLine('plan',[x,0],[x,T],'given')+viewLine('plan',[x,W-T],[x,W],'given');
+    }
+    const active=step===1?(phase<2?1:2):step>=5&&step<=6?2:step>=2&&step<=4?1:0;
+    out+=viewLine('plan',[-18,midY],[L+18,midY],active===1?'axis-line cut-active':'axis-line');
+    out+=viewLine('plan',[midX,-18],[midX,W+18],active===2?'axis-line cut-active':'axis-line');
+    for(const [x,inward] of [[-47,1],[L+47,-1]]){
+      out+=viewPath('plan',[[x,midY-19],[x,midY],[x+inward*21,midY]],'given cut-symbol');
+      out+=txt(plan([x,midY-25]),'1','','middle');
+    }
+    for(const [y,inward] of [[-47,1],[W+47,-1]]){
+      out+=viewPath('plan',[[midX+21,y],[midX,y],[midX,y+inward*21]],'given cut-symbol');
+      out+=txt(plan([midX+30,y+5]),'2');
+    }
+    return out;
+  }
+
+  const mark=(view,a,b,side=1)=>({view,a,b,side});
+  const edge=(view,a,b)=>({view,a,b});
+  const heightMeasure=(view,x,z)=>mark(view,[x,0],[x,z],-1);
+  const section1=(a,b)=>edge('full',a,b);
+  const section2=(a,b)=>edge('half',a,b);
+  const sectionChain=(view,points)=>chain(points).map(([a,b])=>({edge:edge(view,a,b)}));
+  const pointGuide=(view,x,z)=>({view,a:[x,0],b:[x,z],point:true});
+  const levelGuide=(view,z)=>({view,a:[0,z],b:[view==='full'?L:W,z]});
+  const axon1=(a,b)=>[a,b].map(([x,z])=>[x,midY,z]);
+  const makeHeight=(x,z)=>({source:heightMeasure('front',x,z),target:heightMeasure('full',x,z),
+    guide:levelGuide('full',z),axon:axon1([x,0],[x,z])});
+  const wallBase=section1([0,0],[L,0]);
+  const wallLeft=section1([0,0],[0,H]),wallRight=section1([L,0],[L,H]);
+  const operations={
+    1:[{},{}],
+    2:[
+      {source:mark('front',[0,0],[L,0],-1),target:mark('full',[0,0],[L,0],-1),edge:wallBase,axon:axon1([0,0],[L,0])},
+      {source:heightMeasure('front',0,H),target:heightMeasure('full',0,H),edge:wallLeft,axon:axon1([0,0],[0,H])},
+      {source:mark('front',[L,0],[L,H]),target:mark('full',[L,0],[L,H]),edge:wallRight,axon:axon1([L,0],[L,H])}
+    ],
+    3:[
+      makeHeight(A,F),makeHeight(B,S),
+      ...[[A,F],[L-A,F],[B,H],[L-B,H]].map(([x,z])=>({
+        source:mark('plan',[midX,T],[x,T],x<midX?1:-1),
+        target:mark('full',[midX,0],[x,0],x<midX?-1:1),
+        guide:pointGuide('full',x,z),axon:axon1([midX,0],[x,0])
+      })),
+      ...sectionChain('full',[[0,H],...cavityOutline,[L,H]])
+    ],
+    4:[
+      ...[C,L-C].map(x=>({source:mark('front',[midX,H],[x,H],x<midX?1:-1),
+        target:mark('full',[midX,H],[x,H],x<midX?1:-1),guide:pointGuide('full',x,H),
+        axon:[[x,0,N],[x,0,H]]})),
+      {source:mark('front',[C,N],[C,H],-1),target:mark('full',[C,N],[C,H],-1),
+        guide:levelGuide('full',N),axon:[[C,0,N],[C,0,H]]},
+      ...sectionChain('full',fullBehind)
+    ],
+    5:[
+      {source:mark('plan',[L,midY],[L,W]),target:mark('half',[midY,0],[0,0],1),edge:section2(...halfExterior[0])},
+      {source:mark('plan',[L,midY],[L,0]),target:mark('half',[midY,0],[W,0],-1),edge:section2([midY,0],[W,0])},
+      {source:heightMeasure('front',0,H),target:heightMeasure('half',0,H),edge:section2(...halfExterior[1])},
+      {target:mark('half',[W,0],[W,H]),edge:section2([W,0],[W,H])},
+      {edge:section2(...halfExterior[2])},{edge:section2(...halfExterior[3])}
+    ],
+    6:[
+      {source:mark('plan',[L,0],[L,T]),target:mark('half',[W,0],[W-T,0],1),guide:pointGuide('half',W-T,N)},
+      {source:heightMeasure('front',A,F),target:heightMeasure('half',midY,F),guide:levelGuide('half',F)},
+      {source:heightMeasure('front',midX,N),target:mark('half',[W,0],[W,N]),guide:levelGuide('half',N)},
+      ...sectionChain('half',halfBoundary),
+      ...halfBehind.slice(0,2).map(pair=>({edge:section2(...pair)})),
+      {source:heightMeasure('front',B,S),target:heightMeasure('half',midY,S),edge:section2(...halfBehind[2])}
+    ]
+  };
+
+  function brace(a,b,side){
+    const dx=b[0]-a[0],dy=b[1]-a[1],length=Math.hypot(dx,dy);
+    const at=(t,offset)=>xy([a[0]+t*dx-side*offset*dy/length,a[1]+t*dy+side*offset*dx/length]);
+    const tip=Math.min(.22,12/length);
+    return path(`M${at(0,4)} C${at(0,10)} ${at(tip/2,10)} ${at(tip,10)} L${at(.5-tip,10)} `+
+      `Q${at(.5,10)} ${at(.5,16)} Q${at(.5,10)} ${at(.5+tip,10)} L${at(1-tip,10)} `+
+      `C${at(1-tip/2,10)} ${at(1,10)} ${at(1,4)}`,'measure-brace');
+  }
+  function measurement({view,a,b,side}){
+    const p=viewPoint(view,a),q=viewPoint(view,b);
+    return line(p,q,'measure-edge')+brace(p,q,side);
+  }
+  const hatchSpacing=14;
+  function hatch(view,outline,width){
+    const id='metal-'+view;
+    const clip=`<defs><clipPath id="${id}"><path d="${trace(outline.map(point=>viewPoint(view,point)),true)}"/></clipPath></defs>`;
+    const strokes=[];
+    for(let x=-H;x<width;x+=hatchSpacing){
+      strokes.push(`M${xy(viewPoint(view,[x,0]))} L${xy(viewPoint(view,[x+H,H]))}`);
+    }
+    return clip+`<g clip-path="url(#${id})">${path(strokes.join(' '),'metal-line')}</g>`;
+  }
+  function centerLine(){
+    const top=H+23,bottom=-21;
+    let out=viewLine('half',[midY,bottom],[midY,top],'axis-line half-center');
+    for(const [first,second] of [[top-2,top-9],[bottom+2,bottom+9]]){
+      out+=viewLine('half',[midY,first],[midY,second],'symmetry-axis');
+      for(const z of [first,second])out+=viewLine('half',[midY-9,z],[midY+9,z],'symmetry-mark');
+    }
+    return out;
+  }
+  function sectionCaption(view,center,label){
+    const [x,y]=elevation(view,[center,-48]);
+    return '<g class="section-caption">'+txt([x,y],label,'section-name','middle')+
+      line([x,y+6],[x,y+6],'section-underline')+'</g>';
+  }
+  function drawOperation({edge:result,guide},active,current){
+    let out='';
+    if(result)out+=viewLine(result.view,result.a,result.b,active?'drawing-edge':'process');
+    if(guide&&current){
+      out+=viewLine(guide.view,guide.a,guide.b,'guide');
+      if(guide.point){
+        const [x,y]=viewPoint(guide.view,guide.b);
+        out+=`<circle class="transfer-point" cx="${n(x)}" cy="${n(y)}" r="3"/>`;
+      }
+    }
+    return out;
+  }
+  function drawResults(){
+    if(step===0)return '';
+    let out=sectionCaption('full',midX,'1—1 剖面图');
+    if(step===1||step>=5)out+=sectionCaption('half',midY,'2—2 剖面图');
+    if(step===steps.length-1){
+      out+=hatch('full',fullBoundary,L)+hatch('half',halfBoundary,W);
+      out+=viewPath('full',fullBoundary,'result-cut',true)+viewPath('full',fullBehind,'result-behind');
+      out+=viewPath('half',halfBoundary,'result-cut');
+      for(const [a,b] of [...halfExterior,...halfBehind])out+=viewLine('half',a,b,'result-behind');
+      return out+centerLine();
+    }
+    for(const [stage,items] of Object.entries(operations)){
+      const index=Number(stage);
+      if(index>step)break;
+      if(index===5&&step===6){
+        out+=halfExterior.map(([a,b])=>viewLine('half',a,b,'process')).join('');
+        continue;
+      }
+      for(const [i,item] of items.entries()){
+        if(index===step&&phase<2*i+1)break;
+        out+=drawOperation(item,index===step&&phase===2*i+1,index===step);
+      }
+    }
+    if(step===2&&phase>=6)out+=viewLine('full',[0,H],[L,H],'guide');
+    if(step>=5)out+=centerLine();
+    return out;
+  }
+  function drawMeasurements(){
+    const item=operations[step]?.[Math.floor(phase/2)];
+    if(!item)return '';
+    let out=item.source?measurement(item.source):'';
+    if(item.axon)out+=line(...item.axon.map(point=>axonProject(point).slice(0,2)),'measure-edge');
+    if(item.target&&phase%2)out+=measurement(item.target);
+    return out;
+  }
+
+  // Partition the solid along actual feature planes so adjacent faces share the same edges.
+  const grid=[[0,A,B,C,midX,L-C,L-B,L-A,L],[0,T,midY,W-T,W],[0,F,S,N,H]];
+  const occupied=new Map();
+  for(let i=0;i<grid[0].length-1;i++)for(let j=0;j<grid[1].length-1;j++)for(let k=0;k<grid[2].length-1;k++){
+    const index=[i,j,k];
+    const [x,y,z]=index.map((cell,axis)=>(grid[axis][cell]+grid[axis][cell+1])/2);
+    const inset=z<S?A:B;
+    if(z>=F&&x>inset&&x<L-inset&&y>T&&y<W-T)continue;
+    if(z>=N&&x>C&&x<L-C)continue;
+    occupied.set(index.join(','),{index,center:[x,y,z]});
+  }
+  function getMesh(partFor){
+    const faces=[];
+    const vertices=new Map();
+    for(const {index,center} of occupied.values()){
+      const part=partFor(center);
+      for(let axis=0;axis<3;axis++)for(const direction of [-1,1]){
+        const neighbor=index.slice();neighbor[axis]+=direction;
+        const other=occupied.get(neighbor.join(','));
+        if(other&&partFor(other.center)===part)continue;
+        const points=[[0,0],[1,0],[1,1],[0,1]].map(([du,dv])=>{
+          const corner=index.slice();
+          corner[axis]+=direction>0?1:0;
+          corner[(axis+1)%3]+=du;corner[(axis+2)%3]+=dv;
+          return corner.map((node,dimension)=>grid[dimension][node]);
+        });
+        faces.push({points,axis,direction,part,cut:Boolean(other)});
+        for(const point of points)vertices.set(part+'|'+point.join(','),{point,part});
+      }
+    }
+    return {faces,edges:getPhysicalEdges(faces),vertices:[...vertices.values()]};
+  }
+  function getPhysicalEdges(faces){
+    const edges=new Map();
+    for(const face of faces){
+      for(const [index,a] of face.points.entries()){
+        const b=face.points[(index+1)%4];
+        const key=face.part+'|'+[a.join(','),b.join(',')].sort().join('|');
+        if(!edges.has(key))edges.set(key,{a,b,part:face.part,adjacent:[]});
+        edges.get(key).adjacent.push(face);
+      }
+    }
+    return [...edges.values()].filter(({adjacent})=>adjacent.some(face=>face.axis!==adjacent[0].axis));
+  }
+  const modelClosed=getMesh(()=>0);
+  const modelOpen={
+    1:getMesh(([,y])=>y>midY?1:0),
+    2:getMesh(([x,y])=>x>midX&&y<midY?1:0)
+  };
+  const cross=(ax,ay,bx,by)=>ax*by-ay*bx;
+  function projectSurfaces(faces,project){
+    return faces.map(source=>{
+      const points=source.points.map(point=>project(point,source.part));
+      const [a,b,c]=points;
+      const dx=b[0]-a[0],dy=b[1]-a[1],ex=c[0]-a[0],ey=c[1]-a[1];
+      const denominator=cross(dx,dy,ex,ey);
+      const xs=points.map(p=>p[0]),ys=points.map(p=>p[1]);
+      const bounds=[Math.min(...xs),Math.min(...ys),Math.max(...xs),Math.max(...ys)];
+      if(Math.abs(denominator)<1e-7)return {source,points,bounds,orientation:0};
+      const dz=b[2]-a[2],ez=c[2]-a[2];
+      return {source,points,bounds,orientation:Math.sign(denominator),
+        depthX:cross(dz,dy,ez,ey)/denominator,depthY:cross(dx,dz,ex,ez)/denominator};
+    });
+  }
+  function hiddenInterval(a,b,face){
+    const {orientation,points,depthX,depthY,bounds}=face;
+    if(!orientation)return null;
+    if(Math.max(a[0],b[0])<bounds[0]-1e-8||Math.min(a[0],b[0])>bounds[2]+1e-8||
+       Math.max(a[1],b[1])<bounds[1]-1e-8||Math.min(a[1],b[1])>bounds[3]+1e-8)return null;
+    let from=0,to=1;
+    // Clip the screen segment to the face, then keep the interval in front of the edge.
+    for(const [index,p] of points.entries()){
+      const q=points[(index+1)%4];
+      const dx=q[0]-p[0],dy=q[1]-p[1],tolerance=1e-8*Math.hypot(dx,dy);
+      const side=r=>{
+        const value=orientation*cross(dx,dy,r[0]-p[0],r[1]-p[1]);
+        return Math.abs(value)<=tolerance?0:value;
+      };
+      const start=side(a),end=side(b);
+      if(start<0&&end<0)return null;
+      if(start<0)from=Math.max(from,start/(start-end));
+      if(end<0)to=Math.min(to,start/(start-end));
+      if(to<=from)return null;
+    }
+    const [x,y,z]=points[0];
+    const ahead=p=>z+depthX*(p[0]-x)+depthY*(p[1]-y)-p[2]-1e-6;
+    const start=ahead(a),end=ahead(b);
+    if(start<=0&&end<=0)return null;
+    if(start<=0)from=Math.max(from,start/(start-end));
+    if(end<=0)to=Math.min(to,start/(start-end));
+    return to>from?[from,to]:null;
+  }
+  function visibleSegments(edge,faces,project){
+    const a=project(edge.a,edge.part),b=project(edge.b,edge.part);
+    const dx=b[0]-a[0],dy=b[1]-a[1];
+    if(Math.hypot(dx,dy)<1e-7)return [];
+    const hidden=[];
+    for(const face of faces){
+      if(edge.adjacent.includes(face.source))continue;
+      const interval=hiddenInterval(a,b,face);
+      if(interval)hidden.push(interval);
+    }
+    hidden.sort(([start],[other])=>start-other);
+    const visible=[],at=t=>[a[0]+t*dx,a[1]+t*dy];
+    let from=0;
+    for(const [start,end] of hidden){
+      if(start-from>1e-7)visible.push([at(from),at(start)]);
+      from=Math.max(from,end);
+    }
+    if(1-from>1e-7)visible.push([at(from),at(1)]);
+    return visible;
+  }
+  const axonFaces=modelOpen[1].faces.filter(face=>face.part===0);
+  const axonEdges=getPhysicalEdges(axonFaces);
+  function axonProject([x,y,z]){
+    const scale=.45,diagonal=scale/Math.sqrt(3);
+    return [layout.axon[0]+scale*(x+y),layout.axon[1]+diagonal*(y-x-2*z),-x+y+z];
+  }
+  function axonDrawing(){
+    const faces=projectSurfaces(axonFaces,axonProject);
+    const cut=fullBoundary.map(([x,z])=>axonProject([x,midY,z]).slice(0,2));
+    let out=path(trace(cut,true),'axon-cut');
+    for(const edge of axonEdges)for(const [a,b] of visibleSegments(edge,faces,axonProject))out+=line(a,b,'given axon-edge');
+    return out+txt([layout.axon[0]+90,layout===wide?646:950],'1—1 剖开后的轴测图','view-title','middle');
+  }
+
+  let axonCache='';
+  function render2D(){
+    scene.innerHTML=givenViews()+axonCache+drawResults()+drawMeasurements();
+    const [width,height]=layout.size;
+    scene.setAttribute('transform',`translate(${width*(1-zoom)/2+panX} ${height*(1-zoom)/2+panY}) scale(${zoom})`);
+    for(const caption of scene.querySelectorAll('.section-caption')){
+      const [label,underline]=caption.children;
+      const center=label.x.baseVal.getItem(0).value,halfWidth=label.getComputedTextLength()/2;
+      underline.setAttribute('x1',n(center-halfWidth));
+      underline.setAttribute('x2',n(center+halfWidth));
+    }
+    $('count').textContent=step===0?'准备 · 读题':`步骤 ${String(step).padStart(2,'0')} / 07`;
+    $('stepTitle').textContent=steps[step].title;
+    $('action').textContent=steps[step].action;
+    $('prev').disabled=step===0;$('next').disabled=step===steps.length-1;
+    $('progress').value=String(step);$('progressText').textContent=`${step} / ${steps.length-1}`;
+    $('zoomValue').textContent=`${Math.round(zoom*100)}%`;
+    for(const button of $('steps').children)button.setAttribute('aria-current',Number(button.dataset.step)===step?'step':'false');
+  }
+  function setLayout(selected){
+    layout=selected;
+    diagram.setAttribute('viewBox',`0 0 ${layout.size.join(' ')}`);
+    axonCache=axonDrawing();
+    render2D();
+  }
+  const measureDuration=490,drawDuration=325;
+  function phaseDuration(index){
+    const item=operations[step]?.[Math.floor(index/2)];
+    if(index%2)return drawDuration;
+    return item?.source||item?.target||step===1?measureDuration:0;
+  }
+  function setStep(value){
+    clearTimeout(stepTimer);
+    step=Math.max(0,Math.min(steps.length-1,Number(value)));phase=0;
+    if(step<=4)setCut(1);
+    if(step===5||step===6)setCut(2);
+    const count=(operations[step]?.length??0)*2;
+    const duration=Array.from({length:count},(_,index)=>phaseDuration(index)).reduce((sum,time)=>sum+time,0);
+    if(reduced.matches)phase=count;
+    function drawPhase(){
+      render2D();
+      if(phase<count)stepTimer=setTimeout(()=>{phase++;drawPhase()},phaseDuration(phase));
+    }
+    drawPhase();
+    return reduced.matches?0:duration;
+  }
+  function stopPlay(){playing=false;clearTimeout(playTimer);$('play').textContent='播放'}
+  function playNext(){
+    if(!playing)return;
+    if(step===steps.length-1){stopPlay();return}
+    const duration=setStep(step+1);
+    playTimer=setTimeout(playNext,Math.max(2500,duration+900));
+  }
+  $('prev').addEventListener('click',()=>{stopPlay();setStep(step-1)});
+  $('next').addEventListener('click',()=>{stopPlay();setStep(step+1)});
+  $('restart').addEventListener('click',()=>{stopPlay();setStep(0);resetModel()});
+  $('complete').addEventListener('click',()=>{stopPlay();setStep(steps.length-1)});
+  $('play').addEventListener('click',()=>{
+    if(playing){stopPlay();return}
+    if(step===steps.length-1)setStep(0);
+    playing=true;$('play').textContent='暂停';playNext();
+  });
+  $('progress').addEventListener('input',event=>{stopPlay();setStep(event.target.value)});
+  steps.forEach((item,index)=>{
+    const button=document.createElement('button');
+    button.type='button';button.dataset.step=String(index);
+    button.textContent=index===0?'准备 · 读题':`${String(index).padStart(2,'0')} ${item.short}`;
+    button.addEventListener('click',()=>{stopPlay();setStep(index)});
+    $('steps').append(button);
+  });
+  const canvas2D=$('canvas');
+  const changeZoom=value=>{zoom=clamp(value,.75,3);render2D()};
+  $('zoomIn').addEventListener('click',()=>changeZoom(zoom*1.2));
+  $('zoomOut').addEventListener('click',()=>changeZoom(zoom/1.2));
+  $('fit').addEventListener('click',()=>{zoom=1;panX=0;panY=0;render2D()});
+  canvas2D.addEventListener('wheel',event=>{event.preventDefault();changeZoom(zoom*(event.deltaY<0?1.12:1/1.12))},{passive:false});
+  function diagramPoint(event){return new DOMPoint(event.clientX,event.clientY).matrixTransform(diagram.getScreenCTM().inverse())}
+  canvas2D.addEventListener('pointerdown',event=>{
+    if(zoom<=1)return;
+    diagramDrag=diagramPoint(event);canvas2D.setPointerCapture(event.pointerId);
+  });
+  canvas2D.addEventListener('pointermove',event=>{
+    if(!diagramDrag)return;
+    const point=diagramPoint(event);
+    panX+=point.x-diagramDrag.x;panY+=point.y-diagramDrag.y;diagramDrag=point;render2D();
+  });
+  for(const type of ['pointerup','pointercancel','lostpointercapture'])canvas2D.addEventListener(type,()=>{diagramDrag=null});
+  $('fullscreen').addEventListener('click',async()=>{
+    if(document.fullscreenElement)await document.exitFullscreen();
+    else await $('app').requestFullscreen();
+  });
+  addEventListener('keydown',event=>{
+    if(event.defaultPrevented||document.activeElement===$('modelStage')||['INPUT','BUTTON'].includes(document.activeElement?.tagName))return;
+    if(event.key==='ArrowRight'||event.key==='ArrowLeft'){
+      event.preventDefault();stopPlay();setStep(step+(event.key==='ArrowRight'?1:-1));
+    }else if(event.code==='Space'){event.preventDefault();$('play').click()}
+  });
+
+  const stage=$('modelStage'),canvas=$('modelCanvas'),ctx=canvas.getContext('2d');
+  const defaultYaw={1:-.63,2:2.48},defaultPitch=.52;
+  const displacement={1:[0,162],2:[187,-48]};
+  const camera={cut:1,opening:0,yaw:defaultYaw[1],pitch:defaultPitch,zoom:1,x:0,y:0,mode:'rotate'};
+  const clamp=(value,min,max)=>Math.min(max,Math.max(min,value));
+  let modelDrag=null,pinchDistance=0,animation=0,animationTarget=null,showPlanes=false,drawFrame=0;
+  const pointers=new Map();
+  function modelProjection(width,height,mesh=camera.opening>0?modelOpen[camera.cut]:modelClosed){
+    const [moveX,moveY]=displacement[camera.cut].map(value=>camera.opening*value);
+    const cy=Math.cos(camera.yaw),sy=Math.sin(camera.yaw),cp=Math.cos(camera.pitch),sp=Math.sin(camera.pitch);
+    const rotated=([x,y,z],part)=>{
+      const dx=x+part*moveX,dy=y+part*moveY,dz=z;
+      const rx=dx*cy-dy*sy,ry=dx*sy+dy*cy;
+      return [rx,ry*sp-dz*cp,ry*cp+dz*sp];
+    };
+    const corners=mesh.vertices.map(({point,part})=>rotated(point,part));
+    const xs=corners.map(p=>p[0]),ys=corners.map(p=>p[1]);
+    const left=Math.min(...xs),right=Math.max(...xs),top=Math.min(...ys),bottom=Math.max(...ys);
+    const scale=Math.min((width-30)/(right-left),(height-42)/(bottom-top))*camera.zoom;
+    const centerX=(left+right)/2,centerY=(top+bottom)/2;
+    return (point,part)=>{
+      const [x,y,depth]=rotated(point,part);
+      return [width/2+camera.x+(x-centerX)*scale,height/2+3+camera.y+(y-centerY)*scale,depth];
+    };
+  }
+  function faceColor({cut,axis,direction}){
+    if(cut)return [243,235,218];
+    if(axis===2)return direction>0?[208,231,226]:[139,178,175];
+    return axis===0?[159,192,190]:[177,212,207];
+  }
+  const hatchColor=[125,116,100];
+  function rasterFaces(faces,ratio){
+    const {width,height}=canvas;
+    const pixels=ctx.createImageData(width,height),rgba=pixels.data;
+    const depths=new Float32Array(width*height);depths.fill(-Infinity);
+    for(const face of faces){
+      if(!face.orientation)continue;
+      const {source}=face;
+      const color=faceColor(source);
+      const projected=face.points.map(([x,y,z])=>[x*ratio,y*ratio,z]);
+      for(let i=1;i<projected.length-1;i++){
+        const [a,b,c]=[projected[0],projected[i],projected[i+1]];
+        const bx=b[0]-a[0],by=b[1]-a[1],cx=c[0]-a[0],cy=c[1]-a[1];
+        const det=cross(bx,by,cx,cy);
+        if(Math.abs(det)<1e-7)continue;
+        let hatchStart=0,hatchU=0,hatchV=0,pixelSpan=0;
+        if(source.cut){
+          const coordinate=p=>(source.axis===0?W-p[1]:p[0])-p[2]+H;
+          hatchStart=coordinate(source.points[0]);
+          hatchU=coordinate(source.points[i])-hatchStart;
+          hatchV=coordinate(source.points[i+1])-hatchStart;
+          pixelSpan=(Math.abs(cross(hatchU,by,hatchV,cy))+Math.abs(cross(bx,hatchU,cx,hatchV)))/Math.abs(det);
+        }
+        const minX=clamp(Math.floor(Math.min(a[0],b[0],c[0])),0,width-1),maxX=clamp(Math.ceil(Math.max(a[0],b[0],c[0])),0,width-1);
+        const minY=clamp(Math.floor(Math.min(a[1],b[1],c[1])),0,height-1),maxY=clamp(Math.ceil(Math.max(a[1],b[1],c[1])),0,height-1);
+        for(let y=minY;y<=maxY;y++)for(let x=minX;x<=maxX;x++){
+          const dx=x+.5-a[0],dy=y+.5-a[1];
+          const u=cross(dx,dy,cx,cy)/det,v=cross(bx,by,dx,dy)/det;
+          if(u<0||v<0||u+v>1)continue;
+          const index=y*width+x,w=1-u-v,depth=w*a[2]+u*b[2]+v*c[2];
+          if(depth<=depths[index])continue;
+          depths[index]=depth;
+          let coverage=0;
+          if(source.cut){
+            const stripe=(hatchStart+u*hatchU+v*hatchV)%hatchSpacing;
+            const distance=Math.min(stripe,hatchSpacing-stripe),stroke=1.45;
+            const covered=clamp((pixelSpan+stroke)/2-distance,0,Math.min(pixelSpan,stroke));
+            coverage=pixelSpan>=hatchSpacing?stroke/hatchSpacing:covered/Math.max(1e-7,pixelSpan);
+          }
+          const offset=index*4;
+          rgba[offset]=color[0]+(hatchColor[0]-color[0])*coverage;
+          rgba[offset+1]=color[1]+(hatchColor[1]-color[1])*coverage;
+          rgba[offset+2]=color[2]+(hatchColor[2]-color[2])*coverage;
+          rgba[offset+3]=255;
+        }
+      }
+    }
+    ctx.putImageData(pixels,0,0);
+  }
+  const plane1=[[0,midY,0],[L,midY,0],[L,midY,H+14],[0,midY,H+14]];
+  const quarterPlanes=[[[midX,0,0],[midX,midY,0],[midX,midY,H+14],[midX,0,H+14]],
+    [[midX,midY,0],[L,midY,0],[L,midY,H+14],[midX,midY,H+14]]];
+  function strokeSegments(edges,faces,project){
+    ctx.beginPath();
+    for(const edge of edges)for(const [start,end] of visibleSegments(edge,faces,project)){
+      ctx.moveTo(...start);ctx.lineTo(...end);
+    }
+    ctx.stroke();
+  }
+  function drawModel(){
+    const width=stage.clientWidth,height=stage.clientHeight;
+    if(width<20||height<20)return;
+    const ratio=Math.min(1.5,devicePixelRatio||1);
+    const px=Math.round(width*ratio),py=Math.round(height*ratio);
+    if(canvas.width!==px||canvas.height!==py){canvas.width=px;canvas.height=py}
+    const mesh=camera.opening>0?modelOpen[camera.cut]:modelClosed;
+    const project=modelProjection(width,height,mesh);
+    const faces=projectSurfaces(mesh.faces,project);
+    rasterFaces(faces,ratio);
+    ctx.setTransform(ratio,0,0,ratio,0,0);
+    ctx.lineCap='butt';ctx.lineWidth=1.26;ctx.strokeStyle='#3c6565';
+    strokeSegments(mesh.edges,faces,project);
+    if(showPlanes){
+      ctx.setLineDash([5,4]);ctx.strokeStyle='#198681';ctx.lineWidth=1.1;
+      const planes=camera.cut===1?[plane1]:quarterPlanes;
+      const edges=planes.flatMap(plane=>plane.map((a,index)=>({a,b:plane[(index+1)%4],part:0,adjacent:[]})));
+      strokeSegments(edges,faces,project);ctx.setLineDash([]);
+    }
+    if(camera.opening>.035){
+      ctx.fillStyle='#0b6f6b';ctx.font='bold 12px Microsoft YaHei';
+      ctx.fillText(camera.cut===1?'1—1 全剖':'2—2 半剖',10,19);
+    }
+  }
+  function requestDraw(){
+    if(!drawFrame)drawFrame=requestAnimationFrame(()=>{drawFrame=0;drawModel()});
+  }
+  function updateModelControls(){
+    $('openRange').value=String(Math.round(camera.opening*100));
+    $('openValue').textContent=camera.opening===0?'合拢':camera.opening===1?'剖开':`${Math.round(camera.opening*100)}%`;
+    $('openModel').textContent=animationTarget!==null?'暂停动画':camera.opening>.5?'播放合拢动画':'播放剖开动画';
+    $('cutFull').setAttribute('aria-pressed',String(camera.cut===1));
+    $('cutHalf').setAttribute('aria-pressed',String(camera.cut===2));
+  }
+  function stopModel(){animation++;animationTarget=null;showPlanes=false}
+  function resetCamera(){
+    Object.assign(camera,{yaw:defaultYaw[camera.cut],pitch:defaultPitch,zoom:1,x:0,y:0});
+  }
+  function resetModel(){stopModel();camera.opening=0;resetCamera();updateModelControls();requestDraw()}
+  function setCut(cut){
+    if(camera.cut===cut)return;
+    camera.cut=cut;resetModel();
+  }
+  function animateModel(target){
+    const token=++animation,start=camera.opening,started=performance.now();
+    const duration=reduced.matches?0:1000;
+    const intro=target===1&&start===0&&duration ? .22 : 0;
+    animationTarget=target;updateModelControls();
+    function frame(now){
+      if(token!==animation)return;
+      const fraction=duration?clamp((now-started)/duration,0,1):1;
+      showPlanes=fraction<intro;
+      const t=clamp((fraction-intro)/(1-intro),0,1);
+      camera.opening=start+(target-start)*(t*t*(3-2*t));
+      if(fraction<1)requestAnimationFrame(frame);
+      else animationTarget=null;
+      updateModelControls();requestDraw();
+    }
+    requestAnimationFrame(frame);
+  }
+  $('cutFull').addEventListener('click',()=>setCut(1));
+  $('cutHalf').addEventListener('click',()=>setCut(2));
+  $('openModel').addEventListener('click',()=>{
+    if(animationTarget!==null){stopModel();updateModelControls();requestDraw();return}
+    animateModel(camera.opening>.5?0:1);
+  });
+  $('openRange').addEventListener('input',event=>{
+    stopModel();camera.opening=Number(event.target.value)/100;updateModelControls();requestDraw();
+  });
+  function modelMode(mode){
+    camera.mode=mode;
+    $('rotateMode').setAttribute('aria-pressed',String(mode==='rotate'));
+    $('panMode').setAttribute('aria-pressed',String(mode==='pan'));
+  }
+  $('rotateMode').addEventListener('click',()=>modelMode('rotate'));
+  $('panMode').addEventListener('click',()=>modelMode('pan'));
+  $('modelReset').addEventListener('click',()=>{resetCamera();requestDraw()});
+  function pointerDistance(){const [a,b]=pointers.values();return Math.hypot(a.x-b.x,a.y-b.y)}
+  function cameraZoom(factor){camera.zoom=clamp(camera.zoom*factor,.54,3);requestDraw()}
+  stage.addEventListener('pointerdown',event=>{
+    if(pointers.size>=2)return;
+    const point={x:event.clientX,y:event.clientY};
+    pointers.set(event.pointerId,point);stage.setPointerCapture(event.pointerId);
+    if(pointers.size===2){pinchDistance=pointerDistance();modelDrag=null}
+    else modelDrag={...point,mode:event.shiftKey?'pan':camera.mode};
+  });
+  stage.addEventListener('pointermove',event=>{
+    if(!pointers.has(event.pointerId))return;
+    const point={x:event.clientX,y:event.clientY};pointers.set(event.pointerId,point);
+    if(pointers.size===2){
+      const distance=pointerDistance();
+      if(distance>0&&pinchDistance>0)cameraZoom(distance/pinchDistance);
+      pinchDistance=distance;return;
+    }
+    if(!modelDrag)return;
+    const dx=point.x-modelDrag.x,dy=point.y-modelDrag.y;
+    if(modelDrag.mode==='pan'){camera.x+=dx;camera.y+=dy}
+    else{camera.yaw+=dx*.008;camera.pitch+=dy*.008}
+    Object.assign(modelDrag,point);requestDraw();
+  });
+  for(const type of ['pointerup','pointercancel','lostpointercapture'])stage.addEventListener(type,event=>{
+    if(!pointers.delete(event.pointerId))return;
+    const [point]=pointers.values();modelDrag=point?{...point,mode:camera.mode}:null;
+  });
+  stage.addEventListener('wheel',event=>{event.preventDefault();cameraZoom(event.deltaY<0?1.11:1/1.11)},{passive:false});
+  stage.addEventListener('keydown',event=>{
+    const moves={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]};
+    const move=moves[event.key];
+    if(!move)return;
+    event.preventDefault();
+    const [x,y]=move;
+    if(event.shiftKey){camera.x+=x*16;camera.y+=y*16}
+    else{camera.yaw+=x*.12;camera.pitch+=y*.12}
+    requestDraw();
+  });
+  media.addEventListener('change',()=>setLayout(media.matches?narrow:wide));
+  if('ResizeObserver'in window)new ResizeObserver(requestDraw).observe(stage);
+  else addEventListener('resize',requestDraw);
+  setLayout(layout);setStep(0);updateModelControls();drawModel();
+})();
+</script>
+</body>
+</html>

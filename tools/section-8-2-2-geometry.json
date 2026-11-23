@@ -1,0 +1,30 @@
+{
+  "length": 300,
+  "width": 201,
+  "height": 249,
+  "floor": 30,
+  "shoulder": 200,
+  "notchFloor": 230,
+  "lowerInset": 30,
+  "upperInset": 59,
+  "notchInset": 79,
+  "wallThickness": 30.5,
+  "measurement": {
+    "source": "空白作业/8.2-1&2.jpg",
+    "unit": "相对制图单位，正面投影总长取 300",
+    "imageCropOrigin": [1535, 980],
+    "elevation": {
+      "outerX": [153.5, 607],
+      "lowerX": [198.5, 562],
+      "upperX": [241.5, 517],
+      "notchX": [272.5, 486],
+      "heightY": [433.5, 388.5, 131.5, 86.5, 56.5]
+    },
+    "plan": {
+      "outerX": [154, 605.5],
+      "wallY": [605.5, 651.5, 863, 908.5],
+      "cutX": 377.5,
+      "cutY": 757
+    }
+  }
+}
