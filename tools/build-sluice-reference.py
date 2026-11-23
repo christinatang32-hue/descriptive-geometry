@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import json
+import math
+import random
 from pathlib import Path
 
 from PIL import Image, ImageChops, ImageDraw, ImageFont
@@ -40,8 +42,6 @@ def line(draw: ImageDraw.ImageDraw, points, color=INK, width=3):
 
 
 def dashed(draw: ImageDraw.ImageDraw, a, b, color=INK, width=2, dash=10, gap=7):
-    import math
-
     length = math.dist(a, b)
     if not length:
         return
@@ -92,10 +92,17 @@ line(draw, [(FX + x, PY + y) for x, y in back], width=3)
 line(draw, [(FX + x, PY + y) for x, y in front], width=3)
 for x in G["breaks"]:
     line(draw, [(FX + x, PY + inner_back), (FX + x, PY + inner_front)], width=3)
-for x0 in range(-38, W0 + 40, 27):
-    dashed(draw, (FX + x0, PY + G["cutY"]), (FX + min(x0 + 20, W0 + 40), PY + G["cutY"]), MUTED, 2, 16, 7)
-for x in [-34, W0 + 34]:
-    line(draw, [(FX + x - 8, PY + G["cutY"] - 17), (FX + x - 8, PY + G["cutY"]), (FX + x + 8, PY + G["cutY"])], width=3)
+cut_y = PY + G["cutY"]
+dash_length = (96 * 4 / 25.4) / SCALE
+gap, dot_length = 5 / SCALE, 1.8 / SCALE
+x = -22.0
+while x < W0 + 22:
+    for length in (dash_length, dot_length):
+        if x < W0 + 22:
+            line(draw, [(FX + x, cut_y), (FX + min(x + length, W0 + 22), cut_y)], MUTED, 2)
+        x += length + gap
+for x, inward in [(-45, 1), (W0 + 45, -1)]:
+    line(draw, [(FX + x, cut_y - 17), (FX + x, cut_y), (FX + x + 16 * inward, cut_y)], width=3)
     draw.text(at(FX + x - 3, PY + G["cutY"] - 36), "1", font=font(18), fill=INK)
 
 # Section: uncut back wall stays white; only the actual concrete intersection is hatched.
@@ -105,8 +112,30 @@ mask = Image.new("L", (W, H))
 ImageDraw.Draw(mask).polygon(section_polygon, fill=255)
 hatch = Image.new("RGBA", (W, H), (0, 0, 0, 0))
 hatch_draw = ImageDraw.Draw(hatch)
-for base in range(-H, W + H, 19):
-    hatch_draw.line([(base, H), (base + H, 0)], fill=(133, 154, 158, 255), width=2)
+for x in range(-G["crest"], W0, 19):
+    line(hatch_draw, [(SX + x, FY), (SX + x + G["crest"], FY - G["crest"])], "#82969a", 1)
+rng = random.Random(821)
+marks = []
+for count, spacing in [(24, 7), (52, 3)]:
+    added = 0
+    for _ in range(800):
+        if added == count:
+            break
+        x, z = rng.uniform(0, W0), rng.uniform(0, G["crest"])
+        if not (7 <= x <= W0 - 7 and 7 <= z <= height_at(x) - 9):
+            continue
+        if any(math.hypot(x - mx, z - mz) < spacing + ms for mx, mz, ms in marks):
+            continue
+        marks.append((x, z, spacing))
+        added += 1
+        if spacing == 7:
+            angle, radius = rng.uniform(0, 2 * math.pi), rng.uniform(2.8, 4.1)
+            corners = [(SX + x + radius * math.cos(angle + i * math.tau / 3),
+                        FY - z + radius * math.sin(angle + i * math.tau / 3)) for i in range(3)]
+            line(hatch_draw, [*corners, corners[0]], "#687c81", 1)
+        else:
+            r = rng.uniform(0.65, 1.15)
+            hatch_draw.ellipse([at(SX + x - r, FY - z - r), at(SX + x + r, FY - z + r)], fill="#687c81")
 hatch.putalpha(ImageChops.multiply(hatch.getchannel("A"), mask))
 image = Image.alpha_composite(image.convert("RGBA"), hatch)
 draw = ImageDraw.Draw(image)

@@ -12,17 +12,17 @@
      photo.elevationY.map(value=>photo.elevationY.at(-1)-value).join(',')!==[G.height,G.crest,G.floor,0].join(','))
     throw Error('题图量取数据与空间模型不一致');
   const steps=[
-    {title:'读题',action:'观察正面投影与水平投影。闸室由底板、两侧立墙、中央变坡底面和相向的门槽组成；1—1 剖切线通过通道中部，视向指向后墙。题图没有毫米尺寸，以下长度按图示比例从对应投影量取。'},
-    {title:'确定剖切位置',action:'在水平投影中确认 1—1 剖切线贯穿闸室中部，并按箭头方向观察。切面穿过底板和中央凸起；近侧立墙移去，后侧立墙保留为剖切面后方可见的形体。'},
-    {title:'量取总长与总高',action:'从正面投影量取两端之间的总长和底边至墙顶的总高，在剖面图位置建立相同长、高的外轮廓。两图的左右端点和高程基准严格对应。'},
-    {title:'作底板和变坡',action:'由正面投影量取低台面与凸台顶面的高度；由水平投影依次量取左坡起点、左坡终点、右坡起点、右坡终点的位置。先画两端低台面与中央顶面，再连接两条斜坡，封闭被剖到的混凝土轮廓。'},
-    {title:'作后墙门槽',action:'在水平投影中量取门槽两侧至左端的距离，投射到剖面图的后墙。两条竖线从墙顶向下到中央凸台顶面；它们是剖切面后方可见的门槽边，不作为被剖材料加粗。'},
-    {title:'填充混凝土图例',action:'仅在剖切面真正切到的底板及中央凸台范围内绘制钢筋混凝土材料图例。后墙、门槽和空腔都不填图例。'},
-    {title:'加粗结果并核对',action:'加粗被剖材料的边界，后墙可见轮廓保持较细，标注“1—1 剖面图”。核对总长、墙高、两级高程、四处变坡位置及门槽宽度与已知投影一一对应。'}
+    {title:'读题',action:'对照正面投影、水平投影和剖开后的轴测图，找出底板、两侧立墙、两段斜坡和门槽。以闸室左端和底边作量取基准，按题图比例转移长度。'},
+    {title:'确定剖切位置',action:'沿水平投影中两端编号为 1 的剖切线作纵向剖切，由图下方向上方观察。对照轴测图，移去近侧一半，保留被剖到的底板、斜坡和切面后方的立墙。'},
+    {title:'量取总长与墙高',action:'1. 对照轴测图，在正面投影量取两端间的总长，沿剖面图的水平基线作底边。\n2. 从底边量至墙顶，在基线两端分别竖起相同高度，再连接墙顶两点。'},
+    {title:'逐点作底板和变坡',action:'1. 从正面投影底边向上量取低台面和凸台顶面的高度。\n2. 从水平投影左端依次量取两段斜坡四个转折点的位置，向上投射至对应高程。\n3. 从左端起依次连接低台面、上坡、凸台顶面、下坡和右侧低台面。'},
+    {title:'作后墙门槽',action:'对照轴测图的后墙门槽，从水平投影左端分别量取槽的两侧位置。把两个位置转移到剖面图墙顶，各向下作竖线至凸台顶面。'},
+    {title:'填充混凝土图例',action:'在剖到的混凝土范围内画连续的 45° 细实线，再散布小三角和小点。'},
+    {title:'加粗结果并核对',action:'加粗剖切面的闭合轮廓，后墙可见轮廓保持较细，标注“1—1 剖面图”。核对总长、墙高、两级高程、四处变坡位置及门槽宽度。'}
   ];
   const $=id=>document.getElementById(id);
   const scene=$('scene'),diagram=$('diagram');
-  let step=0,playing=false,playTimer=0,zoom=1,panX=0,panY=0,diagramDrag=null;
+  let step=0,phase=0,playing=false,stepTimer=0,playTimer=0,zoom=1,panX=0,panY=0,diagramDrag=null;
   const FX=70,FY=275,PY=335,SX=570;
   const fy=z=>FY-z,px=x=>FX+x,sx=x=>SX+x,py=y=>PY+y;
   const n=v=>Math.round(v*100)/100;
@@ -33,11 +33,38 @@
   const topPoints=[[0,G.floor],...[...G.breaks].map(x=>[x,profile(x)]),[G.length,G.floor]];
   const polyline=(pts,xOffset,yMap)=>'M'+pts.map(([x,z])=>`${n(xOffset+x)} ${n(yMap(z))}`).join(' L');
   const elevationProfile=polyline(topPoints,FX,fy);
-  const sectionProfile=polyline(topPoints,SX,fy);
-  const sectionFill=sectionProfile+` L${SX+G.length} ${FY} L${SX} ${FY} Z`;
+  const sectionFill=polyline(topPoints,SX,fy)+` L${SX+G.length} ${FY} L${SX} ${FY} Z`;
   const cutLabel=()=>txt(SX+110,316,'1—1 剖面图','section-name');
+  const hatchInk='#82969a',aggregateInk='#687c81';
+  // Create one set of marks per page load and reuse it while stepping and rotating.
+  const hatchLines=[];
+  for(let x=-G.crest;x<G.length;x+=19)hatchLines.push(`M${x} 0 l${G.crest} ${-G.crest}`);
+  const aggregate=[],triangles=[],dots=[];
+  for(const [count,spacing] of [[24,7],[52,3]]){
+    for(let added=0,attempt=0;added<count&&attempt<800;attempt++){
+      const x=G.length*Math.random(),z=G.crest*Math.random();
+      if(x<7||x>G.length-7||z<7||z>profile(x)-9)continue;
+      if(aggregate.some(mark=>Math.hypot(mark.x-x,mark.z-z)<spacing+mark.spacing))continue;
+      aggregate.push({x,z,spacing});added++;
+      if(spacing===7){
+        const angle=2*Math.PI*Math.random(),radius=2.8+1.3*Math.random();
+        const corners=[0,1,2].map(index=>{
+          const a=angle+index*2*Math.PI/3;
+          return `${n(x+radius*Math.cos(a))} ${n(-z+radius*Math.sin(a))}`;
+        });
+        triangles.push(`M${corners.join(' L')} Z`);
+      }else dots.push({x,z,r:.65+.5*Math.random()});
+    }
+  }
+  const hatchPath=hatchLines.join(' '),trianglePath=triangles.join(' ');
+  function sectionMaterial(){
+    return `<g clip-path="url(#section-clip)"><g transform="translate(${SX} ${FY})">`+
+      path(hatchPath,'material-line',`stroke="${hatchInk}" stroke-width=".75" fill="none"`)+
+      path(trianglePath,'material-line',`stroke="${aggregateInk}" stroke-width=".85" fill="none"`)+
+      dots.map(({x,z,r})=>`<circle cx="${n(x)}" cy="${n(-z)}" r="${n(r)}" fill="${aggregateInk}"/>`).join('')+'</g></g>';
+  }
   function knownViews(){
-    let out=`<defs><pattern id="concrete" patternUnits="userSpaceOnUse" width="26" height="26"><path d="M-3 26L26 -3 M20 32L32 20" stroke="#82969a" stroke-width="1.2" fill="none"/><path d="M5 18l5 -2 -2 5z M18 7l4 2 -3 2z" fill="none" stroke="#8fa0a2" stroke-width=".9"/></pattern></defs>`;
+    let out=`<defs><clipPath id="section-clip"><path d="${sectionFill}"/></clipPath></defs>`;
     out+=txt(FX,70,'正面投影','view-title')+txt(FX,320,'水平投影','view-title');
     out+=`<rect class="given" x="${FX}" y="${FY-G.height}" width="${G.length}" height="${G.height}"/>`;
     out+=path(elevationProfile,'hidden-line');
@@ -47,63 +74,95 @@
     out+=path(`M${px(0)} ${py(innerBack)} L${px(slotLeft)} ${py(innerBack)} L${px(slotLeft)} ${py(notchBack)} L${px(slotRight)} ${py(notchBack)} L${px(slotRight)} ${py(innerBack)} L${px(G.length)} ${py(innerBack)}`,'given');
     out+=path(`M${px(0)} ${py(innerFront)} L${px(slotLeft)} ${py(innerFront)} L${px(slotLeft)} ${py(notchFront)} L${px(slotRight)} ${py(notchFront)} L${px(slotRight)} ${py(innerFront)} L${px(G.length)} ${py(innerFront)}`,'given');
     for(const x of G.breaks)out+=ln(px(x),py(innerBack),px(x),py(innerFront),'given');
-    out+=ln(px(-42),py(G.cutY),px(G.length+42),py(G.cutY),'axis-line');
-    for(const x of [-37,G.length+37]){
-      out+=path(`M${px(x)-8} ${py(G.cutY)-17} L${px(x)-8} ${py(G.cutY)} L${px(x)+8} ${py(G.cutY)}`,'given');
-      out+=txt(px(x)-3,py(G.cutY)-22,'1');
+    const y=py(G.cutY);
+    out+=ln(px(-22),y,px(G.length+22),y,step===1?'axis-line cut-active':'axis-line');
+    for(const [x,inward] of [[-45,1],[G.length+45,-1]]){
+      out+=path(`M${px(x)} ${y-17} V${y} H${px(x+inward*16)}`,'given');
+      out+=txt(px(x)-3,y-22,'1');
     }
     return out;
+  }
+  const L=G.length,H=G.height,cutY=G.cutY;
+  const segment=(a,b,cls)=>ln(...a,...b,cls);
+  const front=([x,z])=>[px(x),fy(z)],section=([x,z])=>[sx(x),fy(z)];
+  const sectionLine=(a,b,cls)=>segment(section(a),section(b),cls);
+  const axonSegment=(a,b,y=cutY)=>[a,b].map(([x,z])=>[x,y,z]);
+  const frontMeasure=(a,b,side)=>({a:front(a),b:front(b),side});
+  const sectionMeasure=(a,b,side)=>({a:section(a),b:section(b),side});
+  const planMeasure=(x,y)=>({a:[px(0),py(y)],b:[px(x),py(y)],side:-1});
+  const point=([x,z])=>`<circle cx="${sx(x)}" cy="${fy(z)}" r="3" fill="white" stroke="#dd663c" stroke-width="1.4"/>`;
+  function brace({a,b,side}){
+    const dx=b[0]-a[0],dy=b[1]-a[1],length=Math.hypot(dx,dy);
+    const at=(t,offset)=>`${n(a[0]+t*dx-side*offset*dy/length)} ${n(a[1]+t*dy+side*offset*dx/length)}`;
+    const end=Math.min(.22,12/length);
+    return path(`M${at(0,4)} C${at(0,10)} ${at(end/2,10)} ${at(end,10)} L${at(.5-end,10)} `+
+      `Q${at(.5,10)} ${at(.5,16)} Q${at(.5,10)} ${at(.5+end,10)} L${at(1-end,10)} `+
+      `C${at(1-end/2,10)} ${at(1,10)} ${at(1,4)}`,'measure-brace');
+  }
+  const measure=mark=>segment(mark.a,mark.b,'measure-edge')+brace(mark);
+  const outline=[[[0,0],[L,0]],[[0,0],[0,H]],[[L,0],[L,H]],[[0,H],[L,H]]];
+  const elevation=(x,z)=>[[x,0],[x,z]];
+  const operations={
+    2:outline.map(([a,b],index)=>({
+      source:index<3?frontMeasure(a,b,index===2?1:-1):null,
+      target:index<3?sectionMeasure(a,b,index===2?1:-1):null,
+      axon:axonSegment(a,b,index===1||index===2||index===3?G.walls[0]:cutY),
+      edge:[a,b]
+    })),
+    3:[
+      ...[[0,G.floor],[G.breaks[1],G.crest]].map(([x,z])=>({
+        source:frontMeasure(...elevation(x,z),-1),target:sectionMeasure(...elevation(x,z),-1),
+        axon:axonSegment(...elevation(x,z)),level:z
+      })),
+      ...G.breaks.map(x=>({
+        source:planMeasure(x,G.walls[3]),target:sectionMeasure([0,0],[x,0],1),
+        axon:axonSegment([0,0],[x,0]),position:[x,profile(x)]
+      })),
+      ...topPoints.slice(1).map((b,i)=>({edge:[topPoints[i],b],axon:axonSegment(topPoints[i],b)}))
+    ],
+    4:G.slot.map(x=>({source:planMeasure(x,G.walls[2]),target:sectionMeasure([0,H],[x,H],-1),
+      axon:axonSegment([x,H],[x,G.crest],G.walls[2]),edge:[[x,H],[x,G.crest]]}))
+  };
+  function sectionDrawing(){
+    if(step<2)return step===1?txt(SX,70,'待作 1—1 剖面图','view-title'):'';
+    let out=step>=5?sectionMaterial():'';
+    if(step===steps.length-1){
+      for(const [a,b] of [[[0,G.floor],[0,H]],[[L,G.floor],[L,H]],outline[3],...operations[4].map(item=>item.edge)]){
+        out+=sectionLine(a,b,'result-behind');
+      }
+      return out+path(sectionFill,'result-cut')+cutLabel();
+    }
+    for(const [stage,items] of Object.entries(operations)){
+      if(Number(stage)>step)break;
+      const current=Number(stage)===step;
+      for(const [index,item] of items.entries()){
+        if(current&&phase<2*index+1)break;
+        const cls=current&&phase===2*index+1?'drawing-edge':'process';
+        if(item.edge)out+=sectionLine(...item.edge,cls);
+        if(current&&item.level!==undefined)out+=sectionLine([0,item.level],[L,item.level],'guide');
+        if(current&&item.position){
+          out+=sectionLine([item.position[0],0],item.position,'guide')+point(item.position);
+        }
+      }
+    }
+    return out+(step>=5?cutLabel():'');
   }
   function measurementMarks(){
+    const item=operations[step]?.[Math.floor(phase/2)];
+    if(!item)return '';
     let out='';
-    if(step===1){
-      out+=ln(px(0),py(G.cutY),px(G.length),py(G.cutY),'fresh','stroke-dasharray="12 5 2 5"');
-      out+=txt(FX+115,py(G.cutY)-12,'1—1 剖切位置','measure-label');
+    if(item.axon){
+      const [a,b]=item.axon.map(axonProject);
+      out+=ln(a.x,a.y,b.x,b.y,'measure-edge');
     }
-    if(step===2){
-      out+=ln(FX,82,FX+G.length,82,'fresh');
-      out+=ln(FX,77,FX,88,'fresh')+ln(FX+G.length,77,FX+G.length,88,'fresh');
-      out+=ln(SX,82,SX+G.length,82,'fresh');
-      out+=ln(SX,77,SX,88,'fresh')+ln(SX+G.length,77,SX+G.length,88,'fresh');
-      out+=txt(FX+157,77,'总长','measure-label');
-      out+=ln(FX+G.length+17,FY-G.height,FX+G.length+17,FY,'fresh');
-      out+=ln(FX+G.length+12,FY-G.height,FX+G.length+22,FY-G.height,'fresh')+ln(FX+G.length+12,FY,FX+G.length+22,FY,'fresh');
-      out+=ln(SX+G.length+17,FY-G.height,SX+G.length+17,FY,'fresh');
-      out+=txt(SX+G.length+22,fy(90),'总高','measure-label');
-    }
-    if(step===3){
-      out+=path(elevationProfile,'fresh','stroke-dasharray="7 5"');
-      for(const x of G.breaks){out+=ln(px(x),py(G.walls[2]-6),px(x),py(G.walls[3]+4),'fresh','stroke-dasharray="3 5"');out+=ln(sx(x),fy(profile(x))-8,sx(x),fy(profile(x))+8,'fresh')}
-      out+=ln(FX+G.length+20,fy(G.floor),SX-15,fy(G.floor),'guide');
-      out+=ln(FX+G.length+20,fy(G.crest),SX-15,fy(G.crest),'guide');
-      out+=txt(SX-78,fy(G.crest)-7,'顶面高程','measure-label')+txt(SX-78,fy(G.floor)-7,'底板高程','measure-label');
-    }
-    if(step===4){
-      for(const x of G.slot){out+=ln(px(x),py(G.walls[1]),px(x),py(G.walls[2]),'fresh');out+=ln(sx(x),fy(G.height),sx(x),fy(G.crest),'fresh')}
-      out+=txt(SX+120,fy(G.crest)-9,'门槽','measure-label');
-    }
-    return out;
-  }
-  function sectionDrawing(){
-    if(step<2)return step>=1?txt(SX,70,'待作 1—1 剖面图','view-title'):'';
-    const final=step===6,behind=final?'result-behind':'process',cut=final?'result-cut':'process';
-    let out='';
-    out+=ln(SX,fy(G.height),SX+G.length,fy(G.height),behind);
-    out+=ln(SX,fy(G.height),SX,FY,behind)+ln(SX+G.length,fy(G.height),SX+G.length,FY,behind);
-    if(step>=5)out+=path(sectionFill,'hatch');
-    if(step>=3){
-      out+=path(sectionProfile,cut);
-      out+=ln(SX,FY,SX+G.length,FY,cut);
-      if(final){out+=ln(SX,fy(G.floor),SX,FY,cut)+ln(SX+G.length,fy(G.floor),SX+G.length,FY,cut)}
-    }
-    if(step>=4)for(const x of G.slot)out+=ln(sx(x),fy(G.height),sx(x),fy(G.crest),behind);
-    if(step>=5)out+=cutLabel();
+    if(item.source)out+=measure(item.source);
+    if(item.target&&phase%2===1)out+=measure(item.target);
     return out;
   }
   function render2D(){
-    scene.innerHTML=knownViews()+sectionDrawing()+measurementMarks();
+    scene.innerHTML=knownViews()+axonView+sectionDrawing()+measurementMarks();
     scene.setAttribute('transform',`translate(${505*(1-zoom)+panX} ${300*(1-zoom)+panY}) scale(${zoom})`);
-    $('count').textContent=step===0?'准备 · 读题':`步骤 ${String(step).padStart(2,'0')} / 06`;
+    $('count').textContent=step===0?'准备 · 读题':`步骤 ${String(step).padStart(2,'0')} / ${String(steps.length-1).padStart(2,'0')}`;
     $('stepTitle').textContent=steps[step].title;
     $('action').textContent=steps[step].action;
     $('prev').disabled=step===0;$('next').disabled=step===steps.length-1;
@@ -111,9 +170,25 @@
     $('zoomValue').textContent=`${Math.round(zoom*100)}%`;
     for(const button of $('steps').children)button.setAttribute('aria-current',Number(button.dataset.step)===step?'step':'false');
   }
-  function setStep(value){step=Math.max(0,Math.min(steps.length-1,Number(value)));render2D()}
+  const sourceTime=460,transferTime=380;
+  function setStep(value){
+    clearTimeout(stepTimer);
+    step=Math.max(0,Math.min(steps.length-1,Number(value)));phase=0;
+    const count=operations[step]?.length??0;
+    function showPhase(){
+      render2D();
+      if(phase<count*2)stepTimer=setTimeout(()=>{phase++;showPhase()},phase%2===0?sourceTime:transferTime);
+    }
+    showPhase();
+  }
   function stopPlay(){playing=false;clearTimeout(playTimer);$('play').textContent='播放'}
-  function playNext(){if(!playing)return;if(step>=steps.length-1){stopPlay();return}setStep(step+1);playTimer=setTimeout(playNext,step===5?4300:3900)}
+  function playNext(){
+    if(!playing)return;
+    if(step>=steps.length-1){stopPlay();return}
+    setStep(step+1);
+    const duration=(operations[step]?.length??0)*(sourceTime+transferTime);
+    playTimer=setTimeout(playNext,Math.max(2500,duration+900));
+  }
   $('prev').addEventListener('click',()=>{stopPlay();setStep(step-1)});
   $('next').addEventListener('click',()=>{stopPlay();setStep(step+1)});
   $('restart').addEventListener('click',()=>{stopPlay();setStep(0)});
@@ -131,7 +206,6 @@
   for(const type of ['pointerup','pointercancel'])$('canvas').addEventListener(type,()=>{diagramDrag=null});
   $('fullscreen').addEventListener('click',async()=>{if(document.fullscreenElement)await document.exitFullscreen();else await $('app').requestFullscreen()});
   addEventListener('keydown',event=>{if(document.activeElement===$('modelStage'))return;if(['INPUT','BUTTON'].includes(document.activeElement?.tagName))return;if(event.key==='ArrowRight'){event.preventDefault();stopPlay();setStep(step+1)}else if(event.key==='ArrowLeft'){event.preventDefault();stopPlay();setStep(step-1)}else if(event.code==='Space'){event.preventDefault();$('play').click()}});
-  render2D();
 
   // Closed solid is divided at y=cutY only when the opening animation runs.
   // Front and back halves use the same x/z profile and wall slots as the projections.
@@ -187,24 +261,123 @@
     return {x:width/2+camera.panX+rx*scale,y:height/2+camera.panY+(ry*sp-dz*cp)*scale,d:ry*cp+dz*sp};
   }
   const vertexKey=point=>point.map(value=>value.toFixed(3)).join(',');
-  function edgeMap(projectedFaces){
+  const dot=(a,b)=>a.reduce((sum,value,index)=>sum+value*b[index],0);
+  function physicalEdges(surfaces,separateParts){
     const map=new Map();
-    for(const face of projectedFaces){
-      const {points,part,normal}=face.source;
+    const vertices=[...new Map(surfaces.flatMap(face=>face.points.map(point=>[vertexKey(point),point]))).values()];
+    for(const face of surfaces){
+      const {points,part}=face;
       for(let i=0;i<points.length;i++){
-        const a=points[i],b=points[(i+1)%points.length],aKey=vertexKey(a),bKey=vertexKey(b);
-        const key=part+'|'+(aKey<bKey?aKey+'|'+bKey:bKey+'|'+aKey);
-        if(!map.has(key))map.set(key,{a,b,part,normals:[]});
-        map.get(key).normals.push(normal);
+        const start=points[i],end=points[(i+1)%points.length];
+        const direction=end.map((value,index)=>value-start[index]);
+        const lengthSquared=dot(direction,direction);
+        if(!lengthSquared)continue;
+        // Subdivide long boundaries at every collinear vertex to match adjacent short faces.
+        const splits=[[0,start],[1,end]];
+        for(const point of vertices){
+          const delta=point.map((value,index)=>value-start[index]);
+          const t=dot(delta,direction)/lengthSquared;
+          if(t<=0||t>=1)continue;
+          if(delta.every((value,index)=>Math.abs(value-t*direction[index])<1e-7))splits.push([t,point]);
+        }
+        splits.sort((a,b)=>a[0]-b[0]);
+        for(let j=1;j<splits.length;j++){
+          const a=splits[j-1][1],b=splits[j][1],keys=[vertexKey(a),vertexKey(b)].sort();
+          const key=(separateParts?part+'|':'')+keys.join('|');
+          if(!map.has(key))map.set(key,{a,b,part,adjacent:[]});
+          map.get(key).adjacent.push(face);
+        }
       }
     }
-    return [...map.values()].filter(edge=>edge.normals.length<2||edge.normals.some(normal=>{
-      const first=edge.normals[0],dot=Math.abs(first[0]*normal[0]+first[1]*normal[1]+first[2]*normal[2]);
-      return dot<.995;
-    }));
+    return [...map.values()].filter(({adjacent})=>adjacent.some(face=>Math.abs(dot(adjacent[0].normal,face.normal))<1-1e-8));
   }
+  const closedFaces=faces.filter(face=>face.kind!=='cut');
+  const closedEdges=physicalEdges(closedFaces,false),openEdges=physicalEdges(faces,true);
+  const cross2=(ax,ay,bx,by)=>ax*by-ay*bx;
+  function projectSurfaces(surfaces,projectPoint){
+    return surfaces.map(source=>{
+      const projected=source.points.map(point=>projectPoint(point,source.part));
+      const [a,b,c]=projected;
+      const determinant=cross2(b.x-a.x,b.y-a.y,c.x-a.x,c.y-a.y);
+      if(Math.abs(determinant)<1e-7)return {source,projected,orientation:0};
+      return {source,projected,orientation:Math.sign(determinant),
+        depthX:cross2(b.d-a.d,b.y-a.y,c.d-a.d,c.y-a.y)/determinant,
+        depthY:cross2(b.x-a.x,b.d-a.d,c.x-a.x,c.d-a.d)/determinant};
+    });
+  }
+  function occludedInterval(a,b,face){
+    const {projected,orientation,depthX,depthY}=face;
+    if(!orientation)return null;
+    // Clip against the projected convex face and then against its depth plane.
+    let from=0,to=1;
+    for(let i=0;i<projected.length;i++){
+      const p=projected[i],q=projected[(i+1)%projected.length];
+      const dx=q.x-p.x,dy=q.y-p.y;
+      const tolerance=1e-8*Math.hypot(dx,dy);
+      const side=r=>{
+        const value=orientation*cross2(dx,dy,r.x-p.x,r.y-p.y);
+        return Math.abs(value)<=tolerance?0:value;
+      };
+      const atStart=side(a),atEnd=side(b);
+      if(atStart<0&&atEnd<0)return null;
+      if(atStart<0)from=Math.max(from,atStart/(atStart-atEnd));
+      if(atEnd<0)to=Math.min(to,atStart/(atStart-atEnd));
+      if(to<=from)return null;
+    }
+    const p=projected[0];
+    const depthDifference=r=>p.d+depthX*(r.x-p.x)+depthY*(r.y-p.y)-r.d-1e-6;
+    const atStart=depthDifference(a),atEnd=depthDifference(b);
+    if(atStart<=0&&atEnd<=0)return null;
+    if(atStart<=0)from=Math.max(from,atStart/(atStart-atEnd));
+    if(atEnd<=0)to=Math.min(to,atStart/(atStart-atEnd));
+    return to>from?[from,to]:null;
+  }
+  function visibleSegments(edge,projectedFaces,projectPoint){
+    const a=projectPoint(edge.a,edge.part),b=projectPoint(edge.b,edge.part);
+    if(Math.hypot(b.x-a.x,b.y-a.y)<1e-7)return [];
+    const hidden=[];
+    for(const face of projectedFaces){
+      if(edge.adjacent.includes(face.source))continue;
+      const interval=occludedInterval(a,b,face);
+      if(interval)hidden.push(interval);
+    }
+    hidden.sort((left,right)=>left[0]-right[0]);
+    const visible=[];
+    const pointAt=t=>[a.x+t*(b.x-a.x),a.y+t*(b.y-a.y)];
+    let from=0;
+    for(const [start,end] of hidden){
+      if(start-from>1e-7)visible.push([pointAt(from),pointAt(start)]);
+      from=Math.max(from,end);
+    }
+    if(1-from>1e-7)visible.push([pointAt(from),pointAt(1)]);
+    return visible;
+  }
+  function axonProject([x,y,z]){
+    const diagonal=.48/Math.sqrt(3);
+    return {x:630+.48*(x+y),y:548+diagonal*(y-x-2*z),d:-x+y+z};
+  }
+  const axonFaces=faces.filter(face=>face.part==='back');
+  const axonSurfaces=projectSurfaces(axonFaces,axonProject);
+  const axonCut=topPoints.concat([[L,0],[0,0]]).map(([x,z])=>axonProject([x,cutY,z]));
+  const axonView=path('M'+axonCut.map(p=>`${n(p.x)} ${n(p.y)}`).join(' L')+' Z','axon-cut')+
+    physicalEdges(axonFaces,false).flatMap(edge=>visibleSegments(edge,axonSurfaces,axonProject))
+      .map(([a,b])=>segment(a,b,'given axon-edge')).join('')+txt(SX,340,'剖开后的轴测图','view-title');
   function faceColor(kind){return kind==='cut'?[240,233,220]:kind==='top'?[204,229,225]:kind==='bottom'?[142,185,179]:kind==='sideX'?[162,201,195]:[175,212,207]}
-  function polygon(projected){ctx.beginPath();ctx.moveTo(projected[0].x,projected[0].y);for(let i=1;i<projected.length;i++)ctx.lineTo(projected[i].x,projected[i].y);ctx.closePath()}
+  const textureScale=3,texture=document.createElement('canvas');
+  texture.width=L*textureScale;texture.height=G.crest*textureScale;
+  const textureContext=texture.getContext('2d');
+  textureContext.fillStyle=`rgb(${faceColor('cut').join(',')})`;
+  textureContext.fillRect(0,0,texture.width,texture.height);
+  textureContext.setTransform(textureScale,0,0,textureScale,0,texture.height);
+  textureContext.strokeStyle=hatchInk;textureContext.lineWidth=.75;
+  textureContext.stroke(new Path2D(hatchPath));
+  textureContext.strokeStyle=aggregateInk;textureContext.lineWidth=.85;
+  textureContext.stroke(new Path2D(trianglePath));
+  textureContext.fillStyle=aggregateInk;
+  for(const {x,z,r} of dots){
+    textureContext.beginPath();textureContext.arc(x,-z,r,0,Math.PI*2);textureContext.fill();
+  }
+  const material=textureContext.getImageData(0,0,texture.width,texture.height).data;
   // A depth buffer keeps concave channel faces from painting through the nearer wall.
   function rasterFaces(projectedFaces,pixelWidth,pixelHeight,ratio){
     const pixels=ctx.createImageData(pixelWidth,pixelHeight),rgba=pixels.data;
@@ -229,16 +402,16 @@
           const offset=index*4;
           if(face.source.kind==='cut'){
             const v=face.source.points,x3=wa*v[0][0]+wb*v[i][0]+wc*v[i+1][0],z3=wa*v[0][2]+wb*v[i][2]+wc*v[i+1][2];
-            const stripe=((z3-x3)%21+21)%21;
-            if(stripe<1.8){rgba[offset]=143;rgba[offset+1]=132;rgba[offset+2]=113}
-            else{rgba[offset]=color[0];rgba[offset+1]=color[1];rgba[offset+2]=color[2]}
+            const tx=clamp(Math.floor(x3*textureScale),0,texture.width-1);
+            const ty=clamp(Math.floor((G.crest-z3)*textureScale),0,texture.height-1);
+            const sample=(ty*texture.width+tx)*4;
+            rgba[offset]=material[sample];rgba[offset+1]=material[sample+1];rgba[offset+2]=material[sample+2];
           }else{rgba[offset]=color[0];rgba[offset+1]=color[1];rgba[offset+2]=color[2]}
           rgba[offset+3]=255;
         }
       }
     }
     ctx.setTransform(1,0,0,1,0,0);ctx.putImageData(pixels,0,0);
-    return depthBuffer;
   }
   function drawModel(){
     const width=stage.clientWidth,height=stage.clientHeight;
@@ -249,34 +422,31 @@
     }
     ctx.setTransform(ratio,0,0,ratio,0,0);ctx.clearRect(0,0,width,height);
     const scale=Math.min(width/(560+camera.open*100),height/(420+camera.open*45))*camera.zoom;
-    const projectedFaces=faces.filter(face=>face.kind!=='cut'||camera.open>.005).map(source=>{
-      const projected=source.points.map(point=>project(point,source.part,width,height,scale));
-      return {source,projected,depth:projected.reduce((sum,p)=>sum+p.d,0)/projected.length};
-    }).sort((a,b)=>a.depth-b.depth);
-    const depthBuffer=rasterFaces(projectedFaces,canvas.width,canvas.height,ratio);
+    const opened=camera.open>0;
+    const projectPoint=(point,part)=>project(point,part,width,height,scale);
+    const projectedFaces=projectSurfaces(opened?faces:closedFaces,projectPoint);
+    rasterFaces(projectedFaces,canvas.width,canvas.height,ratio);
     ctx.setTransform(ratio,0,0,ratio,0,0);
-    if(planeVisible||camera.open>.015){
-      const plane=[[0,G.cutY,0],[G.length,G.cutY,0],[G.length,G.cutY,G.height],[0,G.cutY,G.height]].map(point=>project(point,'back',width,height,scale));
-      polygon(plane);ctx.setLineDash([5,4]);ctx.strokeStyle='rgba(22,134,128,.55)';ctx.lineWidth=1;ctx.stroke();ctx.setLineDash([]);
-    }
-    ctx.strokeStyle='#416b69';ctx.lineWidth=1.3;ctx.lineCap='round';ctx.lineJoin='round';
-    for(const edge of edgeMap(projectedFaces)){
-      if(camera.open<.005&&Math.abs(edge.a[1]-G.cutY)<.001&&Math.abs(edge.b[1]-G.cutY)<.001)continue;
-      const a=project(edge.a,edge.part,width,height,scale),b=project(edge.b,edge.part,width,height,scale);
-      const segments=Math.max(1,Math.ceil(Math.hypot(a.x-b.x,a.y-b.y)/7));
-      for(let i=0;i<segments;i++){
-        const t=(i+.5)/segments,mid={x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t,d:a.d+(b.d-a.d)*t};
-        const pixelX=Math.floor(mid.x*ratio),pixelY=Math.floor(mid.y*ratio);
-        let nearestDepth=Infinity;
-        for(let oy=-1;oy<=1;oy++)for(let ox=-1;ox<=1;ox++){
-          const x=pixelX+ox,y=pixelY+oy;
-          if(x>=0&&x<canvas.width&&y>=0&&y<canvas.height)nearestDepth=Math.min(nearestDepth,depthBuffer[y*canvas.width+x]);
+    ctx.lineCap='butt';
+    if(planeVisible){
+      const plane=[[0,cutY,0],[L,cutY,0],[L,cutY,H],[0,cutY,H]];
+      ctx.beginPath();
+      for(const [index,a] of plane.entries()){
+        const edge={a,b:plane[(index+1)%plane.length],part:'back',adjacent:[]};
+        for(const [start,end] of visibleSegments(edge,projectedFaces,projectPoint)){
+          ctx.moveTo(...start);ctx.lineTo(...end);
         }
-        if(nearestDepth>mid.d+2.5)continue;
-        const t0=i/segments,t1=(i+1)/segments;
-        ctx.beginPath();ctx.moveTo(a.x+(b.x-a.x)*t0,a.y+(b.y-a.y)*t0);ctx.lineTo(a.x+(b.x-a.x)*t1,a.y+(b.y-a.y)*t1);ctx.stroke();
+      }
+      ctx.setLineDash([5,4]);ctx.strokeStyle='rgba(22,134,128,.72)';ctx.lineWidth=1;ctx.stroke();ctx.setLineDash([]);
+    }
+    ctx.strokeStyle='#416b69';ctx.lineWidth=1.3;
+    ctx.beginPath();
+    for(const edge of opened?openEdges:closedEdges){
+      for(const [start,end] of visibleSegments(edge,projectedFaces,projectPoint)){
+        ctx.moveTo(...start);ctx.lineTo(...end);
       }
     }
+    ctx.stroke();
     if(camera.open>.04){ctx.fillStyle='#0b6f6b';ctx.font='bold 12px Microsoft YaHei';ctx.fillText('1—1 剖切面',10,20)}
   }
   function openControls(){
@@ -325,5 +495,5 @@
     if(event.shiftKey){camera.panX+=sx*16;camera.panY+=sy*16}else{camera.yaw+=sx*.12;camera.pitch+=sy*.12}drawModel();
   });
   if('ResizeObserver'in window)new ResizeObserver(drawModel).observe(stage);else addEventListener('resize',drawModel);
-  openControls();drawModel();
+  setStep(0);openControls();drawModel();
 })();
