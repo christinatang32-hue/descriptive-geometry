@@ -1,0 +1,18 @@
+{
+  "width": 300,
+  "height": 309,
+  "depth": 84.5,
+  "bottom": 36.5,
+  "backWall": 34.5,
+  "shoulder": 61.5,
+  "rearSlotInset": 38,
+  "frontSlotInset": 57,
+  "holeRadius": 93,
+  "measurement": {
+    "source": "空白作业/8.2-5&6.jpg",
+    "unit": "正面投影总宽归一化为 300，其他尺寸按相对比例量取",
+    "cropOrigin": [295, 475],
+    "front": {"outerX": [39, 610], "slotX": [146, 501], "rearSlotX": [111, 537], "baseY": 721, "rimY": 652, "circleTopY": 298.5, "topY": 134},
+    "plan": {"outerX": [39, 610], "backY": 976, "backWallY": 1042, "shoulderY": 1093, "frontY": 1137}
+  }
+}
