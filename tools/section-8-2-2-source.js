@@ -4,15 +4,15 @@
   const {length:L,width:W,height:H,floor:F,shoulder:S,notchFloor:N,
     lowerInset:A,upperInset:B,notchInset:C,wallThickness:T}=G;
   const midX=L/2,midY=W/2;
+  const fullStep=2,halfStep=4;
   const steps=[
     {title:'读题',action:'对照两面投影和轴测图，找出底板、下宽上窄的内腔，以及前后壁顶缘中央的凹槽。台肩下沿和凹槽底在不同高程。以下按题图比例转移尺寸。'},
     {title:'定剖切位置和视向',short:'定视向',action:'1. 1—1 通过前后中点，由水平投影的下方向上观察。\n2. 2—2 通过左右中点，由水平投影的右方向左观察。侧向投影的左半画外观，右半画剖面。'},
-    {title:'定位 1—1 全剖外框',short:'全剖外框',action:'从正面投影量取总长和总高。在剖面图中先画底边，再从两端竖起左右外壁，定位顶面高程。'},
-    {title:'画 1—1 的切面轮廓',short:'全剖切面',action:'1. 从底边量取内腔底面和台肩下沿的高程。\n2. 从水平投影的左右对称中心，分别向两侧量取下部内腔和上部开口的半宽。\n3. 依次连接两侧上段、台肩、下段和内腔底边，围成 U 形切面。'},
-    {title:'补画 1—1 后方顶口',short:'全剖顶口',action:'从正面投影量取凹槽两端距中心的位置，以及由顶面到槽底的高差。将两端向下作短竖线并连接，在两侧接上后方顶缘。'},
-    {title:'定位 2—2 半剖外框',short:'半剖外框',action:'先画竖向细点划中心线，从水平投影的前后中心向两侧分别转移半宽，由正面投影转移总高。沿视向，前半投到左侧作外观，后半投到右侧作剖面。'},
-    {title:'画 2—2 右半剖面',short:'右半剖面',action:'1. 从水平投影量取后壁厚度，从正面投影转移内腔底、槽底和台肩下沿的高程。\n2. 画出底板和后壁组成的 L 形切面。\n3. 补画后方可见的顶缘和竖向轮廓，并从中心线向右画台肩下沿，到后壁内缘为止。'},
-    {title:'加剖面线并核对',short:'完整结果',action:'在实际切到的金属区域内画等距的 45° 连续细实线，加粗切面轮廓。核对两图的底板、台肩与槽底高程，2—2 两半以细点划中心线分界。'}
+    {title:'绘制1-1轮廓线',short:'绘制1-1轮廓线',action:'先用细实线绘制出所有的轮廓线。\n1. 量取总长和总高，用绿色细实线画底边和整条上边，再画外框竖线。先画左边作基准，量出右边相对左边的水平距离，再从上到下描线。\n2. 转移内腔底面和台肩高程，先画各段水平线。用已画竖线定位新竖线的水平距离，再从上到下画出内腔竖线。\n3. 绘制顶口时保留上边作图线。先从左向右画槽底水平线，再依次定位并从上到下画左、右竖线。'},
+    {title:'填充金属图例',short:'填充金属图例',action:'保留 1—1 的轮廓和定位作图线，在切到的金属范围内填充等距的 45° 连续细实线。'},
+    {title:'绘制2-2轮廓线',short:'绘制2-2轮廓线',action:'先用细实线绘制出所有的轮廓线。\n1. 从水平投影向两侧转移半宽，从正面投影转移总高。上边从左到右一次画全，跨过对称轴。以对称轴和已有竖线为基准，量出各竖线的水平位置，再由上至下描线。\n2. 保留外框和已有作图线。量取后壁厚度，转移内腔底面、台肩和槽底的高程，先画水平内边线，再由上向下补画后壁内缘。'},
+    {title:'填充金属图例',short:'填充金属图例',action:'保留两图已有的轮廓和作图线。在 2—2 右半切到的金属范围内填充等距的 45° 连续细实线。'},
+    {title:'加粗结果并核对',short:'加粗结果并核对',action:'清除定位作图线和跨过 1—1 顶口的临时线段。切到的轮廓用 0.28 mm 中粗实线，未切到的可见轮廓用 0.20 mm 中实线。核对两图的底板、台肩、槽底高程和 2—2 的对称符号。'}
   ];
   const $=id=>document.getElementById(id),diagram=$('diagram'),scene=$('scene');
   const media=matchMedia('(max-width: 750px)'),reduced=matchMedia('(prefers-reduced-motion: reduce)');
@@ -22,11 +22,10 @@
   let step=0,phase=0,playing=false,stepTimer=0,playTimer=0,zoom=1,panX=0,panY=0,diagramDrag=null;
   const n=v=>Math.round(v*100)/100;
   const xy=([x,y])=>`${n(x)} ${n(y)}`;
-  const line=(a,b,cls)=>`<line class="${cls}" x1="${n(a[0])}" y1="${n(a[1])}" x2="${n(b[0])}" y2="${n(b[1])}"/>`;
+  const line=(a,b,cls,attributes='')=>`<line class="${cls}" x1="${n(a[0])}" y1="${n(a[1])}" x2="${n(b[0])}" y2="${n(b[1])}"${attributes}/>`;
   const path=(d,cls)=>`<path class="${cls}" d="${d}"/>`;
   const trace=(points,close=false)=>'M'+points.map(xy).join(' L')+(close?' Z':'');
   const txt=([x,y],label,cls='',anchor='start')=>`<text class="${cls}" x="${x}" y="${y}" text-anchor="${anchor}">${label}</text>`;
-  const chain=points=>points.slice(1).map((point,index)=>[points[index],point]);
   const elevation=(view,[x,z])=>[layout[view][0]+x,layout[view][1]-z];
   const plan=([x,y])=>[layout.plan[0]+x,layout.plan[1]+y];
   function viewPoint(view,point){return view==='plan'?plan(point):elevation(view,point)}
@@ -38,7 +37,8 @@
   const fullBehind=[[B,H],[C,H],[C,N],[L-C,N],[L-C,H],[L-B,H]];
   const halfBoundary=[[midY,0],[W,0],[W,N],[W-T,N],[W-T,F],[midY,F]];
   const halfBehind=[[[W,N],[W,H]],[[W-T,N],[W-T,H]],[[midY,S],[W-T,S]]];
-  const halfExterior=[[[midY,0],[0,0]],[[0,0],[0,H]],[[0,H],[midY,H]],[[midY,H],[W,H]]];
+  const halfTop=[[0,H],[W,H]];
+  const halfExterior=[[[0,0],[midY,0]],[[0,H],[0,0]],halfTop];
   const planTop=[[B,T],[L-B,T],[L-B,W-T],[B,W-T]];
 
   function givenViews(){
@@ -50,7 +50,7 @@
     for(const x of [C,L-C]){
       out+=viewLine('plan',[x,0],[x,T],'given')+viewLine('plan',[x,W-T],[x,W],'given');
     }
-    const active=step===1?(phase<2?1:2):step>=5&&step<=6?2:step>=2&&step<=4?1:0;
+    const active=step===1?(phase===0?1:2):step===fullStep?1:step===halfStep?2:0;
     out+=viewLine('plan',[-18,midY],[L+18,midY],active===1?'axis-line cut-active':'axis-line');
     out+=viewLine('plan',[midX,-18],[midX,W+18],active===2?'axis-line cut-active':'axis-line');
     for(const [x,inward] of [[-47,1],[L+47,-1]]){
@@ -67,54 +67,59 @@
   const mark=(view,a,b,side=1)=>({view,a,b,side});
   const edge=(view,a,b)=>({view,a,b});
   const heightMeasure=(view,x,z)=>mark(view,[x,0],[x,z],-1);
-  const section1=(a,b)=>edge('full',a,b);
-  const section2=(a,b)=>edge('half',a,b);
-  const sectionChain=(view,points)=>chain(points).map(([a,b])=>({edge:edge(view,a,b)}));
-  const pointGuide=(view,x,z)=>({view,a:[x,0],b:[x,z],point:true});
-  const levelGuide=(view,z)=>({view,a:[0,z],b:[view==='full'?L:W,z]});
+  const horizontal=(view,z,left,right)=>edge(view,[left,z],[right,z]);
+  const vertical=(view,x,top,bottom)=>edge(view,[x,top],[x,bottom]);
+  const pointGuide=(view,x,top)=>({view,a:[x,top+10],b:[x,top],point:true});
+  const levelGuide=(view,z)=>({view,a:[-6,z],b:[(view==='full'?L:W)+6,z]});
   const axon1=(a,b)=>[a,b].map(([x,z])=>[x,midY,z]);
-  const makeHeight=(x,z)=>({source:heightMeasure('front',x,z),target:heightMeasure('full',x,z),
-    guide:levelGuide('full',z),axon:axon1([x,0],[x,z])});
-  const wallBase=section1([0,0],[L,0]);
-  const wallLeft=section1([0,0],[0,H]),wallRight=section1([L,0],[L,H]);
+  function transferHeight(view,x,z,axon){
+    return {source:heightMeasure('front',x,z),target:heightMeasure(view,-16,z),guide:levelGuide(view,z),axon};
+  }
+  function fullVertical(x,top,bottom,from,depth=T){
+    const z=top+10;
+    return {source:mark('plan',[from,depth],[x,depth],from<x?-1:1),
+      target:mark('full',[from,z],[x,z],from<x?-1:1),guide:pointGuide('full',x,top),
+      axon:[[from,depth,top],[x,depth,top]],edge:vertical('full',x,top,bottom)};
+  }
+  function halfOffset(x,from,top){
+    const z=top+10;
+    return {source:mark('plan',[L,W-from],[L,W-x],x<from?-1:1),
+      target:mark('half',[from,z],[x,z],x<from?1:-1)};
+  }
   const operations={
-    1:[{},{}],
-    2:[
-      {source:mark('front',[0,0],[L,0],-1),target:mark('full',[0,0],[L,0],-1),edge:wallBase,axon:axon1([0,0],[L,0])},
-      {source:heightMeasure('front',0,H),target:heightMeasure('full',0,H),edge:wallLeft,axon:axon1([0,0],[0,H])},
-      {source:mark('front',[L,0],[L,H]),target:mark('full',[L,0],[L,H]),edge:wallRight,axon:axon1([L,0],[L,H])}
+    [fullStep]:[
+      {source:heightMeasure('front',0,H),target:heightMeasure('full',-16,H),axon:axon1([0,0],[0,H])},
+      {source:mark('front',[0,0],[L,0]),target:mark('full',[0,-10],[L,-10]),
+        edge:horizontal('full',0,0,L),axon:axon1([0,0],[L,0])},
+      {edge:horizontal('full',H,0,L),topLevel:true},
+      {edge:vertical('full',0,H,0)},
+      fullVertical(L,H,0,0,0),
+      {...transferHeight('full',B,S,axon1([B,0],[B,S])),edge:horizontal('full',S,A,B)},
+      {...transferHeight('full',A,F,axon1([A,0],[A,F])),edge:horizontal('full',F,A,L-A)},
+      {edge:horizontal('full',S,L-B,L-A)},
+      fullVertical(A,S,F,0),
+      fullVertical(B,H,S,A),
+      fullVertical(L-B,H,S,L),
+      fullVertical(L-A,S,F,L-B),
+      {source:mark('front',[C,H],[C,N],1),target:mark('full',[C-12,H],[C-12,N],1),
+        guide:levelGuide('full',N),axon:[[C,0,H],[C,0,N]],edge:horizontal('full',N,C,L-C)},
+      fullVertical(C,H,N,B),
+      fullVertical(L-C,H,N,L-B)
     ],
-    3:[
-      makeHeight(A,F),makeHeight(B,S),
-      ...[[A,F],[L-A,F],[B,H],[L-B,H]].map(([x,z])=>({
-        source:mark('plan',[midX,T],[x,T],x<midX?1:-1),
-        target:mark('full',[midX,0],[x,0],x<midX?-1:1),
-        guide:pointGuide('full',x,z),axon:axon1([midX,0],[x,0])
-      })),
-      ...sectionChain('full',[[0,H],...cavityOutline,[L,H]])
-    ],
-    4:[
-      ...[C,L-C].map(x=>({source:mark('front',[midX,H],[x,H],x<midX?1:-1),
-        target:mark('full',[midX,H],[x,H],x<midX?1:-1),guide:pointGuide('full',x,H),
-        axon:[[x,0,N],[x,0,H]]})),
-      {source:mark('front',[C,N],[C,H],-1),target:mark('full',[C,N],[C,H],-1),
-        guide:levelGuide('full',N),axon:[[C,0,N],[C,0,H]]},
-      ...sectionChain('full',fullBehind)
-    ],
-    5:[
-      {source:mark('plan',[L,midY],[L,W]),target:mark('half',[midY,0],[0,0],1),edge:section2(...halfExterior[0])},
-      {source:mark('plan',[L,midY],[L,0]),target:mark('half',[midY,0],[W,0],-1),edge:section2([midY,0],[W,0])},
-      {source:heightMeasure('front',0,H),target:heightMeasure('half',0,H),edge:section2(...halfExterior[1])},
-      {target:mark('half',[W,0],[W,H]),edge:section2([W,0],[W,H])},
-      {edge:section2(...halfExterior[2])},{edge:section2(...halfExterior[3])}
-    ],
-    6:[
-      {source:mark('plan',[L,0],[L,T]),target:mark('half',[W,0],[W-T,0],1),guide:pointGuide('half',W-T,N)},
-      {source:heightMeasure('front',A,F),target:heightMeasure('half',midY,F),guide:levelGuide('half',F)},
-      {source:heightMeasure('front',midX,N),target:mark('half',[W,0],[W,N]),guide:levelGuide('half',N)},
-      ...sectionChain('half',halfBoundary),
-      ...halfBehind.slice(0,2).map(pair=>({edge:section2(...pair)})),
-      {source:heightMeasure('front',B,S),target:heightMeasure('half',midY,S),edge:section2(...halfBehind[2])}
+    [halfStep]:[
+      {source:heightMeasure('front',0,H),target:heightMeasure('half',-16,H)},
+      {source:mark('plan',[L,midY],[L,W]),target:mark('half',[midY,-10],[0,-10],-1),
+        edge:horizontal('half',0,0,midY)},
+      {source:mark('plan',[L,midY],[L,0]),target:mark('half',[midY,-10],[W,-10]),
+        edge:horizontal('half',0,midY,W)},
+      {edge:edge('half',...halfTop)},
+      {...halfOffset(0,midY,H),guide:pointGuide('half',0,H),edge:vertical('half',0,H,0)},
+      {...halfOffset(W,0,H),guide:pointGuide('half',W,H),edge:vertical('half',W,H,0)},
+      {...halfOffset(W-T,W,H),guide:pointGuide('half',W-T,H)},
+      {...transferHeight('half',A,F),edge:horizontal('half',F,midY,W-T)},
+      {...transferHeight('half',B,S),edge:horizontal('half',S,midY,W-T)},
+      {...transferHeight('half',midX,N),edge:horizontal('half',N,W-T,W)},
+      {...halfOffset(W-T,W,H),edge:vertical('half',W-T,H,F)}
     ]
   };
 
@@ -154,24 +159,30 @@
     return '<g class="section-caption">'+txt([x,y],label,'section-name','middle')+
       line([x,y+6],[x,y+6],'section-underline')+'</g>';
   }
-  function drawOperation({edge:result,guide},active,current){
+  function drawOperation({edge:result,guide,topLevel},progress){
     let out='';
-    if(result)out+=viewLine(result.view,result.a,result.b,active?'drawing-edge':'process');
-    if(guide&&current){
+    if(guide&&progress>=1){
       out+=viewLine(guide.view,guide.a,guide.b,'guide');
       if(guide.point){
         const [x,y]=viewPoint(guide.view,guide.b);
         out+=`<circle class="transfer-point" cx="${n(x)}" cy="${n(y)}" r="3"/>`;
       }
     }
+    if(result&&progress>=2){
+      const {view,a,b}=result;
+      const cls='process'+(topLevel?' top-level':'')+(progress===2?' drawing-edge':'');
+      const animation=progress===2?` pathLength="1" style="--trace-duration:${drawDuration}ms"`:'';
+      out+=line(viewPoint(view,a),viewPoint(view,b),cls,animation);
+    }
     return out;
   }
   function drawResults(){
     if(step===0)return '';
     let out=sectionCaption('full',midX,'1—1 剖面图');
-    if(step===1||step>=5)out+=sectionCaption('half',midY,'2—2 剖面图');
+    if(step===1||step>=halfStep)out+=sectionCaption('half',midY,'2—2 剖面图');
+    if(step>fullStep)out+=hatch('full',fullBoundary,L);
+    if(step>halfStep)out+=hatch('half',halfBoundary,W);
     if(step===steps.length-1){
-      out+=hatch('full',fullBoundary,L)+hatch('half',halfBoundary,W);
       out+=viewPath('full',fullBoundary,'result-cut',true)+viewPath('full',fullBehind,'result-behind');
       out+=viewPath('half',halfBoundary,'result-cut');
       for(const [a,b] of [...halfExterior,...halfBehind])out+=viewLine('half',a,b,'result-behind');
@@ -180,25 +191,21 @@
     for(const [stage,items] of Object.entries(operations)){
       const index=Number(stage);
       if(index>step)break;
-      if(index===5&&step===6){
-        out+=halfExterior.map(([a,b])=>viewLine('half',a,b,'process')).join('');
-        continue;
-      }
       for(const [i,item] of items.entries()){
-        if(index===step&&phase<2*i+1)break;
-        out+=drawOperation(item,index===step&&phase===2*i+1,index===step);
+        const progress=index===step?phase-3*i:3;
+        if(progress<1)break;
+        out+=drawOperation(item,progress);
       }
     }
-    if(step===2&&phase>=6)out+=viewLine('full',[0,H],[L,H],'guide');
-    if(step>=5)out+=centerLine();
+    if(step>=halfStep)out+=centerLine();
     return out;
   }
   function drawMeasurements(){
-    const item=operations[step]?.[Math.floor(phase/2)];
+    const item=operations[step]?.[Math.floor(phase/3)];
     if(!item)return '';
     let out=item.source?measurement(item.source):'';
     if(item.axon)out+=line(...item.axon.map(point=>axonProject(point).slice(0,2)),'measure-edge');
-    if(item.target&&phase%2)out+=measurement(item.target);
+    if(item.target&&phase%3>=1)out+=measurement(item.target);
     return out;
   }
 
@@ -339,7 +346,7 @@
       underline.setAttribute('x1',n(center-halfWidth));
       underline.setAttribute('x2',n(center+halfWidth));
     }
-    $('count').textContent=step===0?'准备 · 读题':`步骤 ${String(step).padStart(2,'0')} / 07`;
+    $('count').textContent=step===0?'准备 · 读题':`步骤 ${String(step).padStart(2,'0')} / ${String(steps.length-1).padStart(2,'0')}`;
     $('stepTitle').textContent=steps[step].title;
     $('action').textContent=steps[step].action;
     $('prev').disabled=step===0;$('next').disabled=step===steps.length-1;
@@ -353,18 +360,20 @@
     axonCache=axonDrawing();
     render2D();
   }
-  const measureDuration=490,drawDuration=325;
+  const measureDuration=650,transferDuration=540,drawDuration=680;
   function phaseDuration(index){
-    const item=operations[step]?.[Math.floor(index/2)];
-    if(index%2)return drawDuration;
-    return item?.source||item?.target||step===1?measureDuration:0;
+    if(step===1)return measureDuration;
+    const item=operations[step][Math.floor(index/3)];
+    if(index%3===0)return item.source?measureDuration:0;
+    if(index%3===1)return item.target?transferDuration:0;
+    return item.edge?drawDuration:0;
   }
   function setStep(value){
     clearTimeout(stepTimer);
     step=Math.max(0,Math.min(steps.length-1,Number(value)));phase=0;
-    if(step<=4)setCut(1);
-    if(step===5||step===6)setCut(2);
-    const count=(operations[step]?.length??0)*2;
+    if(step<halfStep)setCut(1);
+    if(step>=halfStep&&step<steps.length-1)setCut(2);
+    const count=step===1?2:(operations[step]?.length??0)*3;
     const duration=Array.from({length:count},(_,index)=>phaseDuration(index)).reduce((sum,time)=>sum+time,0);
     if(reduced.matches)phase=count;
     function drawPhase(){

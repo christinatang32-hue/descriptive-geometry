@@ -31,6 +31,7 @@ if (process.argv.includes('--reference')) {
   fs.mkdirSync(previews, { recursive: true });
   const profile = fs.mkdtempSync(path.join(previews, 'reference-profile-'));
   const fixture = path.join(previews, 'reference.html');
+  const rendered = path.join(profile, 'reference.png');
   const answer = path.join(platform, 'answer-references', 'ex-8-2-2.png');
   const referencePage = offlinePage.replace('</body>', `<script>
 document.getElementById('complete').click();
@@ -41,8 +42,16 @@ document.body.replaceChildren(document.getElementById('diagram'));
   const edge = process.env.SECTION_EDGE || 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe';
   const result = spawnSync(edge, ['--headless=new', '--disable-background-networking', '--no-first-run',
     '--disable-gpu', '--hide-scrollbars', '--window-size=1280,768', '--force-device-scale-factor=1',
-    '--user-data-dir='+profile, '--screenshot='+answer, pathToFileURL(fixture).href],
-  { encoding:'utf8', timeout:20000, windowsHide:true });
-  if (result.status !== 0 || !fs.existsSync(answer)) throw Error(result.stderr || String(result.error));
+    '--virtual-time-budget=1000', '--disable-renderer-backgrounding',
+    '--user-data-dir='+profile, '--screenshot='+rendered, pathToFileURL(fixture).href],
+  { encoding:'utf8', timeout:10000, windowsHide:true });
+  const png = fs.existsSync(rendered) ? fs.readFileSync(rendered) : Buffer.alloc(0);
+  // Edge can finish writing its screenshot before an auxiliary process exits.
+  if ((result.status !== 0 && result.error?.code !== 'ETIMEDOUT') ||
+      png.subarray(0, 8).toString('hex') !== '89504e470d0a1a0a' ||
+      png.subarray(-12).toString('hex') !== '0000000049454e44ae426082') {
+    throw Error(result.stderr || String(result.error));
+  }
+  fs.copyFileSync(rendered, answer);
 }
 console.log('已生成作业 8.2-2 离线版及本地平台版。');
