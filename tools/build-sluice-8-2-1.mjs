@@ -10,7 +10,8 @@ const start='// BEGIN GENERATED SLUICE LESSON';
 const end='// END GENERATED SLUICE LESSON';
 if(!html.includes(start)||!html.includes(end))throw Error('Lesson markers missing');
 const geometry=JSON.parse(fs.readFileSync(geometryPath,'utf8'));
-const source=fs.readFileSync(sourcePath,'utf8').replace('__SLUICE_GEOMETRY__',JSON.stringify(geometry));
+const source=fs.readFileSync(sourcePath,'utf8').replace('__SLUICE_GEOMETRY__',JSON.stringify(geometry))
+  .replace('  /* SECTION_LINE_TRACE */',()=>fs.readFileSync(path.join(root,'tools','section-line-trace.js'),'utf8').trimEnd());
 html=html.replace(new RegExp(`${start}[\\s\\S]*?${end}`),`${start}\n${source.trimEnd()}\n${end}`);
 fs.writeFileSync(htmlPath,html,'utf8');
 const offline=html.replace('<link rel="stylesheet" href="assignment-flow.css">','')

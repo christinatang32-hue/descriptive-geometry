@@ -7,7 +7,7 @@
 <style>
 :root{--ink:#20333e;--muted:#687b83;--accent:#007f79;--line:#dce5e5;--paper:#fff;--bg:#f3f6f5;--new:#dd663c;--given:#354b55;--guide:#a4b3b9;--done:#008b84}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 "Microsoft YaHei","PingFang SC",sans-serif}button,input{font:inherit}button{border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:8px;padding:8px 13px;cursor:pointer}button:hover{border-color:var(--accent);background:#f0f8f6}button:focus-visible,input:focus-visible,#modelStage:focus-visible{outline:3px solid #f4b77b;outline-offset:3px}button:disabled{opacity:.42;cursor:default}.primary{background:var(--accent);border-color:var(--accent);color:#fff}.primary:hover{background:#006b66;color:#fff}[hidden]{display:none!important}
-.course-nav{display:flex;gap:20px;flex-wrap:wrap;padding:12px 24px;background:#fff;border-bottom:1px solid var(--line)}.course-nav a{color:#176b8b;text-underline-offset:3px}.shell{max-width:1530px;margin:auto;padding:22px 30px 30px}.page-head{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:14px}.page-head h1{font-size:21px;font-weight:500;margin:0}.workspace{display:grid;grid-template-columns:minmax(0,1fr) 360px;border:1px solid var(--line);border-radius:16px;background:#fff;overflow:hidden}.drawing{min-width:0;border-right:1px solid var(--line)}.toolbar{padding:10px 15px;border-bottom:1px solid #edf1f0;display:flex;justify-content:space-between;align-items:center;gap:10px}.toolbar strong{font-size:14px}.tools{display:flex;align-items:center;gap:5px}.tools button{padding:3px 10px}.tools output{min-width:46px;text-align:center;font-size:12px;color:var(--muted)}.canvas{height:min(57vw,635px);min-height:430px;overflow:hidden;touch-action:none;cursor:grab;background:#fff}.canvas:active{cursor:grabbing}svg{display:block;width:100%;height:100%}#diagram line,#diagram path,#diagram rect{vector-effect:non-scaling-stroke}#diagram .given{stroke:var(--given);fill:none;stroke-width:2}#diagram .hidden-line{stroke:var(--given);fill:none;stroke-width:1.45;stroke-dasharray:8 5}#diagram .axis-line{stroke:#8a9aa2;fill:none;stroke-width:1.2;stroke-dasharray:4mm 5px 1.8px 5px}#diagram .axis-line.cut-active{stroke:var(--new);stroke-width:2.3}#diagram .guide{stroke:var(--guide);fill:none;stroke-width:1.15}#diagram .process{stroke:var(--done);fill:none;stroke-width:0.13mm;stroke-linecap:round;stroke-linejoin:round}#diagram .measure-edge,#diagram .measure-brace{stroke:var(--new);fill:none;stroke-linecap:round;stroke-linejoin:round}#diagram .measure-edge{stroke-width:1.7}#diagram .drawing-edge{stroke-dasharray:1;animation:trace-line var(--trace-duration) linear both}@keyframes trace-line{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}#diagram .measure-brace{stroke-width:1.3}#diagram .result-cut{stroke:var(--new);fill:none;stroke-width:0.28mm;stroke-linecap:round;stroke-linejoin:round}#diagram .result-behind{stroke:var(--given);fill:none;stroke-width:0.20mm;stroke-linecap:round;stroke-linejoin:round}#diagram .cut-symbol{stroke-width:2.5;stroke-linecap:butt;stroke-linejoin:miter}#diagram .metal-line{fill:none;stroke:#77868b;stroke-width:0.10mm}#diagram .transfer-point{fill:#fff;stroke:var(--new);stroke-width:1.25;vector-effect:non-scaling-stroke}#diagram .axon-cut{fill:#eaf3f1;stroke:none}#diagram .axon-edge{stroke-width:1.25}#diagram text{font:14px "Microsoft YaHei",sans-serif;fill:var(--given);paint-order:stroke;stroke:#fff;stroke-width:4px;stroke-linejoin:round}#diagram text.view-title{font-size:15px;font-weight:700}#diagram text.section-name{font-size:18px;font-weight:700}#diagram .symmetry-mark,#diagram .section-underline{stroke:var(--given);stroke-width:1.25}#diagram .symmetry-axis{stroke:#8a9aa2;stroke-width:1.2}
+.course-nav{display:flex;gap:20px;flex-wrap:wrap;padding:12px 24px;background:#fff;border-bottom:1px solid var(--line)}.course-nav a{color:#176b8b;text-underline-offset:3px}.shell{max-width:1530px;margin:auto;padding:22px 30px 30px}.page-head{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:14px}.page-head h1{font-size:21px;font-weight:500;margin:0}.workspace{display:grid;grid-template-columns:minmax(0,1fr) 360px;border:1px solid var(--line);border-radius:16px;background:#fff;overflow:hidden}.drawing{min-width:0;border-right:1px solid var(--line)}.toolbar{padding:10px 15px;border-bottom:1px solid #edf1f0;display:flex;justify-content:space-between;align-items:center;gap:10px}.toolbar strong{font-size:14px}.tools{display:flex;align-items:center;gap:5px}.tools button{padding:3px 10px}.tools output{min-width:46px;text-align:center;font-size:12px;color:var(--muted)}.canvas{height:min(57vw,635px);min-height:430px;overflow:hidden;touch-action:none;cursor:grab;background:#fff}.canvas:active{cursor:grabbing}svg{display:block;width:100%;height:100%}#diagram line,#diagram path,#diagram rect{vector-effect:non-scaling-stroke}#diagram .given{stroke:var(--given);fill:none;stroke-width:2}#diagram .hidden-line{stroke:var(--given);fill:none;stroke-width:1.45;stroke-dasharray:8 5}#diagram .axis-line{stroke:#8a9aa2;fill:none;stroke-width:1.2;stroke-dasharray:4mm 5px 1.8px 5px}#diagram .axis-line.cut-active{stroke:var(--new);stroke-width:2.3}#diagram .guide{stroke:var(--guide);fill:none;stroke-width:1.15}#diagram .process{stroke:var(--done);fill:none;stroke-width:0.13mm;stroke-linecap:round;stroke-linejoin:round}#diagram .measure-edge,#diagram .measure-brace{stroke:var(--new);fill:none;stroke-linecap:round;stroke-linejoin:round}#diagram .measure-edge{stroke-width:1.7}#diagram .measure-brace{stroke-width:1.3}#diagram .result-cut{stroke:var(--new);fill:none;stroke-width:0.56mm;stroke-linecap:round;stroke-linejoin:round}#diagram .result-behind{stroke:var(--given);fill:none;stroke-width:0.40mm;stroke-linecap:round;stroke-linejoin:round}#diagram .cut-symbol{stroke-width:2.5;stroke-linecap:butt;stroke-linejoin:miter}#diagram .metal-line{fill:none;stroke:#77868b;stroke-width:0.10mm}#diagram .transfer-point{fill:#fff;stroke:var(--new);stroke-width:1.25;vector-effect:non-scaling-stroke}#diagram .axon-cut{fill:#eaf3f1;stroke:none}#diagram .axon-edge{stroke-width:1.25}#diagram text{font:14px "Microsoft YaHei",sans-serif;fill:var(--given);paint-order:stroke;stroke:#fff;stroke-width:4px;stroke-linejoin:round}#diagram text.view-title{font-size:15px;font-weight:700}#diagram text.section-name{font-size:18px;font-weight:700}#diagram .symmetry-mark,#diagram .section-underline{stroke:var(--given);stroke-width:1.25}#diagram .symmetry-axis{stroke:#8a9aa2;stroke-width:1.2}
 aside{padding:20px 19px;display:flex;flex-direction:column;min-width:0}.count{color:var(--accent);font-size:12px;font-weight:700;letter-spacing:1px}h2{font-size:23px;line-height:1.35;margin:7px 0 12px}.explain-label{font-size:12px;color:var(--muted);margin:0 0 5px}.explain{font-size:14px;line-height:1.55;white-space:pre-line;margin:0 0 12px}.model-card{margin-top:auto;border-top:1px solid #e6eeee;padding-top:12px}.model-heading{display:flex;justify-content:space-between;gap:10px;align-items:baseline}.model-heading strong{font-size:15px}.model-heading small{font-size:11px;color:var(--muted)}.model-stage{position:relative;width:100%;height:260px;background:#edf5f3;border:1px solid var(--line);border-radius:11px;overflow:hidden;touch-action:none;cursor:grab}.model-stage:active{cursor:grabbing}#modelCanvas{width:100%;height:100%;display:block}.model-help{font-size:11px;color:var(--muted);margin:5px 0}.model-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:7px}.model-row button{font-size:12px;padding:5px 8px}.model-row button[aria-pressed=true]{background:#d7efea;border-color:#75b7ab;color:#075b55}.model-row input{flex:1;min-width:100px;accent-color:var(--accent)}.model-row output{font-size:11px;color:var(--muted);min-width:44px;text-align:right}
 .controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px;padding:12px 16px;background:#fff;border:1px solid var(--line);border-radius:12px}.controls .progress-wrap{display:flex;align-items:center;gap:10px;flex:1;min-width:180px}.controls input{width:100%;accent-color:var(--accent)}.controls span{font-size:13px;color:var(--muted);white-space:nowrap}.steps{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}.steps button{font-size:12px;padding:7px 10px;background:transparent}.steps button[aria-current=step]{background:var(--ink);border-color:var(--ink);color:#fff}.foot{font-size:12px;color:var(--muted)}.shell:fullscreen{max-width:none;overflow:auto;background:var(--bg)}
 @media(max-width:1050px){.workspace{grid-template-columns:minmax(0,1fr) 320px}.canvas{min-height:410px}.model-stage{height:220px}}@media(max-width:750px){.shell{padding:14px 10px}.page-head{align-items:flex-start;flex-direction:column}.page-head h1{font-size:18px}.workspace{display:flex;flex-direction:column}.drawing{width:100%;border-right:0;border-bottom:1px solid var(--line)}.canvas{width:100%;height:auto;min-height:0;aspect-ratio:818/961}.toolbar{padding:8px;flex-wrap:wrap}.toolbar strong{flex-basis:100%}.tools{width:100%;justify-content:flex-end}aside{padding:16px}.model-card{margin-top:12px}.model-stage{height:260px}.controls{padding:10px}.controls .progress-wrap{flex-basis:100%}}@media(prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
@@ -40,11 +40,11 @@ aside{padding:20px 19px;display:flex;flex-direction:column;min-width:0}.count{co
   const steps=[
     {title:'读题',action:'对照两面投影和轴测图，找出底板、下宽上窄的内腔，以及前后壁顶缘中央的凹槽。台肩下沿和凹槽底在不同高程。以下按题图比例转移尺寸。'},
     {title:'定剖切位置和视向',short:'定视向',action:'1. 1—1 通过前后中点，由水平投影的下方向上观察。\n2. 2—2 通过左右中点，由水平投影的右方向左观察。侧向投影的左半画外观，右半画剖面。'},
-    {title:'绘制1-1轮廓线',short:'绘制1-1轮廓线',action:'先用细实线绘制出所有的轮廓线。\n1. 量取总长和总高，用绿色细实线画底边和整条上边，再画外框竖线。先画左边作基准，量出右边相对左边的水平距离，再从上到下描线。\n2. 转移内腔底面和台肩高程，先画各段水平线。用已画竖线定位新竖线的水平距离，再从上到下画出内腔竖线。\n3. 绘制顶口时保留上边作图线。先从左向右画槽底水平线，再依次定位并从上到下画左、右竖线。'},
+    {title:'绘制1-1轮廓线',short:'绘制1-1轮廓线',action:'先用细实线绘制出所有的轮廓线。横线从左向右画，竖线从已有的水平线起笔。\n1. 量取总长和总高，用绿色细实线画底边和整条上边。先从上边左端向下画竖线作基准，再量取水平距离定位右边，从上边右端向下描线。\n2. 转移内腔底面和台肩高程，先画各段水平线，再由已画竖线量取水平距离，从对应水平线向下画内腔竖线。\n3. 绘制顶口时保留上边作图线。先从左向右画槽底水平线，再依次定位左、右竖线，并由上边向下画到槽底。'},
     {title:'填充金属图例',short:'填充金属图例',action:'保留 1—1 的轮廓和定位作图线，在切到的金属范围内填充等距的 45° 连续细实线。'},
-    {title:'绘制2-2轮廓线',short:'绘制2-2轮廓线',action:'先用细实线绘制出所有的轮廓线。\n1. 从水平投影向两侧转移半宽，从正面投影转移总高。上边从左到右一次画全，跨过对称轴。以对称轴和已有竖线为基准，量出各竖线的水平位置，再由上至下描线。\n2. 保留外框和已有作图线。量取后壁厚度，转移内腔底面、台肩和槽底的高程，先画水平内边线，再由上向下补画后壁内缘。'},
+    {title:'绘制2-2轮廓线',short:'绘制2-2轮廓线',action:'先用细实线绘制出所有的轮廓线。\n1. 从水平投影向两侧转移半宽，从正面投影转移总高。底边从左向右画，上边从左到右一次画全，跨过对称轴。以对称轴和已有竖线为基准，确定竖线位置，从上边向下描线。\n2. 保留外框和已有作图线。量取后壁厚度，转移内腔底面、台肩和槽底的高程，从左向右画水平内边线，再从上边向下补画后壁内缘。'},
     {title:'填充金属图例',short:'填充金属图例',action:'保留两图已有的轮廓和作图线。在 2—2 右半切到的金属范围内填充等距的 45° 连续细实线。'},
-    {title:'加粗结果并核对',short:'加粗结果并核对',action:'清除定位作图线和跨过 1—1 顶口的临时线段。切到的轮廓用 0.28 mm 中粗实线，未切到的可见轮廓用 0.20 mm 中实线。核对两图的底板、台肩、槽底高程和 2—2 的对称符号。'}
+    {title:'加粗结果并核对',short:'加粗结果并核对',action:'清除定位作图线和跨过 1—1 顶口的临时线段。本题取 b = 0.8 mm。切到的轮廓用 0.7b 中粗实线（0.56 mm），未切到的可见轮廓用 0.5b 中实线（0.40 mm）。核对两图的底板、台肩、槽底高程和 2—2 的对称符号。'}
   ];
   const $=id=>document.getElementById(id),diagram=$('diagram'),scene=$('scene');
   const media=matchMedia('(max-width: 750px)'),reduced=matchMedia('(prefers-reduced-motion: reduce)');
@@ -54,7 +54,7 @@ aside{padding:20px 19px;display:flex;flex-direction:column;min-width:0}.count{co
   let step=0,phase=0,playing=false,stepTimer=0,playTimer=0,zoom=1,panX=0,panY=0,diagramDrag=null;
   const n=v=>Math.round(v*100)/100;
   const xy=([x,y])=>`${n(x)} ${n(y)}`;
-  const line=(a,b,cls,attributes='')=>`<line class="${cls}" x1="${n(a[0])}" y1="${n(a[1])}" x2="${n(b[0])}" y2="${n(b[1])}"${attributes}/>`;
+  const line=(a,b,cls)=>`<line class="${cls}" x1="${n(a[0])}" y1="${n(a[1])}" x2="${n(b[0])}" y2="${n(b[1])}"/>`;
   const path=(d,cls)=>`<path class="${cls}" d="${d}"/>`;
   const trace=(points,close=false)=>'M'+points.map(xy).join(' L')+(close?' Z':'');
   const txt=([x,y],label,cls='',anchor='start')=>`<text class="${cls}" x="${x}" y="${y}" text-anchor="${anchor}">${label}</text>`;
@@ -203,8 +203,8 @@ aside{padding:20px 19px;display:flex;flex-direction:column;min-width:0}.count{co
     if(result&&progress>=2){
       const {view,a,b}=result;
       const cls='process'+(topLevel?' top-level':'')+(progress===2?' drawing-edge':'');
-      const animation=progress===2?` pathLength="1" style="--trace-duration:${drawDuration}ms"`:'';
-      out+=line(viewPoint(view,a),viewPoint(view,b),cls,animation);
+      const render=progress===2?tracedLine:line;
+      out+=render(viewPoint(view,a),viewPoint(view,b),cls);
     }
     return out;
   }
@@ -367,11 +367,39 @@ aside{padding:20px 19px;display:flex;flex-direction:column;min-width:0}.count{co
     return out+txt([layout.axon[0]+90,layout===wide?646:950],'1—1 剖开后的轴测图','view-title','middle');
   }
 
+  // Animate the endpoint in drawing coordinates so zoom cannot change the traced fraction.
+  let traceFrame=0,traceStage=-1,tracePhase=-1,traceStarted=0;
+  function tracedLine(a,b,cls){
+    const [x,y]=a.map(n);
+    return `<line class="${cls}" x1="${x}" y1="${y}" x2="${x}" y2="${y}"
+      data-end-x="${n(b[0])}" data-end-y="${n(b[1])}"/>`;
+  }
+  function startLineTrace(){
+    if(traceFrame)cancelAnimationFrame(traceFrame);
+    const line=scene.querySelector('.drawing-edge');
+    if(!line){traceStage=-1;return}
+    if(traceStage!==step||tracePhase!==phase){
+      traceStage=step;
+      tracePhase=phase;
+      traceStarted=performance.now();
+    }
+    const x=line.x1.baseVal.value,y=line.y1.baseVal.value;
+    const dx=Number(line.dataset.endX)-x,dy=Number(line.dataset.endY)-y;
+    function draw(now){
+      const progress=Math.max(0,Math.min(1,(now-traceStarted)/drawDuration));
+      line.setAttribute('x2',x+dx*progress);
+      line.setAttribute('y2',y+dy*progress);
+      traceFrame=progress<1?requestAnimationFrame(draw):0;
+    }
+    draw(performance.now());
+  }
+
   let axonCache='';
   function render2D(){
     scene.innerHTML=givenViews()+axonCache+drawResults()+drawMeasurements();
     const [width,height]=layout.size;
     scene.setAttribute('transform',`translate(${width*(1-zoom)/2+panX} ${height*(1-zoom)/2+panY}) scale(${zoom})`);
+    startLineTrace();
     for(const caption of scene.querySelectorAll('.section-caption')){
       const [label,underline]=caption.children;
       const center=label.x.baseVal.getItem(0).value,halfWidth=label.getComputedTextLength()/2;
@@ -392,7 +420,7 @@ aside{padding:20px 19px;display:flex;flex-direction:column;min-width:0}.count{co
     axonCache=axonDrawing();
     render2D();
   }
-  const measureDuration=650,transferDuration=540,drawDuration=680;
+  const measureDuration=850,transferDuration=750,drawDuration=1000;
   function phaseDuration(index){
     if(step===1)return measureDuration;
     const item=operations[step][Math.floor(index/3)];

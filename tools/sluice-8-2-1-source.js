@@ -14,11 +14,9 @@
   const steps=[
     {title:'读题',action:'对照正面投影、水平投影和剖开后的轴测图，找出底板、两侧立墙、两段斜坡和门槽。以闸室左端和底边作量取基准，按题图比例转移长度。'},
     {title:'确定剖切位置',action:'沿水平投影中两端编号为 1 的剖切线作纵向剖切，由图下方向上方观察。对照轴测图，移去近侧一半，保留被剖到的底板、斜坡和切面后方的立墙。'},
-    {title:'量取总长与墙高',action:'1. 对照轴测图，在正面投影量取两端间的总长，沿剖面图的水平基线作底边。\n2. 从底边量至墙顶，在基线两端分别竖起相同高度，再连接墙顶两点。'},
-    {title:'逐点作底板和变坡',action:'1. 从正面投影底边向上量取低台面和凸台顶面的高度。\n2. 从水平投影左端依次量取两段斜坡四个转折点的位置，向上投射至对应高程。\n3. 从左端起依次连接低台面、上坡、凸台顶面、下坡和右侧低台面。'},
-    {title:'作后墙门槽',action:'对照轴测图的后墙门槽，从水平投影左端分别量取槽的两侧位置。把两个位置转移到剖面图墙顶，各向下作竖线至凸台顶面。'},
-    {title:'填充混凝土图例',action:'在剖到的混凝土范围内画连续的 45° 细实线，再散布小三角和小点。'},
-    {title:'加粗结果并核对',action:'加粗剖切面的闭合轮廓，后墙可见轮廓保持较细，标注“1—1 剖面图”。核对总长、墙高、两级高程、四处变坡位置及门槽宽度。'}
+    {title:'绘制轮廓线',action:'先用细实线绘制出所有的轮廓线。\n1. 从正面投影转移总长和墙高。由左向右画底边和顶边，再从顶边两端向下画外框竖线。\n2. 从正面投影转移两个台面的高程，从水平投影转移四个变坡点的位置。先从左向右画各水平段，再连接两段斜坡。\n3. 从水平投影转移门槽的两侧位置，由已画的墙顶线向下作竖线至凸台顶面。'},
+    {title:'填充钢筋混凝土图例',action:'保留细实线轮廓。在剖到的混凝土范围内画连续的 45° 细实线，再散布小三角和小点。'},
+    {title:'加粗结果并核对',action:'本题取 b = 0.8 mm。切到的轮廓用 0.7b 中粗实线（0.56 mm），未切到的可见轮廓用 0.5b 中实线（0.40 mm）。标注“1—1 剖面图”，核对总长、墙高、两级高程、四处变坡位置及门槽宽度。'}
   ];
   const $=id=>document.getElementById(id);
   const scene=$('scene'),diagram=$('diagram');
@@ -59,7 +57,7 @@
   const hatchPath=hatchLines.join(' '),trianglePath=triangles.join(' ');
   function sectionMaterial(){
     return `<g clip-path="url(#section-clip)"><g transform="translate(${SX} ${FY})">`+
-      path(hatchPath,'material-line',`stroke="${hatchInk}" stroke-width=".75" fill="none"`)+
+      path(hatchPath,'material-line',`stroke="${hatchInk}" stroke-width="0.10mm" fill="none"`)+
       path(trianglePath,'material-line',`stroke="${aggregateInk}" stroke-width=".85" fill="none"`)+
       dots.map(({x,z,r})=>`<circle cx="${n(x)}" cy="${n(-z)}" r="${n(r)}" fill="${aggregateInk}"/>`).join('')+'</g></g>';
   }
@@ -100,55 +98,59 @@
       `C${at(1-end/2,10)} ${at(1,10)} ${at(1,4)}`,'measure-brace');
   }
   const measure=mark=>segment(mark.a,mark.b,'measure-edge')+brace(mark);
-  const outline=[[[0,0],[L,0]],[[0,0],[0,H]],[[L,0],[L,H]],[[0,H],[L,H]]];
+  const wallTop=[[0,H],[L,H]];
+  const outline=[[[0,0],[L,0]],wallTop,[[0,H],[0,0]],[[L,H],[L,0]]];
   const elevation=(x,z)=>[[x,0],[x,z]];
-  const operations={
-    2:outline.map(([a,b],index)=>({
-      source:index<3?frontMeasure(a,b,index===2?1:-1):null,
-      target:index<3?sectionMeasure(a,b,index===2?1:-1):null,
-      axon:axonSegment(a,b,index===1||index===2||index===3?G.walls[0]:cutY),
-      edge:[a,b]
+  const slotEdges=G.slot.map(x=>[[x,H],[x,G.crest]]);
+  const contourOperations=[
+    {source:frontMeasure(...elevation(0,H),-1),target:sectionMeasure(...elevation(-20,H),-1),
+      axon:axonSegment(...elevation(0,H),G.walls[0])},
+    ...outline.map(([a,b],index)=>({
+      source:index===0?frontMeasure(a,b,-1):null,
+      target:index===0?sectionMeasure([0,-10],[L,-10],1):null,
+      axon:axonSegment(a,b,index===0?cutY:G.walls[0]),edge:[a,b]
     })),
-    3:[
-      ...[[0,G.floor],[G.breaks[1],G.crest]].map(([x,z])=>({
-        source:frontMeasure(...elevation(x,z),-1),target:sectionMeasure(...elevation(x,z),-1),
-        axon:axonSegment(...elevation(x,z)),level:z
-      })),
-      ...G.breaks.map(x=>({
-        source:planMeasure(x,G.walls[3]),target:sectionMeasure([0,0],[x,0],1),
-        axon:axonSegment([0,0],[x,0]),position:[x,profile(x)]
-      })),
-      ...topPoints.slice(1).map((b,i)=>({edge:[topPoints[i],b],axon:axonSegment(topPoints[i],b)}))
-    ],
-    4:G.slot.map(x=>({source:planMeasure(x,G.walls[2]),target:sectionMeasure([0,H],[x,H],-1),
-      axon:axonSegment([x,H],[x,G.crest],G.walls[2]),edge:[[x,H],[x,G.crest]]}))
-  };
+    ...[[0,G.floor],[G.breaks[1],G.crest]].map(([x,z])=>({
+      source:frontMeasure(...elevation(x,z),-1),target:sectionMeasure(...elevation(x,z),-1),
+      axon:axonSegment(...elevation(x,z)),level:z
+    })),
+    ...G.breaks.map(x=>({
+      source:planMeasure(x,G.walls[3]),target:sectionMeasure([0,-10],[x,-10],1),
+      axon:axonSegment([0,0],[x,0]),position:[x,profile(x)]
+    })),
+    ...[0,2,4,1,3].map(i=>({edge:[topPoints[i],topPoints[i+1]],axon:axonSegment(topPoints[i],topPoints[i+1])})),
+    ...slotEdges.map(([a,b])=>({source:planMeasure(a[0],G.walls[2]),target:sectionMeasure([0,H+10],[a[0],H+10],-1),
+      axon:axonSegment(a,b,G.walls[2]),edge:[a,b]}))
+  ];
+  const contourPhases=contourOperations.length*2;
   function sectionDrawing(){
     if(step<2)return step===1?txt(SX,70,'待作 1—1 剖面图','view-title'):'';
-    let out=step>=5?sectionMaterial():'';
+    let out=step>=3?sectionMaterial():'';
     if(step===steps.length-1){
-      for(const [a,b] of [[[0,G.floor],[0,H]],[[L,G.floor],[L,H]],outline[3],...operations[4].map(item=>item.edge)]){
+      for(const [a,b] of [[[0,G.floor],[0,H]],[[L,G.floor],[L,H]],wallTop,...slotEdges]){
         out+=sectionLine(a,b,'result-behind');
       }
       return out+path(sectionFill,'result-cut')+cutLabel();
     }
-    for(const [stage,items] of Object.entries(operations)){
-      if(Number(stage)>step)break;
-      const current=Number(stage)===step;
-      for(const [index,item] of items.entries()){
-        if(current&&phase<2*index+1)break;
-        const cls=current&&phase===2*index+1?'drawing-edge':'process';
-        if(item.edge)out+=sectionLine(...item.edge,cls);
-        if(current&&item.level!==undefined)out+=sectionLine([0,item.level],[L,item.level],'guide');
-        if(current&&item.position){
-          out+=sectionLine([item.position[0],0],item.position,'guide')+point(item.position);
-        }
+    const drawing=step===2,showGuides=drawing&&phase<contourPhases;
+    let guides='',points='';
+    for(const [index,item] of contourOperations.entries()){
+      if(drawing&&phase<2*index+1)break;
+      const cls=drawing&&phase===2*index+1?'drawing-edge':'process';
+      if(item.edge){
+        const [a,b]=item.edge;
+        out+=cls==='drawing-edge'?tracedLine(section(a),section(b),cls):sectionLine(a,b,cls);
+      }
+      if(showGuides&&item.level!==undefined)guides+=sectionLine([0,item.level],[L,item.level],'guide');
+      if(showGuides&&item.position){
+        guides+=sectionLine([item.position[0],0],item.position,'guide');
+        points+=point(item.position);
       }
     }
-    return out+(step>=5?cutLabel():'');
+    return guides+out+points+(step>=3?cutLabel():'');
   }
   function measurementMarks(){
-    const item=operations[step]?.[Math.floor(phase/2)];
+    const item=step===2?contourOperations[Math.floor(phase/2)]:null;
     if(!item)return '';
     let out='';
     if(item.axon){
@@ -159,9 +161,12 @@
     if(item.target&&phase%2===1)out+=measure(item.target);
     return out;
   }
+  /* SECTION_LINE_TRACE */
+
   function render2D(){
     scene.innerHTML=knownViews()+axonView+sectionDrawing()+measurementMarks();
     scene.setAttribute('transform',`translate(${505*(1-zoom)+panX} ${300*(1-zoom)+panY}) scale(${zoom})`);
+    startLineTrace();
     $('count').textContent=step===0?'准备 · 读题':`步骤 ${String(step).padStart(2,'0')} / ${String(steps.length-1).padStart(2,'0')}`;
     $('stepTitle').textContent=steps[step].title;
     $('action').textContent=steps[step].action;
@@ -170,23 +175,30 @@
     $('zoomValue').textContent=`${Math.round(zoom*100)}%`;
     for(const button of $('steps').children)button.setAttribute('aria-current',Number(button.dataset.step)===step?'step':'false');
   }
-  const sourceTime=460,transferTime=380;
+  const sourceTime=850,transferTime=750,drawDuration=1000;
+  function phaseDuration(index){
+    const item=contourOperations[Math.floor(index/2)];
+    if(index%2)return item.edge?drawDuration:transferTime;
+    return item.source||item.axon?sourceTime:0;
+  }
   function setStep(value){
     clearTimeout(stepTimer);
     step=Math.max(0,Math.min(steps.length-1,Number(value)));phase=0;
-    const count=operations[step]?.length??0;
+    const count=step===2?contourPhases:0;
+    const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if(reduced)phase=count;
     function showPhase(){
       render2D();
-      if(phase<count*2)stepTimer=setTimeout(()=>{phase++;showPhase()},phase%2===0?sourceTime:transferTime);
+      if(phase<count)stepTimer=setTimeout(()=>{phase++;showPhase()},phaseDuration(phase));
     }
     showPhase();
+    return reduced?0:Array.from({length:count},(_,index)=>phaseDuration(index)).reduce((sum,time)=>sum+time,0);
   }
   function stopPlay(){playing=false;clearTimeout(playTimer);$('play').textContent='播放'}
   function playNext(){
     if(!playing)return;
     if(step>=steps.length-1){stopPlay();return}
-    setStep(step+1);
-    const duration=(operations[step]?.length??0)*(sourceTime+transferTime);
+    const duration=setStep(step+1);
     playTimer=setTimeout(playNext,Math.max(2500,duration+900));
   }
   $('prev').addEventListener('click',()=>{stopPlay();setStep(step-1)});

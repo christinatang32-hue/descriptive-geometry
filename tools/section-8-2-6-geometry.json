@@ -1,0 +1,25 @@
+{
+  "radius": 107,
+  "height": 294,
+  "baseHalfLength": 150,
+  "baseHalfDepth": 137.5,
+  "baseHeight": 67,
+  "pocketHalfLength": 76,
+  "pocketHalfDepth": 45,
+  "pocketFloor": 35,
+  "wingHalfLength": 184,
+  "wingHalfDepth": 58,
+  "wingBottom": 157,
+  "wingTop": 229,
+  "windowHalfLength": 63,
+  "windowBottom": 142,
+  "windowTop": 244,
+  "measurement": {
+    "source": "空白作业/8.2-5&6.jpg",
+    "unit": "正面投影底座宽度归一化为 300，水平投影按同一圆的直径校正扫描纵横比例",
+    "cropOrigin": [1610, 875],
+    "frontX": {"base": [186, 636], "cylinder": [251, 571], "wing": [136, 689], "pocket": [297, 525], "window": [317, 505]},
+    "frontY": {"bottom": 489, "baseTop": 388, "top": 48, "pocketFloor": 437, "wing": [254, 145], "window": [276, 123]},
+    "planY": {"base": [662, 1066], "cylinder": [706, 1020], "wing": [778, 949], "pocket": [798, 930]}
+  }
+}

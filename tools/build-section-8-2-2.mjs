@@ -8,7 +8,8 @@ const platform = path.resolve(tools, '..');
 const project = path.resolve(platform, '..');
 const read = name => fs.readFileSync(path.join(tools, name), 'utf8');
 const geometry = JSON.parse(read('section-8-2-2-geometry.json'));
-const source = read('section-8-2-2-source.js').replace('__SECTION_GEOMETRY__', JSON.stringify(geometry));
+const source = read('section-8-2-2-source.js').replace('__SECTION_GEOMETRY__', JSON.stringify(geometry))
+  .replace('  /* SECTION_LINE_TRACE */', () => read('section-line-trace.js').trimEnd());
 const platformPage = read('section-8-2-2-template.html').replace('__SECTION_LESSON__', () => source.trimEnd());
 const offlinePage = platformPage.replace('<link rel="stylesheet" href="assignment-flow.css">', '')
   .replace('<script defer src="config.js"></script><script defer src="tracker.js"></script><script defer src="assignment-flow.js"></script>', '')

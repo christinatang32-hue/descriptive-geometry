@@ -8,11 +8,11 @@
   const steps=[
     {title:'读题',action:'对照两面投影和轴测图，找出底板、下宽上窄的内腔，以及前后壁顶缘中央的凹槽。台肩下沿和凹槽底在不同高程。以下按题图比例转移尺寸。'},
     {title:'定剖切位置和视向',short:'定视向',action:'1. 1—1 通过前后中点，由水平投影的下方向上观察。\n2. 2—2 通过左右中点，由水平投影的右方向左观察。侧向投影的左半画外观，右半画剖面。'},
-    {title:'绘制1-1轮廓线',short:'绘制1-1轮廓线',action:'先用细实线绘制出所有的轮廓线。\n1. 量取总长和总高，用绿色细实线画底边和整条上边，再画外框竖线。先画左边作基准，量出右边相对左边的水平距离，再从上到下描线。\n2. 转移内腔底面和台肩高程，先画各段水平线。用已画竖线定位新竖线的水平距离，再从上到下画出内腔竖线。\n3. 绘制顶口时保留上边作图线。先从左向右画槽底水平线，再依次定位并从上到下画左、右竖线。'},
+    {title:'绘制1-1轮廓线',short:'绘制1-1轮廓线',action:'先用细实线绘制出所有的轮廓线。横线从左向右画，竖线从已有的水平线起笔。\n1. 量取总长和总高，用绿色细实线画底边和整条上边。先从上边左端向下画竖线作基准，再量取水平距离定位右边，从上边右端向下描线。\n2. 转移内腔底面和台肩高程，先画各段水平线，再由已画竖线量取水平距离，从对应水平线向下画内腔竖线。\n3. 绘制顶口时保留上边作图线。先从左向右画槽底水平线，再依次定位左、右竖线，并由上边向下画到槽底。'},
     {title:'填充金属图例',short:'填充金属图例',action:'保留 1—1 的轮廓和定位作图线，在切到的金属范围内填充等距的 45° 连续细实线。'},
-    {title:'绘制2-2轮廓线',short:'绘制2-2轮廓线',action:'先用细实线绘制出所有的轮廓线。\n1. 从水平投影向两侧转移半宽，从正面投影转移总高。上边从左到右一次画全，跨过对称轴。以对称轴和已有竖线为基准，量出各竖线的水平位置，再由上至下描线。\n2. 保留外框和已有作图线。量取后壁厚度，转移内腔底面、台肩和槽底的高程，先画水平内边线，再由上向下补画后壁内缘。'},
+    {title:'绘制2-2轮廓线',short:'绘制2-2轮廓线',action:'先用细实线绘制出所有的轮廓线。\n1. 从水平投影向两侧转移半宽，从正面投影转移总高。底边从左向右画，上边从左到右一次画全，跨过对称轴。以对称轴和已有竖线为基准，确定竖线位置，从上边向下描线。\n2. 保留外框和已有作图线。量取后壁厚度，转移内腔底面、台肩和槽底的高程，从左向右画水平内边线，再从上边向下补画后壁内缘。'},
     {title:'填充金属图例',short:'填充金属图例',action:'保留两图已有的轮廓和作图线。在 2—2 右半切到的金属范围内填充等距的 45° 连续细实线。'},
-    {title:'加粗结果并核对',short:'加粗结果并核对',action:'清除定位作图线和跨过 1—1 顶口的临时线段。切到的轮廓用 0.28 mm 中粗实线，未切到的可见轮廓用 0.20 mm 中实线。核对两图的底板、台肩、槽底高程和 2—2 的对称符号。'}
+    {title:'加粗结果并核对',short:'加粗结果并核对',action:'清除定位作图线和跨过 1—1 顶口的临时线段。本题取 b = 0.8 mm。切到的轮廓用 0.7b 中粗实线（0.56 mm），未切到的可见轮廓用 0.5b 中实线（0.40 mm）。核对两图的底板、台肩、槽底高程和 2—2 的对称符号。'}
   ];
   const $=id=>document.getElementById(id),diagram=$('diagram'),scene=$('scene');
   const media=matchMedia('(max-width: 750px)'),reduced=matchMedia('(prefers-reduced-motion: reduce)');
@@ -22,7 +22,7 @@
   let step=0,phase=0,playing=false,stepTimer=0,playTimer=0,zoom=1,panX=0,panY=0,diagramDrag=null;
   const n=v=>Math.round(v*100)/100;
   const xy=([x,y])=>`${n(x)} ${n(y)}`;
-  const line=(a,b,cls,attributes='')=>`<line class="${cls}" x1="${n(a[0])}" y1="${n(a[1])}" x2="${n(b[0])}" y2="${n(b[1])}"${attributes}/>`;
+  const line=(a,b,cls)=>`<line class="${cls}" x1="${n(a[0])}" y1="${n(a[1])}" x2="${n(b[0])}" y2="${n(b[1])}"/>`;
   const path=(d,cls)=>`<path class="${cls}" d="${d}"/>`;
   const trace=(points,close=false)=>'M'+points.map(xy).join(' L')+(close?' Z':'');
   const txt=([x,y],label,cls='',anchor='start')=>`<text class="${cls}" x="${x}" y="${y}" text-anchor="${anchor}">${label}</text>`;
@@ -171,8 +171,8 @@
     if(result&&progress>=2){
       const {view,a,b}=result;
       const cls='process'+(topLevel?' top-level':'')+(progress===2?' drawing-edge':'');
-      const animation=progress===2?` pathLength="1" style="--trace-duration:${drawDuration}ms"`:'';
-      out+=line(viewPoint(view,a),viewPoint(view,b),cls,animation);
+      const render=progress===2?tracedLine:line;
+      out+=render(viewPoint(view,a),viewPoint(view,b),cls);
     }
     return out;
   }
@@ -335,11 +335,14 @@
     return out+txt([layout.axon[0]+90,layout===wide?646:950],'1—1 剖开后的轴测图','view-title','middle');
   }
 
+  /* SECTION_LINE_TRACE */
+
   let axonCache='';
   function render2D(){
     scene.innerHTML=givenViews()+axonCache+drawResults()+drawMeasurements();
     const [width,height]=layout.size;
     scene.setAttribute('transform',`translate(${width*(1-zoom)/2+panX} ${height*(1-zoom)/2+panY}) scale(${zoom})`);
+    startLineTrace();
     for(const caption of scene.querySelectorAll('.section-caption')){
       const [label,underline]=caption.children;
       const center=label.x.baseVal.getItem(0).value,halfWidth=label.getComputedTextLength()/2;
@@ -360,7 +363,7 @@
     axonCache=axonDrawing();
     render2D();
   }
-  const measureDuration=650,transferDuration=540,drawDuration=680;
+  const measureDuration=850,transferDuration=750,drawDuration=1000;
   function phaseDuration(index){
     if(step===1)return measureDuration;
     const item=operations[step][Math.floor(index/3)];
