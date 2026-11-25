@@ -6,7 +6,7 @@
   const steps=[
     {title:'读题',action:'对照两幅已知投影，辨认背板、两侧槽肩和底板。圆孔沿前后方向穿过背板，孔的最低点与槽底同高。'},
     {title:'定剖切位置和视向',short:'定视向',action:'A—A 经过左右对称中心，也通过圆孔轴线。沿正面投影中 A 符号的视向，自左向右观察，移去左半体。剖面图左边对应背面，右边对应前缘。'},
-    {title:'绘制轮廓线',short:'绘制轮廓线',action:'先用细实线绘制出所有的轮廓线。量取尺寸时，对照剖开后轴测图中同步标出的线段和点位。\n1. 从正面投影转移总高，从水平投影转移总厚。先从左向右画底边和顶边，再从顶边两端向下画外框竖线。\n2. 从水平投影量取背板厚度，圈出圆孔的最高点和最低点，转移高程后从左向右画内侧水平线。孔口下边与槽底线重合，画成一条。\n3. 从已有的顶边向下画背板内缘，再量取槽肩位置，从顶边向下画槽肩竖线。'},
+    {title:'绘制轮廓线',short:'绘制轮廓线',action:'先用细实线绘制出所有的轮廓线。量取尺寸时，对照剖开后轴测图中同步标出的线段和点位。\n1. 从水平投影量取总厚，从左向右画底边。从底边左端向上转移总高，画左竖线。再量取顶边长度，从左向右画顶边，直接连接上下两边的右端点。\n2. 从水平投影量取背板厚度，圈出圆孔的最高点和最低点，转移高程后从左向右画内侧水平线。孔口下边与槽底线重合，画成一条。\n3. 从已有的顶边向下画背板内缘，再量取槽肩位置，从顶边向下画槽肩竖线。'},
     {title:'填充钢筋混凝土图例',short:'填充钢筋混凝土图例',action:'保留细实线轮廓。在上方背板和下方底板的切面内画连续的 45° 细实线，再散布小三角和小点。'},
     {title:'加粗结果并核对',short:'加粗结果并核对',action:'本题取 b = 0.8 mm。切到的轮廓用 0.7b 中粗实线（0.56 mm），未切到的可见轮廓用 0.5b 中实线（0.40 mm）。核对孔口和槽底高程、背板厚度及槽肩位置。'}
   ];
@@ -54,20 +54,23 @@
     return out;
   }
   const cutPoint=([y,z])=>[mid,y,z];
-  function depthMeasure(x,y,axon){
-    return {source:pair('plan',[x,0],[x,y],-1),target:pair('section',[0,-12],[y,-12]),axon};
+  function depthMeasure(x,y,axon,level=-12){
+    return {source:pair('plan',[x,0],[x,y],-1),target:pair('section',[0,level],[y,level],level<0?1:-1),axon};
   }
   const contourOperations=[
-    {source:pair('front',[0,0],[0,H],-1),target:pair('section',[-18,0],[-18,H],-1),axon:[[L,D,0],[L,D,H]]},
-    {...depthMeasure(L,D,[[0,0],[D,0]].map(cutPoint)),edge:section([0,0],[D,0])},
+    depthMeasure(L,D,[[0,0],[D,0]].map(cutPoint)),
+    {edge:section([0,0],[D,0])},
+    {source:pair('front',[0,0],[0,H],-1),target:pair('section',[0,0],[0,H],-1),axon:[[L,0,0],[L,0,H]]},
+    {edge:section([0,0],[0,H])},
+    depthMeasure(L,D,[[L,0,H],[L,D,H]],H+12),
     {edge:section([0,H],[D,H])},
-    {edge:section([0,H],[0,0])},
     {edge:section([D,H],[D,0])},
     depthMeasure(A,T,[[0,topHole],[T,topHole]].map(cutPoint)),
     {sample:topHole},{sample:topHole,edge:section([0,topHole],[T,topHole])},
     {sample:F},{sample:F,edge:section([0,F],[D,F])},
     {edge:section([T,H],[T,F])},
-    {...depthMeasure(B,S,[[L-B,0,H],[L-B,S,H]]),edge:section([S,H],[S,F])}
+    depthMeasure(B,S,[[L-B,0,H],[L-B,S,H]]),
+    {edge:section([S,H],[S,F])}
   ];
   const contourPhases=contourOperations.length*2;
 
@@ -111,7 +114,7 @@
       if(progress>=1&&progress<=3){
         for(const y of [0,T])out+=axonPoint(axonView,cutPoint([y,z]));
       }
-      if(progress>=3)for(const y of [0,T])out+=dotAt('section',[y,z]);
+      if(progress>=2)for(const y of [0,T])out+=dotAt('section',[y,z]);
     }
     return out;
   }
@@ -338,13 +341,13 @@
     axonView=createSectionAxon(modelOpen,layout.axon,'A—A 剖开后的轴测图');
     render2D();
   }
-  const measureDuration=850,drawDuration=1000;
+  const measureDuration=425,transferDuration=375,drawDuration=500;
   function phaseDuration(index){
     if(step===3)return 450;
     const item=contourOperations[Math.floor(index/2)];
     if(index%2&&item?.edge)return drawDuration;
-    if(item?.sample!==undefined)return measureDuration;
-    return item?.source||item?.target?measureDuration:0;
+    if(item?.sample===undefined&&!item?.source&&!item?.target)return 0;
+    return index%2?transferDuration:measureDuration;
   }
   function setStep(value){
     clearTimeout(stepTimer);

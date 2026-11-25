@@ -41,8 +41,8 @@ aside{padding:20px 19px;display:flex;flex-direction:column;min-width:0}.count{co
   const steps=[
     {title:'读题',action:'水平投影中的圆对应竖向圆柱。顶部矩形内腔向下伸入底座，底面低于底座顶面。前后侧窗通到内腔，两侧凸翼位于侧窗的高度范围内。尺寸按题图比例转移。'},
     {title:'确定剖切位置与视向',short:'定剖切视向',action:'A—A 通过圆柱轴线，由水平投影下方向上看，作全剖。B—B 也通过圆柱轴线，由左方向右看，左半保留外观，右半作剖面。'},
-    {title:'绘制全剖轮廓线',short:'绘制全剖轮廓线',action:'先用细实线绘制出所有的轮廓线。量取时，对照 A—A 剖开后轴测图中同步标出的尺寸。\n1. 从中心线向两侧转移底座、圆柱、凸翼的半宽，从正面投影转移各层高程。外轮廓先从左向右画水平线，再从已画的水平线向下画竖线。\n2. 转移内腔半宽和底面高程。先从左向右画内腔底边与后方可见的窗上下边，再从已有的水平线向下画内腔和侧窗的竖边。'},
-    {title:'绘制半剖轮廓线',short:'绘制半剖轮廓线',action:'先用细实线绘制出所有的轮廓线。量取时，对照 B—B 剖开后轴测图中同步标出的尺寸和点位。\n1. 把侧窗的竖边投到水平投影，与圆周求交。圈出交点，向侧面转移其前后位置，并与窗顶、窗底的高程线相交。由此确定侧窗范围内内收的圆柱轮廓。\n2. 先画外轮廓，再补左半凸翼及右半内腔边线。每组先从左向右画水平线，再从已有的水平线向下画竖线。'},
+    {title:'绘制全剖轮廓线',short:'绘制全剖轮廓线',action:'先用细实线绘制出所有的轮廓线。量取时，对照 A—A 剖开后轴测图中同步标出的尺寸。\n1. 量取底座宽度，从左向右画底边。从底边左端向上量取底座高度并画左竖线。量取并画出底座露出的两段上边，再直接连接右端点。\n2. 量取圆柱的顶边跨度及凸翼的位置和高程。先画上方各段水平线，再从相接的水平线画竖线。\n3. 转移内腔半宽和底面高程。先从左向右画内腔底边与后方可见的窗上下边，再从已有的水平线向下画内腔和侧窗的竖边。'},
+    {title:'绘制半剖轮廓线',short:'绘制半剖轮廓线',action:'先用细实线绘制出所有的轮廓线。量取时，对照 B—B 剖开后轴测图中同步标出的尺寸和点位。\n1. 先画底座底边，从其左端向上画左竖线。量取并画出底座可见的上边，再直接连接右端点。\n2. 将侧窗竖边投到水平投影，与圆周求交。圈出交点，并转移其前后位置和窗顶、窗底高程，确定侧窗处内收的轮廓。\n3. 量取圆柱顶边跨度，从左向右画顶边和其余上方水平线，再从相接的水平线画竖线。随后补画左半凸翼和右半内腔的边线。'},
     {title:'填充通用材料图例',short:'填充通用材料图例',action:'保留细实线轮廓。在 A—A 的 U 形切面、B—B 右半的上下两块切面内分别填充等距的 45° 连续细实线。'},
     {title:'加粗结果并核对',short:'加粗结果并核对',action:'本题取 b = 0.8 mm。切到的轮廓用 0.7b 中粗实线（0.56 mm），未切到的可见轮廓用 0.5b 中实线（0.40 mm）。核对内腔底面、侧窗的上下高程和半剖对称符号。'}
   ];
@@ -82,7 +82,7 @@ aside{padding:20px 19px;display:flex;flex-direction:column;min-width:0}.count{co
     [-R,T],[-windowReach,T],[-windowReach,N],[-R,N],[-R,B],[-Y,B]];
   const bFoot=[[0,0],[Y,0],[Y,B],[R,B],[R,N],[Q,N],[Q,F],[0,F]];
   const bCap=rect(Q,T,R,H);
-  const bInside=[horizontal(B,-Y,0),horizontal(J,-V,0),horizontal(K,-V,0),horizontal(F,0,Q),
+  const bInside=[horizontal(J,-V,0),horizontal(K,-V,0),horizontal(F,0,Q),
     horizontal(N,Q,windowReach),horizontal(T,Q,windowReach),vertical(-V,J,K),vertical(Q,F,H)];
   const bBehind=[horizontal(0,-Y,0),horizontal(H,-R,Q),horizontal(B,-Y,0),horizontal(J,-V,0),horizontal(K,-V,0),vertical(-V,J,K),
     horizontal(T,-R,-windowReach),horizontal(N,-R,-windowReach),vertical(-R,T,H),vertical(-windowReach,N,T),
@@ -129,13 +129,37 @@ aside{padding:20px 19px;display:flex;flex-direction:column;min-width:0}.count{co
     target:mark('full',[0,-14],[x,-14],x<0?-1:1),axon:[[0,0,z],[x,0,z]],axonSide:x<0?-1:1});
   const measureY=(y,x,z,ax)=>({source:mark('plan',[x,0],[x,y],y<0?-1:1),
     target:mark('half',[0,-14],[y,-14],y<0?-1:1),axon:[[ax,0,z],[ax,y,z]],axonSide:y<0?-1:1});
+  function measureSpan(view,a,b,z,offset=0){
+    const planPoint=u=>view==='full'?[u,offset]:[offset,u];
+    const spacePoint=u=>view==='full'?[u,0,z]:[0,u,z];
+    const level=z===0?-14:z+10;
+    return {source:mark('plan',planPoint(a),planPoint(b),-1),
+      target:mark(view,[a,level],[b,level],z===0?1:-1),axon:[spacePoint(a),spacePoint(b)]};
+  }
+  function baseOperations(view){
+    const full=view==='full',width=full?X:Y,leftEnd=full?-R:0;
+    return [
+      measureSpan(view,-width,width,0,full?-Y:X),{edge:edge(view,...horizontal(0,-width,width))},
+      transferZ(view,full?-X:X,B,-width-16,full?[-X,0]:[0,-Y]),
+      {edge:edge(view,...vertical(-width,0,B))},
+      measureSpan(view,-width,leftEnd,B),{edge:edge(view,...horizontal(B,-width,leftEnd))},
+      measureSpan(view,R,width,B),{edge:edge(view,...horizontal(B,R,width))},
+      {edge:edge(view,...vertical(width,B,0))}
+    ];
+  }
+  function upperOutline(view,outline){
+    const remaining=polyEdges(outline,true).filter(([a,b])=>
+      Math.min(a[1],b[1])>=B&&!(a[1]===b[1]&&(a[1]===B||a[1]===H)));
+    return [{edge:edge(view,...horizontal(H,-R,R))},...place(view,remaining)];
+  }
   const operations={
     1:[{},{}],
     2:[
-      ...[-1,1].flatMap(sign=>[measureX(sign*X,-Y,0),measureX(sign*R,0,H),measureX(sign*U,-V,K)]),
-      transferZ('full',-R,H,-U-22,[-R,0]),transferZ('full',-X,B,-U-22,[-X,0]),
+      ...baseOperations('full'),
+      ...[-1,1].map(sign=>measureX(sign*U,-V,K)),
+      transferZ('full',-R,H,-U-22,[-R,0]),
       transferZ('full',-U,J,-U-22,[-U,0]),transferZ('full',-U,K,-U-22,[-U,0]),
-      ...place('full',polyEdges(aOutside,true)),
+      measureSpan('full',-R,R,H),...upperOutline('full',aOutside),
       ...[-1,1].flatMap(sign=>[measureX(sign*P,-Q,F),{source:mark('front',[0,T],[sign*M,T],sign<0?1:-1),
         target:mark('full',[0,T+12],[sign*M,T+12],sign<0?1:-1),
         axon:[[0,-Q,T],[sign*M,-Q,T]],axonSide:sign}]),
@@ -144,10 +168,10 @@ aside{padding:20px 19px;display:flex;flex-direction:column;min-width:0}.count{co
       ...place('full',aInside)
     ],
     3:[
-      ...[-1,1].flatMap(sign=>[measureY(sign*Y,X,0,0),measureY(sign*R,0,H,0)]),
-      transferZ('half',R,H,Y+20,[0,R]),transferZ('half',X,B,Y+20,[0,Y]),
+      ...baseOperations('half'),
+      transferZ('half',R,H,Y+20,[0,R]),
       {sample:1},{sample:2},{sample:3},
-      ...place('half',polyEdges(bOutside,true)),
+      measureSpan('half',-R,R,H),...upperOutline('half',bOutside),
       measureY(-V,-U,K,-U),measureY(Q,P,F,0),transferZ('half',-U,J,Y+20,[-U,-V]),
       transferZ('half',-U,K,Y+20,[-U,-V]),transferZ('half',-P,F,Y+20,[0,Q]),
       ...place('half',bInside)
@@ -548,11 +572,12 @@ aside{padding:20px 19px;display:flex;flex-direction:column;min-width:0}.count{co
     };
     render2D();
   }
-  const measureDuration=850,drawDuration=1000;
+  const measureDuration=425,transferDuration=375,drawDuration=500;
   function phaseDuration(index){
     const item=operations[step]?.[Math.floor(index/2)];
     if(index%2&&item?.edge)return drawDuration;
-    return item?.sample||item?.source||item?.target||step===1?measureDuration:0;
+    if(!item?.sample&&!item?.source&&!item?.target&&step!==1)return 0;
+    return index%2?transferDuration:measureDuration;
   }
   function setStep(value){
     clearTimeout(stepTimer);

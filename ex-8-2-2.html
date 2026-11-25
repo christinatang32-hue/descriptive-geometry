@@ -40,9 +40,9 @@ aside{padding:20px 19px;display:flex;flex-direction:column;min-width:0}.count{co
   const steps=[
     {title:'读题',action:'对照两面投影和轴测图，找出底板、下宽上窄的内腔，以及前后壁顶缘中央的凹槽。台肩下沿和凹槽底在不同高程。以下按题图比例转移尺寸。'},
     {title:'定剖切位置和视向',short:'定视向',action:'1. 1—1 通过前后中点，由水平投影的下方向上观察。\n2. 2—2 通过左右中点，由水平投影的右方向左观察。侧向投影的左半画外观，右半画剖面。'},
-    {title:'绘制1-1轮廓线',short:'绘制1-1轮廓线',action:'先用细实线绘制出所有的轮廓线。横线从左向右画，竖线从已有的水平线起笔。\n1. 量取总长和总高，用绿色细实线画底边和整条上边。先从上边左端向下画竖线作基准，再量取水平距离定位右边，从上边右端向下描线。\n2. 转移内腔底面和台肩高程，先画各段水平线，再由已画竖线量取水平距离，从对应水平线向下画内腔竖线。\n3. 绘制顶口时保留上边作图线。先从左向右画槽底水平线，再依次定位左、右竖线，并由上边向下画到槽底。'},
+    {title:'绘制1-1轮廓线',short:'绘制1-1轮廓线',action:'先用细实线绘制出所有的轮廓线。\n1. 量取总长，从左向右画底边。由底边左端向上转移总高，画左竖线。量取上边总长，用绿色细实线从左向右一笔画出整条上边。直接连接上下两边的右端，画右竖线。\n2. 转移内腔底面和台肩高程，先从左向右画各段水平线，再由已画竖线量取水平距离，从相接的水平线向下画内腔竖线。\n3. 绘制顶口时保留上边作图线。先从左向右画槽底水平线，再依次定位左、右竖线，并由上边向下画到槽底。'},
     {title:'填充金属图例',short:'填充金属图例',action:'保留 1—1 的轮廓和定位作图线，在切到的金属范围内填充等距的 45° 连续细实线。'},
-    {title:'绘制2-2轮廓线',short:'绘制2-2轮廓线',action:'先用细实线绘制出所有的轮廓线。\n1. 从水平投影向两侧转移半宽，从正面投影转移总高。底边从左向右画，上边从左到右一次画全，跨过对称轴。以对称轴和已有竖线为基准，确定竖线位置，从上边向下描线。\n2. 保留外框和已有作图线。量取后壁厚度，转移内腔底面、台肩和槽底的高程，从左向右画水平内边线，再从上边向下补画后壁内缘。'},
+    {title:'绘制2-2轮廓线',short:'绘制2-2轮廓线',action:'先用细实线绘制出所有的轮廓线。\n1. 从水平投影向两侧转移半宽，从左向右画底边。由底边左端向上转移总高，画左竖线。量取上边总宽，从左向右跨过对称轴一次画全。直接连接上下两边的右端，画右竖线。\n2. 保留外框和已有作图线。量取后壁厚度，转移内腔底面、台肩和槽底的高程，从左向右画水平内边线，再从上边向下补画后壁内缘。'},
     {title:'填充金属图例',short:'填充金属图例',action:'保留两图已有的轮廓和作图线。在 2—2 右半切到的金属范围内填充等距的 45° 连续细实线。'},
     {title:'加粗结果并核对',short:'加粗结果并核对',action:'清除定位作图线和跨过 1—1 顶口的临时线段。本题取 b = 0.8 mm。切到的轮廓用 0.7b 中粗实线（0.56 mm），未切到的可见轮廓用 0.5b 中实线（0.40 mm）。核对两图的底板、台肩、槽底高程和 2—2 的对称符号。'}
   ];
@@ -100,7 +100,7 @@ aside{padding:20px 19px;display:flex;flex-direction:column;min-width:0}.count{co
   const edge=(view,a,b)=>({view,a,b});
   const heightMeasure=(view,x,z)=>mark(view,[x,0],[x,z],-1);
   const horizontal=(view,z,left,right)=>edge(view,[left,z],[right,z]);
-  const vertical=(view,x,top,bottom)=>edge(view,[x,top],[x,bottom]);
+  const vertical=(view,x,from,to)=>edge(view,[x,from],[x,to]);
   const pointGuide=(view,x,top)=>({view,a:[x,top+10],b:[x,top],point:true});
   const levelGuide=(view,z)=>({view,a:[-6,z],b:[(view==='full'?L:W)+6,z]});
   const axon1=(a,b)=>[a,b].map(([x,z])=>[x,midY,z]);
@@ -120,12 +120,13 @@ aside{padding:20px 19px;display:flex;flex-direction:column;min-width:0}.count{co
   }
   const operations={
     [fullStep]:[
-      {source:heightMeasure('front',0,H),target:heightMeasure('full',-16,H),axon:axon1([0,0],[0,H])},
       {source:mark('front',[0,0],[L,0]),target:mark('full',[0,-10],[L,-10]),
         edge:horizontal('full',0,0,L),axon:axon1([0,0],[L,0])},
-      {edge:horizontal('full',H,0,L),topLevel:true},
-      {edge:vertical('full',0,H,0)},
-      fullVertical(L,H,0,0,0),
+      {source:heightMeasure('front',0,H),target:heightMeasure('full',-16,H),
+        axon:axon1([0,0],[0,H]),edge:vertical('full',0,0,H)},
+      {source:mark('front',[0,H+10],[L,H+10],-1),target:mark('full',[0,H+10],[L,H+10],-1),
+        axon:axon1([0,H],[L,H]),edge:horizontal('full',H,0,L),topLevel:true},
+      {edge:vertical('full',L,H,0)},
       {...transferHeight('full',B,S,axon1([B,0],[B,S])),edge:horizontal('full',S,A,B)},
       {...transferHeight('full',A,F,axon1([A,0],[A,F])),edge:horizontal('full',F,A,L-A)},
       {edge:horizontal('full',S,L-B,L-A)},
@@ -139,14 +140,12 @@ aside{padding:20px 19px;display:flex;flex-direction:column;min-width:0}.count{co
       fullVertical(L-C,H,N,L-B)
     ],
     [halfStep]:[
-      {source:heightMeasure('front',0,H),target:heightMeasure('half',-16,H)},
-      {source:mark('plan',[L,midY],[L,W]),target:mark('half',[midY,-10],[0,-10],-1),
-        edge:horizontal('half',0,0,midY)},
+      {source:mark('plan',[L,midY],[L,W]),target:mark('half',[midY,-10],[0,-10],-1)},
       {source:mark('plan',[L,midY],[L,0]),target:mark('half',[midY,-10],[W,-10]),
-        edge:horizontal('half',0,midY,W)},
-      {edge:edge('half',...halfTop)},
-      {...halfOffset(0,midY,H),guide:pointGuide('half',0,H),edge:vertical('half',0,H,0)},
-      {...halfOffset(W,0,H),guide:pointGuide('half',W,H),edge:vertical('half',W,H,0)},
+        edge:horizontal('half',0,0,W)},
+      {source:heightMeasure('front',0,H),target:heightMeasure('half',-16,H),edge:vertical('half',0,0,H)},
+      {source:mark('plan',[L,W],[L,0],1),target:mark('half',[0,H+10],[W,H+10],-1),edge:edge('half',...halfTop)},
+      {edge:vertical('half',W,H,0)},
       {...halfOffset(W-T,W,H),guide:pointGuide('half',W-T,H)},
       {...transferHeight('half',A,F),edge:horizontal('half',F,midY,W-T)},
       {...transferHeight('half',B,S),edge:horizontal('half',S,midY,W-T)},
@@ -420,7 +419,7 @@ aside{padding:20px 19px;display:flex;flex-direction:column;min-width:0}.count{co
     axonCache=axonDrawing();
     render2D();
   }
-  const measureDuration=850,transferDuration=750,drawDuration=1000;
+  const measureDuration=425,transferDuration=375,drawDuration=500;
   function phaseDuration(index){
     if(step===1)return measureDuration;
     const item=operations[step][Math.floor(index/3)];
