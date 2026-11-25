@@ -14,7 +14,7 @@
   const steps=[
     {title:'读题',action:'对照正面投影、水平投影和剖开后的轴测图，找出底板、两侧立墙、两段斜坡和门槽。以闸室左端和底边作量取基准，按题图比例转移长度。'},
     {title:'确定剖切位置',action:'沿水平投影中两端编号为 1 的剖切线作纵向剖切，由图下方向上方观察。对照轴测图，移去近侧一半，保留被剖到的底板、斜坡和切面后方的立墙。'},
-    {title:'绘制轮廓线',action:'先用细实线绘制出所有的轮廓线。四个变坡点从左到右编号。\n1. 从左向右画底边，从底边左端向上画左竖线，再从左向右画顶边。直接连接两条水平线的右端点，画出右竖线。\n2. 从底边左端向上量取低台面高度，再向右量取低台面长度，确定第 1 点并画出左段低台面。\n3. 从底边左端向上量取高台面高度，再向右量取高台面左端到左竖线的距离，确定第 2 点。从第 2 点向右量取高台面长度，确定第 3 点。画出高台面，连接第 1、2 点，并从顶边补画门槽的可见竖线。\n4. 从底边右端向上量取低台面高度，再向左量取低台面长度，确定第 4 点。画出右段低台面，最后从第 4 点连到第 3 点。'},
+    {title:'绘制轮廓线',action:'先用细实线绘制出所有的轮廓线。\n1. 从左向右画底边，从底边左端向上画左竖线。对照正面投影量取顶边长度，从左向右画顶边。直接连接两条水平线的右端点，画出右竖线。\n2. 从底边左端向上量取低台面高度，再向右量取低台面长度，确定左侧低台面的变坡点并画出该段水平线。\n3. 从底边左端向上量取高台面高度，再向右量取高台面左端到左竖线的距离。从高台面左端向右量取高台面长度，确定其右端。画出高台面和左侧斜坡，再从顶边补画门槽的可见竖线。\n4. 从底边右端向上量取低台面高度，再向左量取低台面长度，确定右侧低台面的变坡点并画出该段水平线。最后从这个变坡点向上连到高台面右端。'},
     {title:'填充钢筋混凝土图例',action:'保留细实线轮廓。在剖到的混凝土范围内画连续的 45° 细实线，再散布小三角和小点。'},
     {title:'加粗结果并核对',action:'本题取 b = 0.8 mm。切到的轮廓用 0.7b 中粗实线（0.56 mm），未切到的可见轮廓用 0.5b 中实线（0.40 mm）。标注“1—1 剖面图”，核对总长、墙高、两级高程、四处变坡位置及门槽宽度。'}
   ];
@@ -32,7 +32,11 @@
   const polyline=(pts,xOffset,yMap)=>'M'+pts.map(([x,z])=>`${n(xOffset+x)} ${n(yMap(z))}`).join(' L');
   const elevationProfile=polyline(topPoints,FX,fy);
   const sectionFill=polyline(topPoints,SX,fy)+` L${SX+G.length} ${FY} L${SX} ${FY} Z`;
-  const cutLabel=()=>txt(SX+110,316,'1—1 剖面图','section-name');
+  function cutLabel(){
+    const x=SX+110,y=316;
+    return '<g class="section-caption">'+txt(x,y,'1—1 剖面图','section-name')+
+      ln(x,y+6,x,y+6,'section-underline')+'</g>';
+  }
   const hatchInk='#82969a',aggregateInk='#687c81';
   // Create one set of marks per page load and reuse it while stepping and rotating.
   const hatchLines=[];
@@ -88,9 +92,8 @@
   const frontMeasure=(a,b,side)=>({a:front(a),b:front(b),side});
   const sectionMeasure=(a,b,side)=>({a:section(a),b:section(b),side});
   const planMeasure=(from,to,y,side)=>({a:[px(from),py(y)],b:[px(to),py(y)],side});
-  function breakPoint({position:[x,z],number}){
-    return `<circle cx="${sx(x)}" cy="${fy(z)}" r="3" fill="white" stroke="#dd663c" stroke-width="1.4"/>`+
-      txt(sx(x)+(number===1?-16:7),fy(z)-6,number,'break-number');
+  function breakPoint([x,z]){
+    return `<circle class="break-point" cx="${sx(x)}" cy="${fy(z)}" r="3" fill="white" stroke="#dd663c" stroke-width="1.4"/>`;
   }
   function brace({a,b,side}){
     const dx=b[0]-a[0],dy=b[1]-a[1],length=Math.hypot(dx,dy);
@@ -109,28 +112,28 @@
   function transferHeight(a,b,side,y){
     return {source:frontMeasure(a,b,side),target:sectionMeasure(a,b,side),axon:axonSegment(a,b,y)};
   }
-  function locateBreak(a,b,number,side=-1){
+  function locateBreak(a,b,side=-1){
     return {source:planMeasure(a[0],b[0],cutY,side),target:sectionMeasure(a,b,side),
-      axon:axonSegment(a,b),position:b,number};
+      axon:axonSegment(a,b),position:b};
   }
   const contourOperations=[
     {...drawEdge(leftBase,rightBase),source:frontMeasure(leftBase,rightBase,1),
       target:sectionMeasure([0,-10],[L,-10],1)},
     {...transferHeight(leftBase,wallTop[0],-1,G.walls[0]),edge:[leftBase,wallTop[0]]},
-    drawEdge(...wallTop,G.walls[0]),
+    {...drawEdge(...wallTop,G.walls[0]),source:frontMeasure(...wallTop,-1),target:sectionMeasure(...wallTop,-1)},
     {edge:[wallTop[1],rightBase]},
     transferHeight(leftBase,leftFloor,-1),
-    locateBreak(leftFloor,firstBreak,1),
+    locateBreak(leftFloor,firstBreak),
     drawEdge(leftFloor,firstBreak),
     transferHeight(leftBase,[0,G.crest],-1),
-    locateBreak([0,G.crest],secondBreak,2),
-    locateBreak(secondBreak,thirdBreak,3),
+    locateBreak([0,G.crest],secondBreak),
+    locateBreak(secondBreak,thirdBreak),
     drawEdge(secondBreak,thirdBreak),
     drawEdge(firstBreak,secondBreak),
     ...slotEdges.map(([a,b])=>({...drawEdge(a,b,G.walls[2]),
       source:planMeasure(0,a[0],G.walls[2],-1),target:sectionMeasure([0,H+10],[a[0],H+10],-1)})),
     transferHeight(rightBase,rightFloor,1),
-    locateBreak(rightFloor,fourthBreak,4,1),
+    locateBreak(rightFloor,fourthBreak,1),
     drawEdge(fourthBreak,rightFloor),
     drawEdge(fourthBreak,thirdBreak)
   ];
@@ -154,7 +157,7 @@
         const [a,b]=item.edge;
         out+=cls==='drawing-edge'?tracedLine(section(a),section(b),cls):sectionLine(a,b,cls);
       }
-      if(drawing&&item.position)points+=breakPoint(item);
+      if(drawing&&item.position)points+=breakPoint(item.position);
     }
     return out+points+(step>=3?cutLabel():'');
   }
@@ -176,6 +179,11 @@
     scene.innerHTML=knownViews()+axonView+sectionDrawing()+measurementMarks();
     scene.setAttribute('transform',`translate(${505*(1-zoom)+panX} ${300*(1-zoom)+panY}) scale(${zoom})`);
     startLineTrace();
+    const caption=scene.querySelector('.section-caption');
+    if(caption){
+      const [label,underline]=caption.children;
+      underline.setAttribute('x2',n(Number(label.getAttribute('x'))+label.getComputedTextLength()));
+    }
     $('count').textContent=step===0?'准备 · 读题':`步骤 ${String(step).padStart(2,'0')} / ${String(steps.length-1).padStart(2,'0')}`;
     $('stepTitle').textContent=steps[step].title;
     $('action').textContent=steps[step].action;
@@ -184,7 +192,7 @@
     $('zoomValue').textContent=`${Math.round(zoom*100)}%`;
     for(const button of $('steps').children)button.setAttribute('aria-current',Number(button.dataset.step)===step?'step':'false');
   }
-  const sourceTime=850,transferTime=750,drawDuration=1000;
+  const sourceTime=425,transferTime=375,drawDuration=500;
   function phaseDuration(index){
     const item=contourOperations[Math.floor(index/3)];
     if(index%3===0)return item.source||item.axon?sourceTime:0;
