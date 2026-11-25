@@ -14,7 +14,7 @@
   const steps=[
     {title:'读题',action:'对照正面投影、水平投影和剖开后的轴测图，找出底板、两侧立墙、两段斜坡和门槽。以闸室左端和底边作量取基准，按题图比例转移长度。'},
     {title:'确定剖切位置',action:'沿水平投影中两端编号为 1 的剖切线作纵向剖切，由图下方向上方观察。对照轴测图，移去近侧一半，保留被剖到的底板、斜坡和切面后方的立墙。'},
-    {title:'绘制轮廓线',action:'先用细实线绘制出所有的轮廓线。\n1. 从正面投影转移总长和墙高。由左向右画底边和顶边，再从顶边两端向下画外框竖线。\n2. 从正面投影转移两个台面的高程，从水平投影转移四个变坡点的位置。先从左向右画各水平段，再连接两段斜坡。\n3. 从水平投影转移门槽的两侧位置，由已画的墙顶线向下作竖线至凸台顶面。'},
+    {title:'绘制轮廓线',action:'先用细实线绘制出所有的轮廓线。四个变坡点从左到右编号。\n1. 从左向右画底边，从底边左端向上画左竖线，再从左向右画顶边。直接连接两条水平线的右端点，画出右竖线。\n2. 从底边左端向上量取低台面高度，再向右量取低台面长度，确定第 1 点并画出左段低台面。\n3. 从底边左端向上量取高台面高度，再向右量取高台面左端到左竖线的距离，确定第 2 点。从第 2 点向右量取高台面长度，确定第 3 点。画出高台面，连接第 1、2 点，并从顶边补画门槽的可见竖线。\n4. 从底边右端向上量取低台面高度，再向左量取低台面长度，确定第 4 点。画出右段低台面，最后从第 4 点连到第 3 点。'},
     {title:'填充钢筋混凝土图例',action:'保留细实线轮廓。在剖到的混凝土范围内画连续的 45° 细实线，再散布小三角和小点。'},
     {title:'加粗结果并核对',action:'本题取 b = 0.8 mm。切到的轮廓用 0.7b 中粗实线（0.56 mm），未切到的可见轮廓用 0.5b 中实线（0.40 mm）。标注“1—1 剖面图”，核对总长、墙高、两级高程、四处变坡位置及门槽宽度。'}
   ];
@@ -87,8 +87,11 @@
   const axonSegment=(a,b,y=cutY)=>[a,b].map(([x,z])=>[x,y,z]);
   const frontMeasure=(a,b,side)=>({a:front(a),b:front(b),side});
   const sectionMeasure=(a,b,side)=>({a:section(a),b:section(b),side});
-  const planMeasure=(x,y)=>({a:[px(0),py(y)],b:[px(x),py(y)],side:-1});
-  const point=([x,z])=>`<circle cx="${sx(x)}" cy="${fy(z)}" r="3" fill="white" stroke="#dd663c" stroke-width="1.4"/>`;
+  const planMeasure=(from,to,y,side)=>({a:[px(from),py(y)],b:[px(to),py(y)],side});
+  function breakPoint({position:[x,z],number}){
+    return `<circle cx="${sx(x)}" cy="${fy(z)}" r="3" fill="white" stroke="#dd663c" stroke-width="1.4"/>`+
+      txt(sx(x)+(number===1?-16:7),fy(z)-6,number,'break-number');
+  }
   function brace({a,b,side}){
     const dx=b[0]-a[0],dy=b[1]-a[1],length=Math.hypot(dx,dy);
     const at=(t,offset)=>`${n(a[0]+t*dx-side*offset*dy/length)} ${n(a[1]+t*dy+side*offset*dx/length)}`;
@@ -98,31 +101,40 @@
       `C${at(1-end/2,10)} ${at(1,10)} ${at(1,4)}`,'measure-brace');
   }
   const measure=mark=>segment(mark.a,mark.b,'measure-edge')+brace(mark);
+  const leftBase=[0,0],rightBase=[L,0];
   const wallTop=[[0,H],[L,H]];
-  const outline=[[[0,0],[L,0]],wallTop,[[0,H],[0,0]],[[L,H],[L,0]]];
-  const elevation=(x,z)=>[[x,0],[x,z]];
+  const [leftFloor,firstBreak,secondBreak,thirdBreak,fourthBreak,rightFloor]=topPoints;
   const slotEdges=G.slot.map(x=>[[x,H],[x,G.crest]]);
+  const drawEdge=(a,b,y)=>({edge:[a,b],axon:axonSegment(a,b,y)});
+  function transferHeight(a,b,side,y){
+    return {source:frontMeasure(a,b,side),target:sectionMeasure(a,b,side),axon:axonSegment(a,b,y)};
+  }
+  function locateBreak(a,b,number,side=-1){
+    return {source:planMeasure(a[0],b[0],cutY,side),target:sectionMeasure(a,b,side),
+      axon:axonSegment(a,b),position:b,number};
+  }
   const contourOperations=[
-    {source:frontMeasure(...elevation(0,H),-1),target:sectionMeasure(...elevation(-20,H),-1),
-      axon:axonSegment(...elevation(0,H),G.walls[0])},
-    ...outline.map(([a,b],index)=>({
-      source:index===0?frontMeasure(a,b,-1):null,
-      target:index===0?sectionMeasure([0,-10],[L,-10],1):null,
-      axon:axonSegment(a,b,index===0?cutY:G.walls[0]),edge:[a,b]
-    })),
-    ...[[0,G.floor],[G.breaks[1],G.crest]].map(([x,z])=>({
-      source:frontMeasure(...elevation(x,z),-1),target:sectionMeasure(...elevation(x,z),-1),
-      axon:axonSegment(...elevation(x,z)),level:z
-    })),
-    ...G.breaks.map(x=>({
-      source:planMeasure(x,G.walls[3]),target:sectionMeasure([0,-10],[x,-10],1),
-      axon:axonSegment([0,0],[x,0]),position:[x,profile(x)]
-    })),
-    ...[0,2,4,1,3].map(i=>({edge:[topPoints[i],topPoints[i+1]],axon:axonSegment(topPoints[i],topPoints[i+1])})),
-    ...slotEdges.map(([a,b])=>({source:planMeasure(a[0],G.walls[2]),target:sectionMeasure([0,H+10],[a[0],H+10],-1),
-      axon:axonSegment(a,b,G.walls[2]),edge:[a,b]}))
+    {...drawEdge(leftBase,rightBase),source:frontMeasure(leftBase,rightBase,1),
+      target:sectionMeasure([0,-10],[L,-10],1)},
+    {...transferHeight(leftBase,wallTop[0],-1,G.walls[0]),edge:[leftBase,wallTop[0]]},
+    drawEdge(...wallTop,G.walls[0]),
+    {edge:[wallTop[1],rightBase]},
+    transferHeight(leftBase,leftFloor,-1),
+    locateBreak(leftFloor,firstBreak,1),
+    drawEdge(leftFloor,firstBreak),
+    transferHeight(leftBase,[0,G.crest],-1),
+    locateBreak([0,G.crest],secondBreak,2),
+    locateBreak(secondBreak,thirdBreak,3),
+    drawEdge(secondBreak,thirdBreak),
+    drawEdge(firstBreak,secondBreak),
+    ...slotEdges.map(([a,b])=>({...drawEdge(a,b,G.walls[2]),
+      source:planMeasure(0,a[0],G.walls[2],-1),target:sectionMeasure([0,H+10],[a[0],H+10],-1)})),
+    transferHeight(rightBase,rightFloor,1),
+    locateBreak(rightFloor,fourthBreak,4,1),
+    drawEdge(fourthBreak,rightFloor),
+    drawEdge(fourthBreak,thirdBreak)
   ];
-  const contourPhases=contourOperations.length*2;
+  const contourPhases=contourOperations.length*3;
   function sectionDrawing(){
     if(step<2)return step===1?txt(SX,70,'待作 1—1 剖面图','view-title'):'';
     let out=step>=3?sectionMaterial():'';
@@ -132,25 +144,22 @@
       }
       return out+path(sectionFill,'result-cut')+cutLabel();
     }
-    const drawing=step===2,showGuides=drawing&&phase<contourPhases;
-    let guides='',points='';
+    const drawing=step===2;
+    let points='';
     for(const [index,item] of contourOperations.entries()){
-      if(drawing&&phase<2*index+1)break;
-      const cls=drawing&&phase===2*index+1?'drawing-edge':'process';
-      if(item.edge){
+      const progress=drawing?phase-3*index:3;
+      if(progress<1)break;
+      const cls=progress===2?'drawing-edge':'process';
+      if(item.edge&&progress>=2){
         const [a,b]=item.edge;
         out+=cls==='drawing-edge'?tracedLine(section(a),section(b),cls):sectionLine(a,b,cls);
       }
-      if(showGuides&&item.level!==undefined)guides+=sectionLine([0,item.level],[L,item.level],'guide');
-      if(showGuides&&item.position){
-        guides+=sectionLine([item.position[0],0],item.position,'guide');
-        points+=point(item.position);
-      }
+      if(drawing&&item.position)points+=breakPoint(item);
     }
-    return guides+out+points+(step>=3?cutLabel():'');
+    return out+points+(step>=3?cutLabel():'');
   }
   function measurementMarks(){
-    const item=step===2?contourOperations[Math.floor(phase/2)]:null;
+    const item=step===2?contourOperations[Math.floor(phase/3)]:null;
     if(!item)return '';
     let out='';
     if(item.axon){
@@ -158,7 +167,7 @@
       out+=ln(a.x,a.y,b.x,b.y,'measure-edge');
     }
     if(item.source)out+=measure(item.source);
-    if(item.target&&phase%2===1)out+=measure(item.target);
+    if(item.target&&phase%3===1)out+=measure(item.target);
     return out;
   }
   /* SECTION_LINE_TRACE */
@@ -177,9 +186,10 @@
   }
   const sourceTime=850,transferTime=750,drawDuration=1000;
   function phaseDuration(index){
-    const item=contourOperations[Math.floor(index/2)];
-    if(index%2)return item.edge?drawDuration:transferTime;
-    return item.source||item.axon?sourceTime:0;
+    const item=contourOperations[Math.floor(index/3)];
+    if(index%3===0)return item.source||item.axon?sourceTime:0;
+    if(index%3===1)return item.target?transferTime:0;
+    return item.edge?drawDuration:0;
   }
   function setStep(value){
     clearTimeout(stepTimer);

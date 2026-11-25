@@ -14,7 +14,9 @@ assert(g.floor<g.crest&&g.crest<g.height);
 const page=fs.readFileSync(path.join(root,'ex-8-2-1.html'),'utf8');
 const offline=fs.readFileSync(path.resolve(root,'..','assignment','作业8.2-1.html'),'utf8');
 const source=fs.readFileSync(path.join(root,'tools','sluice-8-2-1-source.js'),'utf8');
-const embedded=source.replace('__SLUICE_GEOMETRY__',JSON.stringify(g)).trimEnd();
+const trace=fs.readFileSync(path.join(root,'tools','section-line-trace.js'),'utf8');
+const embedded=source.replace('__SLUICE_GEOMETRY__',JSON.stringify(g))
+  .replace('  /* SECTION_LINE_TRACE */',()=>trace.trimEnd()).trimEnd();
 assert(page.includes(embedded));
 assert(offline.includes(embedded));
 assert(!/<script[^>]+src=|<link[^>]+stylesheet|class="assignment-locked"/.test(offline));
