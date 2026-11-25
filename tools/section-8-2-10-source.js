@@ -7,10 +7,9 @@
   const steps=[
     {title:'读题',action:'对照两面投影，辨认左凸台、横向通孔、内腔和中央带孔圆形凸台。横孔在水平投影中由两条虚线表示，中央两圈分别对应凸台外缘和竖向通孔。各尺寸按题图比例转移。'},
     {title:'确定剖切位置与视向',short:'定剖切位置',action:'水平投影左段 A—A 穿过左凸台横孔的轴线，右段穿过中央凸台及竖向孔的轴线。两段从图下方朝图上方观察，并在同一立面合成。可播放三维剖开动画，查看两个平行剖切面及其转折。'},
-    {title:'绘制外轮廓',short:'画外轮廓',action:'先用细实线绘制出所有的轮廓线。以主体中心线为基准，向两侧量底边半长并画底边。由底边左端向上量取凸台底高，再转移凸台伸出长度和高度。由底边右端向上画右壁，连接两个顶端，画出完整顶部轮廓。'},
-    {title:'绘制内轮廓与孔',short:'画内轮廓与孔',action:'1. 从外壁向内量取壁厚，由顶边向下画内壁。定位底板面后画中央凸台两侧的底边。\n2. 转移左侧孔轴高程，从轴线向上下各量半径，画横孔上下边。\n3. 根据水平投影内、外两圆在水平轴上的交点，向两侧转移半径。定位凸台顶面，再画凸台外壁和贯穿底板的孔壁。每次量取后紧接着描线。'},
-    {title:'填充混凝土图例',short:'填混凝土图例',action:'在实际切到的三个混凝土区域内散布不同方向的小三角和点。左横孔、中央竖孔和内腔都留白。'},
-    {title:'加粗结果并核对',short:'加粗并核对',action:'本题取 b = 0.8 mm。切到的轮廓用 0.7b 中粗实线（0.56 mm），未切到的可见轮廓用 0.5b 中实线（0.40 mm）。核对两个通孔、底板和两段剖切的连续关系。'}
+    {title:'绘制轮廓线',action:'先用细实线绘制出所有的轮廓线。\n1. 从主体中心线向两侧量取底边半长，画底边。由左端逐段画出左凸台，由右端向上画右竖线，再连接两个顶端。\n2. 从外轮廓左、右竖线的上端分别向内量取，定出两条内壁的顶点。分别向下量取内壁高度并画竖线，再从各自下端向内量取并画两段底板面线。由这两段线的内端向上量取并画圆凸台的两条竖线，连接两条竖线的上端。\n3. 从中央轴线向两侧量取竖孔半径，定位并画出两条竖直转向线。\n4. 最后画横孔。从外轮廓顶边与最左竖线的交点向下量取孔轴位置，画水平细点划线。再从孔轴向上、向下分别量取半径，依次画出两条水平转向线。'},
+    {title:'填充混凝土图例',action:'在实际切到的三个混凝土区域内散布不同方向的小三角和点。左横孔、中央竖孔和内腔都留白。'},
+    {title:'加粗结果并核对',action:'本题取 b = 0.8 mm。切到的轮廓用 0.7b 中粗实线（0.56 mm），未切到的可见轮廓用 0.5b 中实线（0.40 mm）。核对两个通孔、底板和两段剖切的连续关系。'}
   ];
   const $=id=>document.getElementById(id),diagram=$('diagram'),scene=$('scene');
   const media=matchMedia('(max-width: 750px)'),reduced=matchMedia('(prefers-reduced-motion: reduce)');
@@ -34,6 +33,7 @@
   const viewPath=(view,pts,cls,close=false)=>path(trace(pts.map(point=>viewPoint(view,point)),close),cls);
   const h=(z,a,b)=>[[Math.min(a,b),z],[Math.max(a,b),z]];
   const v=(x,a,b)=>[[x,a],[x,b]];
+  const portAxis=h(Zb,-E-13,A+12);
   const sectionRegions=[
     rect(-E,hi,A,H),
     [[-E,J],[0,J],[0,0],[Cx-r,0],[Cx-r,U],[Cx-R,U],[Cx-R,F],[A,F],[A,lo],[-E,lo]],
@@ -82,25 +82,20 @@
   function measuredWidth(z,from,to,y,axonY=y){return op(h(z,from,to),width(from,to,z,y,axonY))}
   function measuredWall(x,from,to,y,sourceX=x){return op(v(x,from,to),height(x,from,to,y,sourceX))}
   const sides=[-1,1];
-  const operations={
-    2:[
-      op(h(0,0,W),...sides.map(i=>width(Cx,Cx+i*Cx,0,D,0))),
-      measuredWall(0,0,J,Yb),measuredWidth(J,0,-E,Yb),
-      measuredWall(-E,J,H,Yb),measuredWall(W,0,H,Cy),op(h(H,-E,W))
-    ],
-    3:[
-      locate([[A,H],[W-A,H]],width(0,A,H,Yb),width(W,W-A,H,Cy)),
-      measuredWall(A,H,F,Yb),measuredWall(W-A,H,F,Cy),
-      locate(sides.flatMap(i=>[[Cx+i*R,F],[Cx+i*r,0]]),
-        ...sides.flatMap(i=>[width(Cx,Cx+i*R,F,Cy),width(Cx,Cx+i*r,0,Cy)])),
-      op(h(F,A,Cx-R)),op(h(F,Cx+R,W-A)),
-      locate([[-E,Zb]],height(-E,J,Zb,Yb)),
-      op(h(lo,-E,A),height(-E,Zb,lo,Yb)),
-      op(h(hi,-E,A),height(-E,Zb,hi,Yb)),
-      measuredWall(Cx-R,F,U,Cy),measuredWall(Cx+R,F,U,Cy),op(h(U,Cx-R,Cx+R)),
-      measuredWall(Cx-r,0,U,Cy),measuredWall(Cx+r,0,U,Cy)
-    ]
-  };
+  const contourOperations=[
+    op(h(0,0,W),...sides.map(i=>width(Cx,Cx+i*Cx,0,D,0))),
+    measuredWall(0,0,J,Yb),measuredWidth(J,0,-E,Yb),
+    measuredWall(-E,J,H,Yb),measuredWall(W,0,H,Cy),op(h(H,-E,W)),
+    locate([[A,H]],width(-E,A,H,Yb)),locate([[W-A,H]],width(W,W-A,H,Cy)),
+    measuredWall(A,H,F,Yb),measuredWall(W-A,H,F,Cy),
+    measuredWidth(F,A,Cx-R,Cy,Yb),measuredWidth(F,W-A,Cx+R,Cy),
+    measuredWall(Cx-R,F,U,Cy),measuredWall(Cx+R,F,U,Cy),op(h(U,Cx-R,Cx+R)),
+    locate(sides.map(i=>[Cx+i*r,U]),...sides.map(i=>width(Cx,Cx+i*r,U,Cy))),
+    measuredWall(Cx-r,U,0,Cy),measuredWall(Cx+r,U,0,Cy),
+    {...op(portAxis,height(-E,H,Zb,Yb)),axis:true,points:[[-E,Zb]]},
+    op(h(hi,-E,A),height(-E,Zb,hi,Yb)),
+    op(h(lo,-E,A),height(-E,Zb,lo,Yb))
+  ];
   const insideSection=(x,z)=>sectionRegions.some(points=>{
     let inside=false;
     for(const [[a,b],[c,d]] of polyEdges(points,true))if((b>z)!==(d>z)&&x<a+(c-a)*(z-b)/(d-b))inside=!inside;
@@ -130,31 +125,29 @@
   }
   function drawResults(){
     if(step<2)return '';
-    let out=step>=4?concrete():'';
-    if(step===5){
+    let out=step>=3?concrete():'';
+    if(step===4){
       out+=sectionRegions.map(points=>viewPath('section',points,'result-cut',true)).join('');
       out+=behind.map(([a,b])=>viewLine('section',a,b,'result-behind')).join('');
+      out+=viewLine('section',...portAxis,'axis-line port-axis');
     }else{
-      for(const stage of [2,3]){
-        if(stage>step)break;
-        for(const [index,item] of operations[stage].entries()){
-          const progress=stage===step?phase-3*index:3;
-          if(progress<1)break;
-          if(item.points&&stage===step){
-            for(const point of item.points)out+=circle('section',point,3,'transfer-point');
-          }
-          if(item.edge&&progress>=2){
-            const [a,b]=item.edge.map(p=>viewPoint('section',p)),active=progress===2;
-            out+=(active?tracedLine:line)(a,b,active?'drawing-edge':'process');
-          }
+      for(const [index,item] of contourOperations.entries()){
+        const progress=step===2?phase-3*index:3;
+        if(progress<1)break;
+        if(item.points&&step===2){
+          for(const point of item.points)out+=circle('section',point,3,'transfer-point');
+        }
+        if(item.edge&&progress>=2){
+          const [a,b]=item.edge.map(p=>viewPoint('section',p)),active=progress===2;
+          const style=item.axis?'axis-line port-axis'+(active?' drawing-edge':''):active?'drawing-edge':'process';
+          out+=(active?tracedLine:line)(a,b,style);
         }
       }
     }
-    return out+viewLine('section',[Cx,-12],[Cx,H+12],'axis-line')+
-      (step>=3?viewLine('section',[-E-13,Zb],[A+12,Zb],'axis-line'):'')+sectionCaption();
+    return out+viewLine('section',[Cx,-12],[Cx,H+12],'axis-line')+sectionCaption();
   }
   function drawMeasurements(){
-    const item=operations[step]?.[Math.floor(phase/3)];
+    const item=step===2?contourOperations[Math.floor(phase/3)]:null;
     if(!item)return '';
     return item.measures.map(({source,target,axon,side})=>
       measurement(source)+(phase%3===1?measurement(target):'')+axonMeasurement(axonView,axon,side)).join('');
@@ -269,14 +262,14 @@
 
   const measureDuration=425,transferDuration=375,drawDuration=500;
   function phaseDuration(index){
-    const item=operations[step][Math.floor(index/3)],part=index%3;
+    const item=contourOperations[Math.floor(index/3)],part=index%3;
     if(part===2)return item.edge?drawDuration:0;
     return item.measures.length?(part===0?measureDuration:transferDuration):0;
   }
   function setStep(value){
     clearTimeout(stepTimer);
     step=Math.max(0,Math.min(steps.length-1,Number(value)));phase=0;
-    const count=(operations[step]?.length??0)*3;
+    const count=step===2?contourOperations.length*3:0;
     const duration=Array.from({length:count},(_,index)=>phaseDuration(index)).reduce((sum,time)=>sum+time,0);
     if(reduced.matches)phase=count;
     function drawPhase(){
@@ -307,7 +300,7 @@
   steps.forEach((item,index)=>{
     const button=document.createElement('button');
     button.type='button';button.dataset.step=String(index);
-    button.textContent=index===0?'准备 · 读题':`${String(index).padStart(2,'0')} ${item.short}`;
+    button.textContent=index===0?'准备 · 读题':`${String(index).padStart(2,'0')} ${item.short??item.title}`;
     button.addEventListener('click',()=>{stopPlay();setStep(index)});
     $('steps').append(button);
   });
