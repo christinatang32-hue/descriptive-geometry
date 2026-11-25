@@ -1,0 +1,16 @@
+{
+  "8-2-11": {
+    "radius": 150, "plate": 34, "height": 54, "pitch": 97, "hub": 43,
+    "centerHole": 22.5, "leftHole": 24.5, "boss": 22.5, "bossHole": 12.8,
+    "offsetHole": 22.5, "direction": [123, 81]
+  },
+  "8-3-3": {
+    "halfWidth": 150, "height": 155, "rearHeight": 126, "rearDepth": 44,
+    "shoulderDepth": 74, "depth": 148, "slotHalfWidth": 37.5,
+    "innerFoot": 98, "innerTop": 120, "breakHeight": 82
+  },
+  "8-3-4": {
+    "halfWidth": 150, "halfDepth": 102.5, "height": 200, "mainRadius": 73.5,
+    "slotHalfWidth": 105, "slotHalfDepth": 36, "sideRadius": 22.5
+  }
+}
