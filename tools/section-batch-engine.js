@@ -364,7 +364,8 @@
   });
 
   const stage=$('modelStage'),canvas=$('modelCanvas'),ctx=canvas.getContext('2d');
-  const defaultYaw=lesson.defaultYaw??-.76,defaultPitch=.55;
+  const {yaw:defaultYaw=-.76,rightSign:modelRightSign=1}=lesson.modelCamera??{};
+  const defaultPitch=.55;
   const camera={opening:0,yaw:defaultYaw,pitch:defaultPitch,zoom:1,x:0,y:0,mode:'rotate'};
   const clamp=(value,min,max)=>Math.min(max,Math.max(min,value));
   let modelDrag=null,pinchDistance=0,animation=0,animationTarget=null,showPlanes=false,drawFrame=0;
@@ -374,7 +375,7 @@
     const cy=Math.cos(camera.yaw),sy=Math.sin(camera.yaw),cp=Math.cos(camera.pitch),sp=Math.sin(camera.pitch);
     const rotated=([x,y,z],part)=>{
       const dx=x+part*movement[0],dy=y+part*movement[1],dz=z+part*movement[2];
-      const rx=dx*cy-dy*sy,ry=dx*sy+dy*cy;
+      const rx=modelRightSign*(dx*cy-dy*sy),ry=dx*sy+dy*cy;
       return [rx,ry*sp-dz*cp,ry*cp+dz*sp];
     };
     const corners=mesh.vertices.map(({point,part})=>rotated(point,part));
@@ -535,7 +536,7 @@
     if(!modelDrag)return;
     const dx=point.x-modelDrag.x,dy=point.y-modelDrag.y;
     if(modelDrag.mode==='pan'){camera.x+=dx;camera.y+=dy}
-    else{camera.yaw+=dx*.008;camera.pitch+=dy*.008}
+    else{camera.yaw+=modelRightSign*dx*.008;camera.pitch+=dy*.008}
     Object.assign(modelDrag,point);requestDraw();
   });
   for(const type of ['pointerup','pointercancel','lostpointercapture'])stage.addEventListener(type,event=>{
@@ -550,7 +551,7 @@
     event.preventDefault();
     const [x,y]=move;
     if(event.shiftKey){camera.x+=x*16;camera.y+=y*16}
-    else{camera.yaw+=x*.12;camera.pitch+=y*.12}
+    else{camera.yaw+=modelRightSign*x*.12;camera.pitch+=y*.12}
     requestDraw();
   });
   media.addEventListener('change',()=>setLayout(media.matches?lesson.narrow:lesson.wide));

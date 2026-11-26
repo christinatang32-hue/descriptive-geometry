@@ -4,6 +4,11 @@
     "centerHole": 22.5, "leftHole": 24.5, "boss": 22.5, "bossHole": 12.8,
     "offsetHole": 22.5, "direction": [123, 81]
   },
+  "8-3-1": {
+    "length": 808, "halfWidth": 43, "division": -3, "fullHeight": 120,
+    "endHeight": 81, "ledgeHeight": 94, "slopeFoot": 22, "slopeCrest": 46,
+    "upperStart": 44, "transition": 363, "upperEnd": 765, "stations": [21, 214, 635]
+  },
   "8-3-2": {
     "length": 674, "halfWidth": 106, "beamHalfWidth": 17.5, "top": 284,
     "slabBottom": 260, "crossBottom": 227, "mainBottom": 192,

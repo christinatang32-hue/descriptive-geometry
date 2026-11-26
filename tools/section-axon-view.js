@@ -1,6 +1,7 @@
   // Use the same open mesh and edge-occlusion calculation as the rotating model.
   function createSectionAxon(model,[left,top,right,bottom],label,silhouettes=[],eye=[-1,1,1]){
-    const iso=([x,y,z])=>[y-eye[0]*x,(y+eye[0]*x-2*z)/Math.sqrt(3),eye[0]*x+y+z];
+    const [eyeX,eyeY]=eye;
+    const iso=([x,y,z])=>[y-eyeX*eyeY*x,(eyeX*x+eyeY*y-2*z)/Math.sqrt(3),eyeX*x+eyeY*y+z];
     const faces=model.faces.filter(face=>face.part===0);
     const vertices=model.vertices.filter(vertex=>vertex.part===0).map(({point})=>iso(point));
     const xs=vertices.map(point=>point[0]),ys=vertices.map(point=>point[1]);
