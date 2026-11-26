@@ -24,6 +24,8 @@
   const horizontal=(z,a,b)=>segment([Math.min(a,b),z],[Math.max(a,b),z]);
   const vertical=(x,from,to)=>segment([x,from],[x,to]);
   const arc=(a,b,r,sweep=1)=>({a,b,r,sweep});
+  const compassArc=(edge,center)=>({...edge,center});
+  const compassCircle=(center,r)=>({center,r});
   const mark=(view,a,b,side=1)=>({view,a,b,side});
   const dimension=(source,target,space)=>({source,target,space});
   const operation=(section,edge,...marks)=>({section,edge,marks});
@@ -42,6 +44,17 @@
   const outlinePath=(view,loop)=>'M'+xy(viewPoint(view,loop[0].a))+
     loop.map(edge=>commands(view,edge)).join(' ')+'Z';
   function showEdge(view,edge,cls,active=false){
+    if(edge.center&&active) {
+      const center=viewPoint(view,edge.center);
+      const angle=p=>Math.atan2(p[1]-center[1],p[0]-center[0]);
+      const fullTurn=2*Math.PI;
+      const start=edge.a?angle(viewPoint(view,edge.a)):0;
+      const end=edge.b?angle(viewPoint(view,edge.b)):fullTurn;
+      const positive=(end-start+fullTurn)%fullTurn;
+      const sweep=edge.a?(edge.sweep?positive:positive-fullTurn):fullTurn;
+      return tracedCurve(center,edge.r,start,sweep,cls);
+    }
+    if(!edge.a)return ring(view,edge.center,edge.r,cls+' hole-rim');
     const a=viewPoint(view,edge.a),b=viewPoint(view,edge.b);
     if(edge.r)return path('M'+xy(a)+commands(view,edge),cls);
     return (active?tracedLine:line)(a,b,cls);
@@ -170,9 +183,9 @@
           points+=ring(point.view,point.p,3,'transfer-point');
           if(point.space)points+=axonPoint(axons[item.section.mode],point.space);
         }
-        if(item.edge&&progress>=2){
+        if(item.edge&&progress>=2&&(!item.construction||s===step)){
           const active=progress===2;
-          out+=showEdge(item.section.id,item.edge,active?'process drawing-edge':'process',active);
+          out+=showEdge(item.section.id,item.edge,active?'process drawing-edge':item.construction?'guide':'process',active);
         }
       }
     }
@@ -402,7 +415,8 @@
     }
     if(camera.opening>.035){
       ctx.fillStyle='#0b6f6b';ctx.font='bold 12px Microsoft YaHei';
-      ctx.fillText(lesson.cuts[mode].label+' 剖开',10,19);
+      const cut=lesson.cuts[mode];
+      ctx.fillText(cut.modelLabel??cut.label+' 剖开',10,19);
     }
   }
   function requestDraw(){
@@ -494,7 +508,7 @@
   for(const [index,cut] of lesson.cuts.entries()){
     if(lesson.cuts.length===1)break;
     const button=document.createElement('button');
-    button.type='button';button.textContent=cut.label;
+    button.type='button';button.textContent=cut.modelLabel??cut.label;
     button.addEventListener('click',()=>selectMode(index));
     $('cutModes').append(button);
   }

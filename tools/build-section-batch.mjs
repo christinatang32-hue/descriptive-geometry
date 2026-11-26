@@ -11,8 +11,10 @@ const geometry = JSON.parse(read('section-batch-geometry.json'));
 const lessons = [
   { id:'8-2-11', draw:'A—A 旋转剖面图', material:'金属', stepMax:5, mobile:'700/860' },
   { id:'8-3-3', draw:'A—A 剖面图', material:'通用材料图例', stepMax:4, mobile:'715/850' },
-  { id:'8-3-4', draw:'A—A、B—B 剖面图', material:'通用材料图例', stepMax:5, mobile:'820/1220' }
+  { id:'8-3-4', draw:'A—A、B—B 剖面图', material:'通用材料图例', stepMax:5, mobile:'874/1070' }
 ];
+const exercise = process.argv.find(argument=>argument.startsWith('--exercise='))?.split('=')[1];
+if (exercise && !lessons.some(({id})=>id===exercise)) throw Error('未知习题 '+exercise);
 
 function screenshot(id, offline){
   const preview = path.join(project, '.preview', 'section-batch');
@@ -49,6 +51,8 @@ const engine = read('section-batch-engine.js')
 const cards = [];
 for (const { id, draw, material, stepMax, mobile } of lessons){
   const number = id.replace('-', '.');
+  cards.push({ id, html:`<a class="card" href="ex-${id}.html"><strong>作业 ${number}</strong><span>${number} ${draw}</span><b>开始学习 →</b></a>` });
+  if (exercise && id!==exercise) continue;
   const problem = '求作 '+draw+'（'+material+'）。';
   const js = engine.replace('__SECTION_GEOMETRY__', JSON.stringify(geometry[id]))
     .replace('/* SECTION_BATCH_LESSON */', () => read('section-'+id+'-lesson.js').trimEnd());
@@ -62,7 +66,6 @@ for (const { id, draw, material, stepMax, mobile } of lessons){
     .replace(/<nav class="course-nav"[^>]*>.*?<\/nav>/, '');
   fs.writeFileSync(path.join(platform, 'ex-'+id+'.html'), page);
   fs.writeFileSync(path.join(project, 'assignment', '作业'+number+'.html'), offline);
-  cards.push({ id, html:`<a class="card" href="ex-${id}.html"><strong>作业 ${number}</strong><span>${number} ${draw}</span><b>开始学习 →</b></a>` });
   if (process.argv.includes('--reference') || process.argv.includes('--reference='+id)) screenshot(id, offline);
 }
 
@@ -78,4 +81,4 @@ for (const { id, html } of cards){
   previous = id;
 }
 fs.writeFileSync(catalogPath, catalog);
-console.log('已生成 8.2-11、8.3-3、8.3-4 的离线版及平台版。');
+console.log('已生成 '+(exercise?exercise.replace('-', '.'):lessons.map(({id})=>id.replace('-', '.')).join('、'))+' 的离线版及平台版。');
