@@ -520,7 +520,7 @@
   steps.forEach((item,index)=>{
     const button=document.createElement('button');
     button.type='button';button.dataset.step=String(index);
-    button.textContent=index===0?'准备 · 读题':`${String(index).padStart(2,'0')} ${item.short}`;
+    button.textContent=index===0?'准备 · 读题':`${String(index).padStart(2,'0')} ${item.short??item.title}`;
     button.addEventListener('click',()=>{stopPlay();setStep(index)});
     $('steps').append(button);
   });
