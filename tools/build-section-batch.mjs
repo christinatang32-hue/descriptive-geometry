@@ -9,9 +9,10 @@ const project = path.dirname(platform);
 const read = name => fs.readFileSync(path.join(tools, name), 'utf8');
 const geometry = JSON.parse(read('section-batch-geometry.json'));
 const lessons = [
-  { id:'8-2-11', draw:'A—A 旋转剖面图', material:'金属', stepMax:5, mobile:'700/860' },
-  { id:'8-3-3', draw:'A—A 剖面图', material:'通用材料图例', stepMax:4, mobile:'715/850' },
-  { id:'8-3-4', draw:'A—A、B—B 剖面图', material:'通用材料图例', stepMax:5, mobile:'874/1070' }
+  { id:'8-2-11', draw:'A—A 旋转剖面图', catalogLabel:'旋转剖面图', material:'金属', stepMax:5, mobile:'700/860' },
+  { id:'8-3-2', draw:'板梁柱结构的 1—1 剖面图和 2—2 断面图', catalogLabel:'剖面图和断面图', material:'钢筋混凝土', stepMax:5, mobile:'1284/875' },
+  { id:'8-3-3', draw:'A—A 剖面图', catalogLabel:'剖面图', material:'通用材料图例', stepMax:4, mobile:'715/850' },
+  { id:'8-3-4', draw:'A—A、B—B 剖面图', catalogLabel:'剖面图', material:'通用材料图例', stepMax:5, mobile:'874/1070' }
 ];
 const exercise = process.argv.find(argument=>argument.startsWith('--exercise='))?.split('=')[1];
 if (exercise && !lessons.some(({id})=>id===exercise)) throw Error('未知习题 '+exercise);
@@ -49,9 +50,9 @@ const engine = read('section-batch-engine.js')
   .replace('/* SECTION_AXON_VIEW */', () => read('section-axon-view.js').trimEnd())
   .replace('/* SECTION_LINE_TRACE */', () => read('section-line-trace.js').trimEnd());
 const cards = [];
-for (const { id, draw, material, stepMax, mobile } of lessons){
+for (const { id, draw, catalogLabel, material, stepMax, mobile } of lessons){
   const number = id.replace('-', '.');
-  cards.push({ id, html:`<a class="card" href="ex-${id}.html"><strong>作业 ${number}</strong><span>${number} ${draw}</span><b>开始学习 →</b></a>` });
+  cards.push({ id, html:`<a class="card" href="ex-${id}.html"><strong>作业 ${number}</strong><span>${number} ${catalogLabel??draw}</span><b>开始学习 →</b></a>` });
   if (exercise && id!==exercise) continue;
   const problem = '求作 '+draw+'（'+material+'）。';
   const js = engine.replace('__SECTION_GEOMETRY__', JSON.stringify(geometry[id]))
@@ -71,10 +72,14 @@ for (const { id, draw, material, stepMax, mobile } of lessons){
 
 const catalogPath = path.join(platform, 'catalog.html');
 let catalog = fs.readFileSync(catalogPath, 'utf8');
+const cardPattern = id => new RegExp('<a class="card" href="ex-'+id+'\\.html">[\\s\\S]*?<\\/a>');
 let previous = '8-2-10';
 for (const { id, html } of cards){
-  if (!catalog.includes('href="ex-'+id+'.html"')){
-    const anchor = new RegExp('<a class="card" href="ex-'+previous+'\\.html">[\\s\\S]*?<\\/a>');
+  const existing = cardPattern(id);
+  if (existing.test(catalog)){
+    catalog = catalog.replace(existing, () => html);
+  } else {
+    const anchor = cardPattern(previous);
     if (!anchor.test(catalog)) throw Error('作业目录缺少 '+previous);
     catalog = catalog.replace(anchor, card=>card+html);
   }

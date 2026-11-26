@@ -91,7 +91,7 @@
           block(lo,hi,cross,.08,z0,z0+.035,C.frame);
         }
         if(!security){for(const [l,r]of[[lo,lo+.035],[hi-.035,hi]])block(l,r,cross,.08,z0,z1,C.frame);block(lo,hi,cross,.08,z1-.035,z1,C.frame);}
-        if(!solid&&!sliding&&/^(SC|YC)/.test(code)){
+        if(!solid&&!sliding&&!o.sharedEaves&&/^(SC|YC)/.test(code)){
           const sign=(axis==='x'?cross<6:cross<16)?-1:1,d=cross+sign*(t/2+.06);
           if(axis==='x')box(lo-.10,d-.09,z1+.015,hi+.10,d+.09,z1+.075,g,floor,'窗上檐 · '+name,C.trim,{windowHood:true});
           else box(d-.09,lo-.10,z1+.015,d+.09,hi+.10,z1+.075,g,floor,'窗上檐 · '+name,C.trim,{windowHood:true});
@@ -267,6 +267,7 @@
   }
 
   const facadeWallBands=[[-.25,-.25,32.65,.12],[-.25,-.25,.12,12.25],[32.28,-.25,32.65,12.25],[-.25,11.88,13.05,12.25],[13.05,10.98,19.35,11.35],[19.35,11.88,32.65,12.25],[12.68,11.1,13.05,12.25],[19.35,11.1,19.72,12.25]];
+  const northBalconyBays=[[3.6,6.6],[9.3,12.8],[19.6,23.1],[25.8,28.8]];
   for(let f=0;f<5;f++){
     const z=f*2.8;
     // 楼梯间贯通洞口，分区拼接板面。
@@ -348,14 +349,15 @@
       wall('x',faceA,faceB,-1.23,z+1.2,1.6,.075,f,[{c:(faceA+faceB)/2,w:faceB-faceA,b:0,h:1.6,code}]);
       for(const x of[a===0?-.2125:a,b===32.4?32.6125:b])wall('y',-1.2,0,x,z+1.2,1.6,.075,f,[{c:-.6,w:1.2,b:0,h:1.6,code,segments:2,info:{face:'侧窗',countInSchedule:false}}]);
     }
-    for(const [a,b]of[[3.6,6.6],[9.3,12.8],[19.6,23.1],[25.8,28.8]]){
+    for(const [a,b]of northBalconyBays){
       const code=b-a<3.1?'YC3':'YC4',w=spec.openings[code].width/1000;
+      const sharedEaves=f===4;
       box(a,12.12,z-.12,b,12.72,z,'balconies',f,'厨房阳台板',C.slab);
       box(a,12.62,z,b,12.72,z+1.2,'balconies',f,'厨房阳台栏板',C.balcony);
-      wall('x',a,b,12.67,z+1.2,1.6,.075,f,[{c:(a+b)/2,w,b:0,h:1.6,code}]);
+      wall('x',a,b,12.67,z+1.2,1.6,.075,f,[{c:(a+b)/2,w,b:0,h:1.6,code,sharedEaves}]);
       for(const x of[a,b]){
         box(x-.05,12.18,z,x+.05,12.72,z+1.2,'balconies',f,'北阳台侧栏板',C.balcony);
-        wall('y',12.18,12.72,x,z+1.2,1.6,.075,f,[{c:12.45,w:.54,b:0,h:1.6,code,segments:1,info:{face:'侧窗',countInSchedule:false,dimensionNote:'侧窗净宽540依据建施12；型材断面示意'}}]);
+        wall('y',12.18,12.72,x,z+1.2,1.6,.075,f,[{c:12.45,w:.54,b:0,h:1.6,code,sharedEaves,segments:1,info:{face:'侧窗',countInSchedule:false,dimensionNote:'侧窗净宽540依据建施12；型材断面示意'}}]);
       }
     }
     // 外墙连续到上层楼面，取消逐层追加的水平饰带。
@@ -570,6 +572,46 @@
   }
   for(const r of atticRooms.filter(r=>r.type==='stair'))r.note='四处洞口南端防护补齐；两端户为钢制螺旋梯、中间两户为直梯。靠墙边无扶手，临空边及出口平台设防护，出口不设横杆。';
 
+  // 建施7、9、10：北檐连通，四处阳台局部外挑，中央随外墙退进。
+  function buildNorthEaves(){
+    const outer=12.72,projection=.10,returnOverhang=.12,setback=.90;
+    const {notchX0,notchX1}=planAlignment;
+    const jogs=[...northBalconyBays.map(([a,b])=>[a-returnOverhang,b+returnOverhang,outer+projection]),
+      [notchX0+returnOverhang,notchX1-returnOverhang,outer-setback]]
+      .sort(([a],[b])=>a-b);
+    const outline=[[-.45,outer],...jogs.flatMap(([a,b,y])=>[[a,outer],[a,y],[b,y],[b,outer]]),[32.85,outer]];
+    const inward=outline.slice(1).map(([x,y],i)=>{
+      const [a,b]=outline[i],length=Math.hypot(x-a,y-b);
+      return [(y-b)/length,(a-x)/length];
+    });
+    // 建施10侧立面及建施13节点2：底缘、收分、斜肩和上缘；槽内侧与顶棚板连成一体。
+    const layers=[
+      {z:0,outer:.06,inner:.70},{z:.08,outer:.06,inner:.70},
+      {z:.08,outer:.14,inner:.70},{z:.12,outer:.14,inner:.70},
+      {z:.12,outer:.14,inner:.24},{z:.31,outer:.14,inner:.24},
+      {z:.34,outer:.11,inner:.24},{z:.36,outer:.06,inner:.24},
+      {z:.36,outer:0,inner:.24},{z:.48,outer:0,inner:.24}
+    ];
+    const profile=layers.map(({outer,z})=>[outer,z]).concat(layers.slice().reverse().map(({inner,z})=>[inner,z]))
+      .filter(([u,z],i,list)=>!i||u!==list[i-1][0]||z!==list[i-1][1]);
+    const topDatum=14,args=['roof',4,'北侧连续顶棚与阶形檐口',C.trim];
+    const point=(i,inset,z)=>{
+      const [x,y]=outline[i],left=inward[i-1],right=inward[i];
+      const miter=left&&right?[left[0]+right[0],left[1]+right[1]]:left||right;
+      return [x+miter[0]*inset,y+miter[1]*inset,topDatum+z];
+    };
+    for(let i=0;i<outline.length-1;i++)for(let j=0;j<profile.length;j++){
+      const a=profile[j],b=profile[(j+1)%profile.length];
+      quad(point(i,...a),point(i,...b),point(i+1,...b),point(i+1,...a),...args);
+    }
+    for(const i of[0,outline.length-1])for(let j=1;j<layers.length;j++){
+      const a=layers[j-1],b=layers[j];
+      if(a.z===b.z)continue;
+      const face=[point(i,a.inner,a.z),point(i,a.outer,a.z),point(i,b.outer,b.z),point(i,b.inner,b.z)];
+      quad(...(i===0?face.reverse():face),...args);
+    }
+  }
+  buildNorthEaves();
   // 双坡屋面几何开洞，为16樘老虎窗留下实际空间。
   const dormerLayout=[[4.9,7.85,14.7,17.7,24.55,27.5],[1.8,5.1,7.95,11.05,14.5,17.9,21.35,24.45,27.3,30.6]];
   const roofHeight=y=>17.773-Math.abs(y-6)*(3.073/6);
@@ -617,7 +659,7 @@
     const eaves=side?[[-.45,13.05],[13.05,19.35],[19.35,32.85]]:[[-.45,0],[3.4,9.3],[13.2,19.2],[23.1,29],[32.4,32.85]];
     for(const [a,b]of eaves){
       const gutterOuter=side&&(a+b)/2>13.05&&(a+b)/2<19.35?11.65:outer;
-      box(a,gutterOuter-.06,roofHeight(gutterOuter)-.165,b,gutterOuter+.06,roofHeight(gutterOuter)-.045,'roof',5,'白色檐沟（瓦面以下）',C.trim);
+      if(!side)box(a,gutterOuter-.06,roofHeight(gutterOuter)-.165,b,gutterOuter+.06,roofHeight(gutterOuter)-.045,'roof',5,'白色檐沟（瓦面以下）',C.trim);
       // 檐口逐块弧形瓦截面：与表面的程序化瓦垄相接，无贴图依赖。
       for(let x=a;x+.24<=b;x+=.24)for(let k=0;k<4;k++){
         const t0=k*Math.PI/4,t1=(k+1)*Math.PI/4,x0=x+.12*(1-Math.cos(t0)),x1=x+.12*(1-Math.cos(t1)),z0=roofHeight(gutterOuter)+.035*Math.sin(t0),z1=roofHeight(gutterOuter)+.035*Math.sin(t1),yy=side?gutterOuter-.28:gutterOuter+.28;

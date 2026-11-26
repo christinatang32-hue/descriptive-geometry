@@ -66,6 +66,50 @@
 
   const lesson=createLesson(G),steps=lesson.steps;
   const closedMesh=lesson.mesh(null),openMeshes=lesson.cuts.map((_,index)=>lesson.mesh(index));
+  function concreteAggregate(section){
+    const points=section.loops.flatMap(loop=>loop.map(edge=>edge.a));
+    const xs=points.map(p=>p[0]),ys=points.map(p=>p[1]);
+    const left=Math.min(...xs),bottom=Math.min(...ys),right=Math.max(...xs),top=Math.max(...ys);
+    const contains=(u,v)=>section.loops.some(loop=>loop.reduce((inside,{a,b})=>
+      (a[1]>v)!==(b[1]>v)&&u<a[0]+(b[0]-a[0])*(v-a[1])/(b[1]-a[1])?!inside:inside,false));
+    const marks=[];
+    const area=section.loops.reduce((sum,loop)=>sum+
+      Math.abs(loop.reduce((twice,{a,b})=>twice+a[0]*b[1]-b[0]*a[1],0))/2,0);
+    for(const [triangle,density] of [[true,600],[false,155]]){
+      const count=Math.round(area/density);
+      for(let accepted=0,attempt=0;accepted<count&&attempt<count*35;attempt++){
+        const u=left+Math.random()*(right-left),v=bottom+Math.random()*(top-bottom);
+        const r=triangle?2.8+1.4*Math.random():.58+.65*Math.random();
+        if(!contains(u,v)||marks.some(mark=>Math.hypot(mark.u-u,mark.v-v)<r+mark.r+1.5))continue;
+        const azimuth=Math.random()*2*Math.PI;
+        const vertices=triangle?[0,1,2].map(i=>{
+          const angle=azimuth+i*2*Math.PI/3;
+          return [u+r*Math.cos(angle),v+r*Math.sin(angle)];
+        }):null;
+        if(vertices?.some(([a,b])=>!contains(a,b)))continue;
+        marks.push({u,v,r,vertices});accepted++;
+      }
+    }
+    const scale=2,texture=document.createElement('canvas');
+    texture.width=Math.ceil((right-left)*scale)+2;
+    texture.height=Math.ceil((top-bottom)*scale)+2;
+    const ctx=texture.getContext('2d');
+    ctx.setTransform(scale,0,0,scale,-left*scale,-bottom*scale);
+    ctx.lineWidth=.68;
+    for(const {u,v,r,vertices} of marks){
+      ctx.beginPath();
+      if(vertices){
+        ctx.moveTo(...vertices[0]);ctx.lineTo(...vertices[1]);ctx.lineTo(...vertices[2]);ctx.closePath();ctx.stroke();
+      }else{ctx.arc(u,v,r,0,2*Math.PI);ctx.fill()}
+    }
+    const {width,height}=texture,alpha=ctx.getImageData(0,0,width,height).data;
+    function sample(u,v){
+      const x=Math.floor((u-left)*scale),y=Math.floor((v-bottom)*scale);
+      return x>=0&&x<width&&y>=0&&y<height?alpha[(y*width+x)*4+3]/255:0;
+    }
+    return {marks,sample};
+  }
+  const aggregates=lesson.concrete?lesson.sections.map(concreteAggregate):[];
   function brace(a,b,side){
     const dx=b[0]-a[0],dy=b[1]-a[1],length=Math.hypot(dx,dy);
     const at=(t,offset)=>xy([a[0]+t*dx-side*offset*dy/length,a[1]+t*dy+side*offset*dx/length]);
@@ -150,10 +194,12 @@
     const {id,loops}=section;
     const cut=loops.map(loop=>outlinePath(id,loop)).join(' ');
     const [w,h]=layout.size;
+    const marks=aggregates[section.mode]?.marks.map(({u,v,r,vertices})=>vertices?
+      viewPath(id,vertices,'aggregate-triangle',true):ring(id,[u,v],r,'aggregate-dot')).join('')??'';
     return `<defs><clipPath id="material-${id}">${path(cut,'clip-shape')}</clipPath>
       <pattern id="hatch-${id}" width="13" height="13" patternUnits="userSpaceOnUse">
       <path class="material-line" d="M-1 1 1 -1 M0 13 13 0 M12 14 14 12"/></pattern></defs>
-      <g clip-path="url(#material-${id})"><rect class="hatch-area" width="${w}" height="${h}" fill="url(#hatch-${id})"/></g>`;
+      <g clip-path="url(#material-${id})"><rect class="hatch-area" width="${w}" height="${h}" fill="url(#hatch-${id})"/>${marks}</g>`;
   }
   function caption(section){
     const [x,y]=viewPoint(section.id,section.caption);
@@ -232,8 +278,11 @@
   function setLayout(selected){
     layout=selected;
     diagram.setAttribute('viewBox',`0 0 ${layout.size.join(' ')}`);
-    axons=openMeshes.map((mesh,index)=>createSectionAxon(mesh,layout.axons[index],lesson.cuts[index].label+' 剖开后的轴测图',
-      silhouettes(mesh,[-1,1,1]).filter(edge=>edge.part===0)));
+    axons=openMeshes.map((mesh,index)=>{
+      const cut=lesson.cuts[index],eye=cut.eye??[-1,1,1];
+      return createSectionAxon(mesh,layout.axons[index],cut.label+' 剖开后的轴测图',
+        silhouettes(mesh,eye).filter(edge=>edge.part===0),eye);
+    });
     render2D();
   }
   const measureDuration=425,transferDuration=375,drawDuration=500;
@@ -315,7 +364,7 @@
   });
 
   const stage=$('modelStage'),canvas=$('modelCanvas'),ctx=canvas.getContext('2d');
-  const defaultYaw=-.76,defaultPitch=.55;
+  const defaultYaw=lesson.defaultYaw??-.76,defaultPitch=.55;
   const camera={opening:0,yaw:defaultYaw,pitch:defaultPitch,zoom:1,x:0,y:0,mode:'rotate'};
   const clamp=(value,min,max)=>Math.min(max,Math.max(min,value));
   let modelDrag=null,pinchDistance=0,animation=0,animationTarget=null,showPlanes=false,drawFrame=0;
@@ -351,6 +400,7 @@
     const {width,height}=canvas;
     const pixels=ctx.createImageData(width,height),rgba=pixels.data;
     const depths=new Float32Array(width*height);depths.fill(-Infinity);
+    const aggregate=aggregates[mode],cutViewSign=lesson.cuts[mode].eye?.[0]??-1;
     for(const face of faces){
       if(!face.orientation)continue;
       const {source}=face;
@@ -378,6 +428,7 @@
             const coordinate=Math.abs(normal[2])>.99?pos[0]+pos[1]:Math.abs(normal[0])>.99?pos[1]+pos[2]:pos[0]+pos[2];
             const stripe=((coordinate%12)+12)%12;
             if(Math.min(stripe,12-stripe)<.65)coverage=.6;
+            if(aggregate)coverage=Math.max(coverage,.72*aggregate.sample(cutViewSign*pos[1],pos[2]));
           }
           const offset=index*4;
           for(let channel=0;channel<3;channel++)rgba[offset+channel]=color[channel]*(1-coverage)+102*coverage;
